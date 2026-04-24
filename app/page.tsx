@@ -7,7 +7,7 @@ const EJEMPLOS = ['Migraña', 'Vértigo', 'Epilepsia', 'Temblor esencial', 'Inso
 
 function BrainIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-purple-400">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-purple-400" aria-hidden="true">
       <path
         d="M12 3C9.5 3 7.5 4.5 7 6.5C5.5 6.5 4 7.8 4 9.5C4 10.5 4.5 11.4 5.2 12C4.5 12.6 4 13.5 4 14.5C4 16.2 5.5 17.5 7 17.5C7.5 19.5 9.5 21 12 21C14.5 21 16.5 19.5 17 17.5C18.5 17.5 20 16.2 20 14.5C20 13.5 19.5 12.6 18.8 12C19.5 11.4 20 10.5 20 9.5C20 7.8 18.5 6.5 17 6.5C16.5 4.5 14.5 3 12 3Z"
         stroke="currentColor"
@@ -142,10 +142,11 @@ export default function Home() {
         {!resultado && (
           <form onSubmit={handleSubmit} className="space-y-4 mb-8">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label htmlFor="diagnostico" className="block text-sm text-gray-400 mb-2">
                 ¿Cuál es tu diagnóstico?
               </label>
               <textarea
+                id="diagnostico"
                 rows={3}
                 value={diagnostico}
                 onChange={(e) => setDiagnostico(e.target.value)}
@@ -172,11 +173,12 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label htmlFor="contexto" className="block text-sm text-gray-400 mb-2">
                 Contexto adicional{' '}
                 <span className="text-gray-600">(opcional)</span>
               </label>
               <textarea
+                id="contexto"
                 rows={2}
                 value={contexto}
                 onChange={(e) => setContexto(e.target.value)}
@@ -194,7 +196,7 @@ export default function Home() {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
