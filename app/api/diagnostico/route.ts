@@ -75,6 +75,10 @@ export interface DiagnosticoResponse {
   nota_final: string
 }
 
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
+
 export async function POST(request: NextRequest) {
   let body: unknown
   try {
@@ -123,10 +127,6 @@ export async function POST(request: NextRequest) {
     ? `Diagnóstico: ${diagnosticoTrimmed}\n\nContexto: ${contextoTrimmed}`
     : `Diagnóstico: ${diagnosticoTrimmed}`
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  })
-
   try {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -157,7 +157,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result: DiagnosticoResponse = JSON.parse(jsonMatch[0])
+    let result: DiagnosticoResponse
+    try {
+      result = JSON.parse(jsonMatch[0])
+    } catch {
+      console.error('JSON malformado del modelo:', jsonMatch[0].slice(0, 200))
+      return NextResponse.json(
+        { error: 'El modelo devolvió un JSON malformado' },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error llamando a Claude:', error)
