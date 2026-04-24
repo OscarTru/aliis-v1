@@ -2,25 +2,21 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Entiende tu diagnóstico · Cerebros Esponjosos',
+  title: 'Aliis · Entiende tu diagnóstico neurológico',
   description:
-    'Tu médico te dio un diagnóstico y no quedó del todo claro. Aquí lo desglosamos en lenguaje humano — con evidencia real, sin jerga innecesaria.',
+    'Aliis es tu asistente de IA para salud cerebral. Traduce el lenguaje médico, cita sus fuentes, y te acompaña entre consulta y consulta.',
   openGraph: {
-    title: 'Entiende tu diagnóstico · Cerebros Esponjosos',
+    title: 'Aliis · Entiende tu diagnóstico neurológico',
     description:
-      'Escribe tu diagnóstico y recibe un pack educativo personalizado en lenguaje humano.',
-    siteName: 'Cerebros Esponjosos',
+      'Cuéntale a Aliis lo que te dijo el neurólogo. Te devuelve una explicación clara, con referencias verificables.',
+    siteName: 'Aliis · Cerebros Esponjosos',
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className="min-h-screen bg-[#0f0f1a] text-white antialiased">
+      <body style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
         {children}
       </body>
     </html>

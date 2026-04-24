@@ -1,52 +1,75 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --c-bg: #fafaf9;
+  --c-surface: #f4f4f5;
+  --c-surface-2: rgba(0, 0, 0, 0.04);
+  --c-border: rgba(0, 0, 0, 0.08);
+  --c-border-strong: rgba(0, 0, 0, 0.18);
+  --c-text: #18181b;
+  --c-text-muted: #52525b;
+  --c-text-subtle: #71717a;
+  --c-text-faint: #a1a1aa;
+  --c-invert: #18181b;
+  --c-invert-fg: #ffffff;
+
+  --c-brand-teal: #1F8A9B;
+  --c-brand-teal-deep: #14606E;
+  --c-brand-teal-light: #8AC9D2;
+  --c-brand-ink: #0F2633;
+  --c-brand-scribble: rgba(30, 40, 55, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: #0f0f1a;
+  background: var(--c-bg);
+  color: var(--c-text);
+  margin: 0;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes ce-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+@keyframes ce-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ce-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease forwards;
+.ce-fade {
+  animation: ce-fade-in 0.4s ease forwards;
 }
-
-.delay-1 { animation-delay: 0.1s; opacity: 0; }
-.delay-2 { animation-delay: 0.2s; opacity: 0; }
-.delay-3 { animation-delay: 0.3s; opacity: 0; }
-.delay-4 { animation-delay: 0.4s; opacity: 0; }
-.delay-5 { animation-delay: 0.5s; opacity: 0; }
-.delay-6 { animation-delay: 0.6s; opacity: 0; }
-.delay-7 { animation-delay: 0.7s; opacity: 0; }
-.delay-8 { animation-delay: 0.8s; opacity: 0; }
 
 .shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--c-surface) 25%, #e8e8e9 50%, var(--c-surface) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
