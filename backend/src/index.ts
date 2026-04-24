@@ -3,6 +3,11 @@ import express from 'express'
 import cors from 'cors'
 import Anthropic from '@anthropic-ai/sdk'
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('ANTHROPIC_API_KEY no está definida. El servidor no puede iniciar.')
+  process.exit(1)
+}
+
 const app = express()
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -83,6 +88,21 @@ export interface DiagnosticoResponse {
   nota_final: string
 }
 
+function isDiagnosticoResponse(v: unknown): v is DiagnosticoResponse {
+  if (!v || typeof v !== 'object') return false
+  const r = v as Record<string, unknown>
+  return (
+    typeof r.diagnostico_recibido === 'string' &&
+    typeof r.que_es === 'string' &&
+    typeof r.como_funciona === 'string' &&
+    typeof r.que_esperar === 'string' &&
+    Array.isArray(r.preguntas_para_medico) &&
+    Array.isArray(r.senales_de_alarma) &&
+    typeof r.mito_frecuente === 'string' &&
+    typeof r.nota_final === 'string'
+  )
+}
+
 app.post('/diagnostico', async (req, res) => {
   const body = req.body as unknown
 
@@ -132,6 +152,12 @@ app.post('/diagnostico', async (req, res) => {
       return
     }
 
+    if (response.stop_reason !== 'end_turn') {
+      console.error('Respuesta truncada, stop_reason:', response.stop_reason)
+      res.status(500).json({ error: 'La respuesta del modelo fue incompleta. Intenta de nuevo.' })
+      return
+    }
+
     const jsonMatch = textContent.text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       res.status(500).json({ error: 'El modelo no devolvió un JSON válido' })
@@ -140,7 +166,13 @@ app.post('/diagnostico', async (req, res) => {
 
     let result: DiagnosticoResponse
     try {
-      result = JSON.parse(jsonMatch[0]) as DiagnosticoResponse
+      const parsed: unknown = JSON.parse(jsonMatch[0])
+      if (!isDiagnosticoResponse(parsed)) {
+        console.error('Estructura de respuesta incompleta del modelo')
+        res.status(500).json({ error: 'El modelo devolvió una estructura incompleta' })
+        return
+      }
+      result = parsed
     } catch {
       console.error('JSON malformado del modelo:', jsonMatch[0].slice(0, 200))
       res.status(500).json({ error: 'El modelo devolvió un JSON malformado' })
