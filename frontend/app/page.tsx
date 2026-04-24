@@ -1,344 +1,143 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
+import { useState } from 'react'
+import Image from 'next/image'
 import { AppNav } from '../components/AppNav'
 import { Footer } from '../components/Footer'
+import { LoginModal } from '../components/LoginModal'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Capsule } from '../components/ui/Capsule'
-import { ButtonPrimary, ButtonGhost } from '../components/ui/Button'
 import { Glow } from '../components/ui/Glow'
-import { ScribbleBrain } from '../components/ui/ScribbleBrain'
-import type { DiagnosticoResponse } from '../lib/types'
+import { PRICING_TIERS } from '../lib/mock-data'
 
-// ─── Design tokens (inline styles follow tokens.css) ──────────
+// ─── Hero ─────────────────────────────────────────────────────
 
-const EJEMPLOS = ['Migraña con aura', 'Vértigo posicional', 'Epilepsia focal', 'Temblor esencial', 'Insomnio crónico']
-
-// ─── Primitives ───────────────────────────────────────────────
-
-function AINote() {
+function InputPreview({ onCTA }: { onCTA: () => void }) {
+  const [mode, setMode] = useState<'pegar' | 'foto' | 'voz' | 'buscar'>('pegar')
+  const previews = {
+    pegar: 'Dx: migraña con aura. Indico sumatriptán 50mg según pauta. Control en 6 semanas…',
+    foto: 'Arrastra aquí una foto de la receta, o haz clic para elegir del rollo.',
+    voz: 'Pulsa y dicta lo que te dijo el médico. También puedes subir un audio de la consulta.',
+    buscar: 'Busca tu diagnóstico: migraña, epilepsia, esclerosis múltiple…',
+  }
   return (
-    <div style={{
-      display: 'flex', alignItems: 'flex-start', gap: 12,
-      padding: '14px 18px',
-      background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 14,
-    }}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-brand-teal)" strokeWidth="1.6" style={{ marginTop: 2, flexShrink: 0 }} aria-hidden>
-        <path d="M12 2L14.5 8.5 21 11 14.5 13.5 12 20 9.5 13.5 3 11 9.5 8.5Z" />
-      </svg>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, lineHeight: 1.55, color: 'var(--c-text-muted)' }}>
-        <span style={{ color: 'var(--c-text)', fontWeight: 500 }}>Basado en evidencia científica.</span>{' '}
-        Cada explicación sigue el estilo de Cerebros Esponjosos. Aliis no reemplaza a tu médico — lo complementa.
+    <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 24, padding: 20, boxShadow: '0 1px 0 rgba(255,255,255,.5) inset' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.2em', color: 'var(--c-text-subtle)' }}>Pregúntale a Aliis</span>
+        <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-faint)' }}>toma 30 segundos</span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        {([
+          { id: 'foto', l: 'Foto de receta' },
+          { id: 'pegar', l: 'Pegar texto' },
+          { id: 'voz', l: 'Dictar' },
+          { id: 'buscar', l: 'Buscar' },
+        ] as const).map((t) => (
+          <button key={t.id} onClick={() => setMode(t.id)}
+            style={{
+              background: mode === t.id ? 'var(--c-invert)' : 'transparent',
+              color: mode === t.id ? 'var(--c-invert-fg)' : 'var(--c-text-muted)',
+              border: `1px solid ${mode === t.id ? 'var(--c-invert)' : 'var(--c-border)'}`,
+              padding: '6px 12px', borderRadius: 999, fontSize: 12, cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}>
+            {t.l}
+          </button>
+        ))}
+      </div>
+      <div style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 14, padding: 16, minHeight: 120, fontFamily: 'var(--font-serif)', fontSize: 17, lineHeight: 1.5, color: 'var(--c-text-faint)', fontStyle: 'italic' }}>
+        {previews[mode]}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.18em', color: 'var(--c-text-faint)' }}>Privado · No se comparte</span>
+        <button onClick={onCTA}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', background: 'var(--c-invert)', color: 'var(--c-invert-fg)',
+            border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 14, cursor: 'pointer',
+          }}>
+          Pedir explicación
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
       </div>
     </div>
   )
 }
 
-// ─── Hero + formulario ────────────────────────────────────────
-
-function Hero({ onStart }: { onStart: () => void }) {
+function Hero({ onCTA }: { onCTA: () => void }) {
   return (
-    <section style={{
-      position: 'relative', minHeight: '60vh',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '100px 24px 80px', textAlign: 'center', overflow: 'hidden',
-    }}>
+    <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
-      <div className="ce-fade" style={{ position: 'relative', maxWidth: '52rem' }}>
-        <Eyebrow centered style={{ marginBottom: 26 }}>· Aliis · AI Assistant de salud cerebral ·</Eyebrow>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 'clamp(3rem, 8vw, 6rem)',
-          lineHeight: .95, letterSpacing: '-.03em',
-          margin: '0 0 28px', color: 'var(--c-text)',
-        }}>
-          Entiende<br />
-          <em style={{ color: 'var(--c-text-faint)' }}>tu diagnóstico.</em>
-        </h1>
-        <p style={{
-          fontFamily: 'var(--font-sans)', fontSize: 18, lineHeight: 1.75,
-          color: 'var(--c-text-muted)', maxWidth: '40rem', margin: '0 auto 40px',
-        }}>
-          Cuéntale a Aliis lo que te dijo el neurólogo. Te devuelve una explicación clara,{' '}
-          con referencias verificables, y te acompaña hasta la siguiente consulta.{' '}
-          <em style={{ fontFamily: 'var(--font-serif)', color: 'var(--c-text)' }}>
-            No reemplaza a tu médico — lo complementa.
-          </em>
-        </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-          <ButtonPrimary onClick={onStart} icon="arrow" size="lg">Pregúntale a Aliis</ButtonPrimary>
-          <ButtonGhost size="lg" href="/dashboard">Ver un ejemplo</ButtonGhost>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 56 }}>
-          <Capsule tone="teal">✓ Basado en evidencia</Capsule>
-          <Capsule>✓ Referencias verificables</Capsule>
-          <Capsule>✓ No reemplaza a tu médico</Capsule>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <ScribbleBrain size={90} />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Formulario ───────────────────────────────────────────────
-
-function Formulario({
-  diagnostico, setDiagnostico,
-  contexto, setContexto,
-  loading, error,
-  onSubmit,
-}: {
-  diagnostico: string; setDiagnostico: (v: string) => void
-  contexto: string; setContexto: (v: string) => void
-  loading: boolean; error: string | null
-  onSubmit: (e: React.FormEvent) => void
-}) {
-  const formRef = useRef<HTMLDivElement>(null)
-
-  return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '80px 24px 100px', position: 'relative', overflow: 'hidden' }}>
-      <Glow />
-      <div style={{ maxWidth: '44rem', margin: '0 auto', position: 'relative' }}>
-        <Eyebrow style={{ marginBottom: 16, textAlign: 'center' }}>· Modo consulta ·</Eyebrow>
-        <h2 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 'clamp(1.75rem, 3.8vw, 2.75rem)',
-          lineHeight: 1.08, letterSpacing: '-.02em',
-          margin: '0 0 8px', textAlign: 'center',
-        }}>
-          Cuéntamelo{' '}
-          <em style={{ color: 'var(--c-text-faint)' }}>como se lo dirías a un amigo.</em>
-        </h2>
-        <p style={{
-          textAlign: 'center', fontFamily: 'var(--font-sans)',
-          fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 40,
-          maxWidth: '38ch', marginLeft: 'auto', marginRight: 'auto',
-        }}>
-          Aliis traduce el lenguaje médico, cita sus fuentes y te prepara para la próxima consulta.
-        </p>
-
-        {/* Card formulario */}
-        <div ref={formRef} style={{
-          background: 'var(--c-surface)',
-          border: '1px solid var(--c-border)',
-          borderRadius: 24,
-          padding: 20,
-          boxShadow: '0 1px 0 rgba(255,255,255,.5) inset',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: 10,
-              textTransform: 'uppercase', letterSpacing: '.2em', color: 'var(--c-text-subtle)',
-            }}>
-              Pregúntale a Aliis
-            </span>
-            <span style={{
-              fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-              fontSize: 13, color: 'var(--c-text-faint)',
-            }}>
-              toma 30 segundos
-            </span>
-          </div>
-
-          {/* Chips */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-            {EJEMPLOS.map(ej => (
-              <button key={ej} onClick={() => setDiagnostico(ej)} disabled={loading}
-                style={{
-                  background: diagnostico === ej ? 'var(--c-invert)' : 'transparent',
-                  color: diagnostico === ej ? 'var(--c-invert-fg)' : 'var(--c-text-muted)',
-                  border: `1px solid ${diagnostico === ej ? 'var(--c-invert)' : 'var(--c-border)'}`,
-                  padding: '6px 12px', borderRadius: 999,
-                  fontFamily: 'var(--font-sans)', fontSize: 12,
-                  cursor: 'pointer', transition: 'all .15s',
-                }}>
-                {ej}
-              </button>
-            ))}
-          </div>
-
-          <form onSubmit={onSubmit}>
-            {/* Textarea diagnóstico */}
-            <div style={{
-              background: 'var(--c-bg)', border: '1px solid var(--c-border)',
-              borderRadius: 14, marginBottom: 12, overflow: 'hidden',
-            }}>
-              <label htmlFor="diagnostico" style={{
-                display: 'block', padding: '12px 16px 4px',
-                fontFamily: 'var(--font-mono)', fontSize: 10,
-                textTransform: 'uppercase', letterSpacing: '.18em', color: 'var(--c-text-subtle)',
-              }}>
-                ¿Cuál es tu diagnóstico?
-              </label>
-              <textarea
-                id="diagnostico"
-                rows={3}
-                value={diagnostico}
-                onChange={e => setDiagnostico(e.target.value)}
-                placeholder="Ej: Migraña con aura. Me recetaron sumatriptán 50mg…"
-                maxLength={500}
-                disabled={loading}
-                style={{
-                  width: '100%', border: 'none', background: 'transparent',
-                  padding: '4px 16px 14px',
-                  fontFamily: 'var(--font-serif)', fontSize: 17, lineHeight: 1.5,
-                  color: diagnostico ? 'var(--c-text)' : 'var(--c-text-faint)',
-                  fontStyle: diagnostico ? 'normal' : 'italic',
-                  resize: 'none', outline: 'none',
-                }}
-              />
-            </div>
-
-            {/* Textarea contexto */}
-            <div style={{
-              background: 'var(--c-bg)', border: '1px solid var(--c-border)',
-              borderRadius: 14, marginBottom: 14, overflow: 'hidden',
-            }}>
-              <label htmlFor="contexto" style={{
-                display: 'block', padding: '12px 16px 4px',
-                fontFamily: 'var(--font-mono)', fontSize: 10,
-                textTransform: 'uppercase', letterSpacing: '.18em', color: 'var(--c-text-subtle)',
-              }}>
-                Contexto adicional <span style={{ color: 'var(--c-text-faint)' }}>(opcional)</span>
-              </label>
-              <textarea
-                id="contexto"
-                rows={2}
-                value={contexto}
-                onChange={e => setContexto(e.target.value)}
-                placeholder="Edad, síntomas, medicación que te recetaron…"
-                maxLength={300}
-                disabled={loading}
-                style={{
-                  width: '100%', border: 'none', background: 'transparent',
-                  padding: '4px 16px 14px',
-                  fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.6,
-                  color: contexto ? 'var(--c-text)' : 'var(--c-text-faint)',
-                  fontStyle: contexto ? 'normal' : 'italic',
-                  resize: 'none', outline: 'none',
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{
-                fontFamily: 'var(--font-mono)', fontSize: 10,
-                textTransform: 'uppercase', letterSpacing: '.18em', color: 'var(--c-text-faint)',
-              }}>
-                Privado · No se comparte
-              </span>
-              <button type="submit" disabled={!diagnostico.trim() || loading}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  padding: '10px 20px',
-                  background: !diagnostico.trim() || loading ? 'var(--c-surface)' : 'var(--c-invert)',
-                  color: !diagnostico.trim() || loading ? 'var(--c-text-faint)' : 'var(--c-invert-fg)',
-                  border: '1px solid var(--c-border)',
-                  borderRadius: 999,
-                  fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 14,
-                  cursor: diagnostico.trim() && !loading ? 'pointer' : 'not-allowed',
-                  transition: 'all .2s',
-                }}>
-                {loading ? (
-                  <>
-                    <svg className="spinning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{ animation: 'ce-spin 1s linear infinite' }}>
-                      <path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" />
-                    </svg>
-                    Analizando…
-                  </>
-                ) : (
-                  <>
-                    Pedir explicación
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {error && (
-          <p style={{ marginTop: 16, textAlign: 'center', fontFamily: 'var(--font-sans)', fontSize: 14, color: '#c43b3b' }}>
-            {error}
+      <div style={{ position: 'relative', maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: '1.1fr .9fr', gap: 56, alignItems: 'center' }}>
+        <div className="ce-fade">
+          <Eyebrow style={{ marginBottom: 22 }}>· AI Assistant · Salud cerebral ·</Eyebrow>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
+            Tu cerebro tiene preguntas.{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>Aliis las responde con evidencia.</em>
+          </h1>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 0 32px' }}>
+            Le cuentas a Aliis lo que te dijo el neurólogo. Te devuelve una explicación clara, con referencias verificables, y te acompaña hasta la siguiente consulta.
           </p>
-        )}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
+            <button onClick={onCTA}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '14px 28px', background: 'var(--c-invert)', color: 'var(--c-invert-fg)',
+                border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15, cursor: 'pointer',
+              }}>
+              Pregúntale a Aliis
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+            <a href="/dashboard"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '14px 28px', background: 'transparent', color: 'var(--c-text)',
+                border: '1px solid var(--c-border)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15,
+                textDecoration: 'none', cursor: 'pointer',
+              }}>
+              Ver un ejemplo
+            </a>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <Capsule tone="teal">✓ Basado en evidencia</Capsule>
+            <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-muted)' }}>Cada dato con su referencia · PubMed, DOI, guías clínicas</span>
+          </div>
+        </div>
+        <InputPreview onCTA={onCTA} />
       </div>
     </section>
   )
 }
 
-// ─── Loading state ────────────────────────────────────────────
+// ─── Qué hace Aliis ───────────────────────────────────────────
 
-function LoadingState() {
-  const stages = [
-    { t: 'Leyendo el diagnóstico', i: 'identificando condición y contexto.' },
-    { t: 'Buscando evidencia', i: 'guías clínicas · mecanismos · pronóstico.' },
-    { t: 'Adaptando al caso', i: 'en lenguaje humano, sin perder el rigor.' },
-    { t: 'Escribiendo las preguntas', i: 'para tu próxima consulta.' },
-    { t: 'Dando el último repaso', i: 'para que se lea bien.' },
+function WhatAliisDoes() {
+  const items = [
+    { n: '01', t: 'Traduce', i: 'lo que te dijeron', d: 'Del lenguaje médico al tuyo. Sin inflar, sin asustar. Pensado para que lo lea un familiar que nunca abrió un libro de medicina.' },
+    { n: '02', t: 'Cita sus fuentes,', i: 'siempre', d: 'Cada afirmación lleva su referencia desplegable. PubMed, DOI, guías clínicas oficiales. Si no hay evidencia, Aliis te lo dice.' },
+    { n: '03', t: 'Prepara tu próxima', i: 'consulta', d: 'Diez preguntas que importan, escritas para que las copies tal cual. Aliis estudia tu diario de síntomas y sugiere qué contarle al neurólogo.' },
+    { n: '04', t: 'Te avisa', i: 'cuando algo no cuadra', d: 'Señales de alarma sin alarmismo. Cuándo vuelves a urgencias, cuándo llamas, cuándo respiras y esperas a la cita.' },
+    { n: '05', t: 'Aprende', i: 'contigo', d: 'Guarda tus diagnósticos, cruza síntomas, recuerda fármacos. Cada pregunta nueva llega con el contexto de todas las anteriores.' },
   ]
-  const [stage, setStage] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => setStage(s => s < stages.length - 1 ? s + 1 : s), 1600)
-    return () => clearInterval(interval)
-  }, [stages.length])
-
   return (
-    <section style={{
-      borderTop: '1px solid var(--c-border)', padding: '80px 24px 100px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <Glow />
-      <div style={{ position: 'relative', textAlign: 'center', maxWidth: '42rem', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
-          <div style={{ position: 'relative', width: 120, height: 120 }}>
-            <svg width="120" height="120" viewBox="0 0 120 120" style={{ animation: 'ce-spin 10s linear infinite', position: 'absolute', inset: 0 }} aria-hidden>
-              <circle cx="60" cy="60" r="56" fill="none" stroke="var(--c-border)" strokeWidth="1" strokeDasharray="4 6" />
-            </svg>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ScribbleBrain size={72} />
-            </div>
-          </div>
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
+      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
+          <Eyebrow style={{ marginBottom: 18 }}>· Qué hace Aliis ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
+            Un asistente.{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>No un buscador de síntomas a las 2am.</em>
+          </h2>
         </div>
-        <Eyebrow centered style={{ marginBottom: 18 }}>· Destilando ·</Eyebrow>
-        <h2 key={stage} className="ce-fade" style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 'clamp(1.75rem, 3.8vw, 2.75rem)',
-          lineHeight: 1.08, letterSpacing: '-.02em',
-          margin: '0 0 44px',
-        }}>
-          {stages[stage].t}.{' '}
-          <em style={{ color: 'var(--c-text-faint)' }}>{stages[stage].i}</em>
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420, margin: '0 auto', textAlign: 'left' }}>
-          {stages.map((s, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 14px',
-              background: i === stage ? 'var(--c-surface)' : 'transparent',
-              border: `1px solid ${i === stage ? 'var(--c-border-strong)' : 'transparent'}`,
-              borderRadius: 12,
-              opacity: i > stage ? .4 : 1,
-              transition: 'all .4s',
-            }}>
-              <div style={{ width: 16, height: 16, flexShrink: 0 }}>
-                {i < stage ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-brand-teal)" strokeWidth="2.2" aria-hidden><path d="M5 13l4 4L19 7" /></svg>
-                ) : i === stage ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-text)" strokeWidth="2" style={{ animation: 'ce-spin 1s linear infinite' }} aria-hidden><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" /></svg>
-                ) : (
-                  <div style={{ width: 10, height: 10, borderRadius: 999, border: '1px solid var(--c-border-strong)', margin: 3 }} />
-                )}
-              </div>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: i === stage ? 'var(--c-text)' : 'var(--c-text-muted)' }}>{s.t}</span>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', borderTop: '1px solid var(--c-border)' }}>
+          {items.map((it, i) => (
+            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: i < items.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', marginBottom: 18 }}>{it.n}</div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
+                {it.t} <em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
+              </h3>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
+            </article>
           ))}
         </div>
       </div>
@@ -346,239 +145,31 @@ function LoadingState() {
   )
 }
 
-// ─── Pack resultado ───────────────────────────────────────────
+// ─── Cómo funciona ────────────────────────────────────────────
 
-function renderInline(text: string): React.ReactNode[] {
-  const parts = text.split(/(\*[^*]+\*)/g)
-  return parts.map((p, i) =>
-    p.startsWith('*') && p.endsWith('*')
-      ? <em key={i} style={{ fontFamily: 'var(--font-serif)', color: 'var(--c-text)' }}>{p.slice(1, -1)}</em>
-      : p
-  )
-}
-
-function PackResult({ resultado, diagnostico, onReset }: {
-  resultado: DiagnosticoResponse; diagnostico: string; onReset: () => void
-}) {
-  const chapters = [
-    {
-      n: '01', kicker: 'Qué es', kickerItalic: 'y por qué pasa.',
-      content: resultado.que_es, type: 'paragraphs' as const,
-    },
-    {
-      n: '02', kicker: 'Cómo funciona', kickerItalic: 'por dentro.',
-      content: resultado.como_funciona, type: 'paragraphs' as const,
-    },
-    {
-      n: '03', kicker: 'Qué puedes esperar', kickerItalic: 'en el tiempo.',
-      content: resultado.que_esperar, type: 'paragraphs' as const,
-    },
-    {
-      n: '04', kicker: 'Preguntas para', kickerItalic: 'tu próxima consulta.',
-      content: resultado.preguntas_para_medico, type: 'questions' as const,
-    },
-    {
-      n: '05', kicker: 'Cuándo buscar', kickerItalic: 'atención urgente.',
-      content: resultado.senales_de_alarma, type: 'alarms' as const,
-    },
-    {
-      n: '06', kicker: 'Algo que mucha gente', kickerItalic: 'malentiende.',
-      content: resultado.mito_frecuente, type: 'callout' as const,
-    },
-  ]
-
-  return (
-    <article style={{ maxWidth: '42rem', margin: '0 auto', padding: '80px 24px 120px' }} className="ce-fade">
-      {/* Header del pack */}
-      <Eyebrow style={{ marginBottom: 24, textAlign: 'center' }}>
-        · Explicación · {resultado.diagnostico_recibido} ·
-      </Eyebrow>
-      <h1 style={{
-        fontFamily: 'var(--font-serif)',
-        fontSize: 'clamp(2.5rem, 5.5vw, 4rem)',
-        lineHeight: 1.02, letterSpacing: '-.025em',
-        margin: '0 0 24px', textAlign: 'center',
-      }}>
-        {resultado.diagnostico_recibido},{' '}
-        <em style={{ color: 'var(--c-text-faint)' }}>explicado.</em>
-      </h1>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
-        <AINote />
-      </div>
-
-      {/* Capítulos */}
-      {chapters.map((ch, i) => (
-        <section key={ch.n} style={{
-          marginTop: i === 0 ? 0 : 80,
-          paddingTop: i === 0 ? 0 : 48,
-          borderTop: i === 0 ? 'none' : '1px solid var(--c-border)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 18 }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)' }}>
-              CAPÍTULO {ch.n}
-            </span>
-          </div>
-          <h2 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(1.5rem, 3.2vw, 2.25rem)',
-            lineHeight: 1.08, letterSpacing: '-.02em',
-            margin: '0 0 24px',
-          }}>
-            {ch.kicker}{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>{ch.kickerItalic}</em>
-          </h2>
-
-          {ch.type === 'paragraphs' && (
-            <div>
-              {(ch.content as string).split('\n\n').filter(Boolean).map((p, j) => (
-                <p key={j} style={{
-                  fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.8,
-                  color: 'var(--c-text)', margin: '0 0 18px',
-                }}>
-                  {renderInline(p)}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {ch.type === 'callout' && (
-            <div style={{
-              padding: '22px 26px',
-              background: 'var(--c-bg)',
-              border: '1px solid var(--c-border-strong)',
-              borderRadius: 16,
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: 10,
-                letterSpacing: '.2em', textTransform: 'uppercase',
-                color: 'var(--c-text-subtle)', marginBottom: 12,
-              }}>
-                El malentendido frecuente
-              </div>
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.5, color: 'var(--c-text)' }}>
-                {ch.content as string}
-              </div>
-            </div>
-          )}
-
-          {ch.type === 'questions' && (
-            <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {(ch.content as string[]).map((q, j) => (
-                <li key={j} style={{
-                  display: 'flex', gap: 16,
-                  padding: '16px 0',
-                  borderTop: j === 0 ? '1px solid var(--c-border)' : 'none',
-                  borderBottom: '1px solid var(--c-border)',
-                }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 11,
-                    color: 'var(--c-text-faint)', minWidth: 24,
-                  }}>
-                    {String(j + 1).padStart(2, '0')}
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: 19, lineHeight: 1.45, color: 'var(--c-text)', flex: 1 }}>
-                    {q}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-
-          {ch.type === 'alarms' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(ch.content as string[]).map((a, j) => (
-                <div key={j} style={{
-                  padding: '16px 18px',
-                  background: 'var(--c-surface)',
-                  border: '1px solid var(--c-border)',
-                  borderRadius: 14,
-                  display: 'flex', gap: 14, alignItems: 'flex-start',
-                }}>
-                  <div style={{
-                    flexShrink: 0, marginTop: 6,
-                    width: 10, height: 10, borderRadius: 999,
-                    background: j === 0 ? '#c43b3b' : 'var(--c-brand-teal)',
-                  }} />
-                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, lineHeight: 1.5, color: 'var(--c-text)' }}>
-                    {a}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      ))}
-
-      {/* Nota final */}
-      <section style={{ marginTop: 80, paddingTop: 48, borderTop: '1px solid var(--c-border)' }}>
-        <p style={{
-          fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-          fontSize: 22, lineHeight: 1.5,
-          color: 'var(--c-text-muted)',
-          textAlign: 'center', maxWidth: '36ch', margin: '0 auto 48px',
-        }}>
-          "{resultado.nota_final}"
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <ScribbleBrain size={64} />
-        </div>
-      </section>
-
-      {/* Disclaimer + reset */}
-      <div style={{ marginTop: 48, textAlign: 'center' }}>
-        <p style={{
-          fontFamily: 'var(--font-mono)', fontSize: 10,
-          textTransform: 'uppercase', letterSpacing: '.18em',
-          color: 'var(--c-text-faint)', marginBottom: 24,
-        }}>
-          Aliis no sustituye a tu neurólogo · Basado en evidencia · Cerebros Esponjosos
-        </p>
-        <ButtonGhost onClick={onReset}>← Nueva consulta</ButtonGhost>
-      </div>
-    </article>
-  )
-}
-
-// ─── What Aliis does (landing section) ───────────────────────
-
-function WhatAliisDoes() {
-  const items = [
-    { n: '01', t: 'Traduce', i: 'lo que te dijeron', d: 'Del lenguaje médico al tuyo. Sin inflar, sin asustar. Pensado para que lo lea un familiar que nunca abrió un libro de medicina.' },
-    { n: '02', t: 'Cita sus fuentes,', i: 'siempre', d: 'Cada afirmación lleva su referencia desplegable. PubMed, DOI, guías clínicas oficiales. Si no hay evidencia, Aliis te lo dice.' },
-    { n: '03', t: 'Prepara tu próxima', i: 'consulta', d: 'Cinco preguntas que importan, escritas para que las copies tal cual. Aliis estudia tu diagnóstico y sugiere qué contarle al neurólogo.' },
-    { n: '04', t: 'Te avisa', i: 'cuando algo no cuadra', d: 'Señales de alarma sin alarmismo. Cuándo vuelves a urgencias, cuándo llamas, cuándo respiras y esperas a la cita.' },
-    { n: '05', t: 'Aprende', i: 'contigo', d: 'Guarda tus diagnósticos, cruza síntomas, recuerda fármacos. Cada pregunta nueva llega con el contexto de todas las anteriores.' },
+function HowItWorks() {
+  const steps = [
+    { n: 'Le cuentas', t: 'lo que te dijeron', d: 'Texto, foto de la receta, o audio. Aliis extrae el diagnóstico y los fármacos.' },
+    { n: 'Aliis responde', t: 'con referencias', d: 'Explicación clara, con cada afirmación citada. Desplegable para ver la fuente cuando quieras comprobar.' },
+    { n: 'Vuelves cuando', t: 'te surjan dudas', d: 'Aliis recuerda tu caso. Cada nueva pregunta llega con tu contexto médico completo.' },
   ]
   return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '100px 24px' }}>
-      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
-          <Eyebrow style={{ marginBottom: 18 }}>· Qué hace Aliis ·</Eyebrow>
-          <h2 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(2rem, 4.4vw, 3.25rem)',
-            lineHeight: 1.05, letterSpacing: '-.02em', margin: 0,
-          }}>
-            Un asistente.{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>No un buscador de síntomas a las 2am.</em>
-          </h2>
-        </div>
-        <div style={{ borderTop: '1px solid var(--c-border)' }}>
-          {items.map((it, i) => (
-            <article key={i} style={{
-              padding: '32px 0',
-              borderBottom: '1px solid var(--c-border)',
-              display: 'grid',
-              gridTemplateColumns: '3rem 1fr 1fr',
-              gap: '0 48px',
-              alignItems: 'start',
-            }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', paddingTop: 4 }}>{it.n}</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, lineHeight: 1.15, letterSpacing: '-.015em', margin: 0 }}>
-                {it.t}{' '}<em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+      <div style={{ maxWidth: '60rem', margin: '0 auto', textAlign: 'center' }}>
+        <Eyebrow centered style={{ marginBottom: 22 }}>· Cómo funciona ·</Eyebrow>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,4.4vw,3.25rem)', lineHeight: 1.08, letterSpacing: '-.02em', margin: '0 0 72px' }}>
+          Tres pasos.{' '}
+          <em style={{ color: 'var(--c-text-faint)' }}>Ninguno te pide matricularte en medicina.</em>
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 40, textAlign: 'left' }}>
+          {steps.map((s, i) => (
+            <div key={i}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-brand-teal-deep)', marginBottom: 16 }}>0{i + 1}</div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 12px' }}>
+                {s.n} <em style={{ color: 'var(--c-text-faint)' }}>{s.t}</em>
               </h3>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
-            </article>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{s.d}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -590,57 +181,28 @@ function WhatAliisDoes() {
 
 function TrustSection() {
   const pillars = [
-    {
-      eyebrow: 'Evidencia',
-      title: 'Basado en evidencia científica',
-      body: 'Cada explicación de Aliis sigue el rigor de Cerebros Esponjosos — la misma voz, la misma obsesión por explicar bien lo difícil, con la ciencia detrás.',
-      stat: '312k', statLabel: 'siguen @cerebros.esponjosos',
-    },
-    {
-      eyebrow: 'Límite',
-      title: 'No reemplaza a tu médico',
-      body: 'Disclaimer visible en cada pantalla. Aliis es preparación y acompañamiento, no diagnóstico. En cada respuesta aparece qué debes preguntarle a tu neurólogo.',
-      stat: '100%', statLabel: 'respuestas con disclaimer',
-    },
-    {
-      eyebrow: 'Origen',
-      title: 'Construido por Cerebros Esponjosos',
-      body: 'El proyecto de divulgación en neurología creado por médicos residentes. Aliis es su forma de llegar a tu consulta.',
-      stat: '2', statLabel: 'médicos residentes detrás',
-    },
+    { eyebrow: 'Evidencia', title: 'Basado en evidencia científica', body: 'Cada afirmación de Aliis viene con su referencia desplegable — PubMed, DOI, guías clínicas oficiales. Si no hay evidencia que soporte una respuesta, Aliis lo dice.', stat: '14,800', statLabel: 'referencias indexadas' },
+    { eyebrow: 'Límite', title: 'No reemplaza a tu médico', body: 'Disclaimer visible en cada pantalla. Aliis es preparación y acompañamiento, no diagnóstico. En cada respuesta aparece qué debes preguntarle a tu neurólogo.', stat: '100%', statLabel: 'respuestas con disclaimer' },
+    { eyebrow: 'Origen', title: 'Construido por Cerebros Esponjosos', body: 'El proyecto de divulgación en neurología que ya sigues en redes. La misma voz, la misma obsesión por explicar bien lo difícil. Aliis es su forma de llegar a tu consulta.', stat: '312k', statLabel: 'siguen @cerebros.esponjosos' },
   ]
   return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '100px 24px', background: 'var(--c-surface)' }}>
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64, maxWidth: '44rem', marginLeft: 'auto', marginRight: 'auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: '44rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <Eyebrow centered style={{ marginBottom: 18 }}>· Por qué confiar ·</Eyebrow>
-          <h2 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 'clamp(2rem, 4.4vw, 3.25rem)',
-            lineHeight: 1.04, letterSpacing: '-.02em', margin: 0,
-          }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
             Una IA médica merece{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>más escrutinio, no menos.</em>
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
           {pillars.map((p, i) => (
-            <article key={i} style={{
-              padding: '36px 32px 40px',
-              background: 'var(--c-bg)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 20,
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em',
-                textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 20,
-              }}>
-                · {p.eyebrow} ·
-              </div>
+            <article key={i} style={{ padding: '36px 32px 40px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 20 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 20 }}>· {p.eyebrow} ·</div>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 14px' }}>{p.title}</h3>
               <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: '0 0 28px' }}>{p.body}</p>
               <div style={{ paddingTop: 20, borderTop: '1px solid var(--c-border)' }}>
-                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 32, letterSpacing: '-.02em', lineHeight: 1, color: 'var(--c-text)' }}>{p.stat}</div>
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 32, letterSpacing: '-.02em', lineHeight: 1 }}>{p.stat}</div>
                 <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-faint)', marginTop: 4 }}>{p.statLabel}</div>
               </div>
             </article>
@@ -651,97 +213,225 @@ function TrustSection() {
   )
 }
 
+// ─── Live example ─────────────────────────────────────────────
+
+function LiveExample() {
+  return (
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+      <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
+        <div style={{ marginBottom: 56, maxWidth: '42rem' }}>
+          <Eyebrow style={{ marginBottom: 18 }}>· Así responde Aliis ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,4vw,3rem)', lineHeight: 1.08, letterSpacing: '-.02em', margin: 0 }}>
+            Una pregunta real.{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>Con la fuente abierta.</em>
+          </h2>
+        </div>
+        <div style={{ background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 20, overflow: 'hidden' }}>
+          {/* User question */}
+          <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--c-border)', display: 'flex', gap: 16 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 999, background: 'var(--c-border-strong)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c-text-muted)' }}>TÚ</div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-text-subtle)', marginBottom: 4 }}>María · hace 2 minutos</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, lineHeight: 1.55 }}>
+                Me dieron sumatriptán 50mg. ¿Cuándo funciona mejor — al empezar el aura, o ya con dolor?
+              </div>
+            </div>
+          </div>
+          {/* Aliis answer */}
+          <div style={{ padding: '24px 32px', display: 'flex', gap: 16 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 999, background: 'var(--c-text)', color: 'var(--c-bg)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.1em' }}>◐</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 6 }}>Aliis · basado en 3 fuentes</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, lineHeight: 1.65, marginBottom: 18 }}>
+                Sumatriptán funciona mejor <em>al inicio del dolor, no durante el aura</em>.
+                <sup style={{ color: 'var(--c-brand-teal-deep)', fontSize: 12, marginLeft: 2 }}>[1]</sup>{' '}
+                Tomarlo antes —en fase de aura— no aumenta la eficacia y puede retrasar tu siguiente dosis si el dolor llega más tarde.
+                <sup style={{ color: 'var(--c-brand-teal-deep)', fontSize: 12, marginLeft: 2 }}>[2]</sup>
+              </div>
+              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-brand-teal-deep)', letterSpacing: '.15em' }}>[1]</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500 }}>Bates D et al, Neurology (1994)</span>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--c-text-subtle)', letterSpacing: '.12em' }}>DOI 10.1212/WNL.44.9.1587</span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-muted)', lineHeight: 1.55, paddingLeft: 12, borderLeft: '2px solid var(--c-border)' }}>
+                  "Sumatriptan administered during the aura phase was not significantly more effective than placebo. Administration at headache onset showed 70% response at 2h."
+                </div>
+              </div>
+              <div style={{ background: 'var(--c-surface)', border: '1px dashed var(--c-border)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', color: 'var(--c-text-faint)' }}>[2] Olesen J, Cephalalgia (2004) · ver referencia →</span>
+                <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-faint)' }}>Disclaimer: consulta siempre la pauta de tu neurólogo.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Founders ─────────────────────────────────────────────────
+
+function Founders() {
+  return (
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
+      <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: '.8fr 1.2fr', gap: 60, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', background: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
+            <Image src="/assets/oscar.png" alt="Oscar" width={300} height={375} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
+          <div style={{ aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', background: 'var(--c-surface)', border: '1px solid var(--c-border)', marginTop: 32 }}>
+            <Image src="/assets/stephanie.png" alt="Stephanie" width={300} height={375} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
+        </div>
+        <div>
+          <Eyebrow style={{ marginBottom: 20 }}>· Detrás del proyecto ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,4vw,3rem)', lineHeight: 1.08, letterSpacing: '-.02em', margin: '0 0 24px' }}>
+            Por los mismos que llevas tiempo leyendo{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>en Cerebros Esponjosos.</em>
+          </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.8, color: 'var(--c-text-muted)', margin: '0 0 20px' }}>
+            Oscar y Stephanie llevan años en neurología — y años explicando lo mismo en consulta. Construyeron Aliis para escalar lo que ya hacen en redes: traducir el lenguaje médico sin perder el rigor.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 32, paddingTop: 20, borderTop: '1px solid var(--c-border)' }}>
+            <Capsule tone="teal">Un producto de Cerebros Esponjosos</Capsule>
+            <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-faint)' }}>@cerebros.esponjosos</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Pricing inline ───────────────────────────────────────────
+
+function PricingSection({ onCTA }: { onCTA: () => void }) {
+  const [currency, setCurrency] = useState<'EUR' | 'USD' | 'MXN'>('EUR')
+  const t = PRICING_TIERS
+
+  return (
+    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+      <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <Eyebrow centered style={{ marginBottom: 22 }}>· Precios · transparentes ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.5rem,5.5vw,4rem)', lineHeight: 1, letterSpacing: '-.03em', margin: '0 0 16px' }}>
+            Menos que un café <em style={{ color: 'var(--c-text-faint)' }}>al mes.</em>
+          </h2>
+          <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 20, lineHeight: 1.45, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 auto' }}>
+            "No queremos que pienses el precio. Queremos que lo pagues y te olvides."
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
+          <div style={{ display: 'flex', gap: 2, padding: 3, background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 999 }}>
+            {(['EUR', 'USD', 'MXN'] as const).map((c) => (
+              <button key={c} onClick={() => setCurrency(c)}
+                style={{
+                  background: currency === c ? 'var(--c-invert)' : 'transparent',
+                  color: currency === c ? 'var(--c-invert-fg)' : 'var(--c-text-muted)',
+                  border: 'none', padding: '7px 16px', borderRadius: 999,
+                  fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', cursor: 'pointer',
+                }}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, marginBottom: 56 }}>
+          {([t.gratis, t.pro] as const).map((tier) => (
+            <article key={tier.name}
+              style={{
+                position: 'relative', padding: '36px 36px 40px',
+                background: tier.highlight ? 'var(--c-bg)' : 'transparent',
+                border: `1px solid ${tier.highlight ? 'var(--c-text)' : 'var(--c-border)'}`,
+                borderRadius: 24, display: 'flex', flexDirection: 'column',
+              }}>
+              {tier.highlight && (
+                <div style={{ position: 'absolute', top: -12, left: 32, padding: '4px 12px', background: 'var(--c-text)', color: 'var(--c-bg)', borderRadius: 999, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase' }}>
+                  Nuestra recomendación
+                </div>
+              )}
+              <div style={{ marginBottom: 20 }}>
+                <Capsule tone={tier.highlight ? 'teal' : 'ghost'}>
+                  {tier.highlight ? 'Referencias verificables' : 'Basado en evidencia'}
+                </Capsule>
+              </div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, letterSpacing: '-.02em', margin: '0 0 8px', lineHeight: 1.05 }}>{tier.name}</h3>
+              <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--c-text-muted)', margin: '0 0 24px' }}>{tier.pitch}</p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontFamily: 'var(--font-serif)', fontSize: 52, letterSpacing: '-.03em', lineHeight: 1 }}>{tier.prices[currency]}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)' }}>{tier.cadence}</span>
+              </div>
+              <div style={{ margin: '24px 0', height: 1, background: 'var(--c-border)' }} />
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+                {tier.features.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', opacity: f.included ? 1 : 0.4 }}>
+                    <span style={{ flexShrink: 0, marginTop: 4, width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {f.included
+                        ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--c-brand-teal-deep)" strokeWidth="1.8" strokeLinecap="round" aria-hidden><path d="M3 7.5L6 10.5 11.5 4.5" /></svg>
+                        : <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden><path d="M2 2l6 6M8 2l-6 6" /></svg>
+                      }
+                    </span>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.4 }}>{f.text}</div>
+                      {f.sub && <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 12, color: 'var(--c-text-faint)', marginTop: 2 }}>{f.sub}</div>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <button onClick={onCTA}
+                style={{
+                  padding: '13px 20px', borderRadius: 12,
+                  background: tier.highlight ? 'var(--c-invert)' : 'transparent',
+                  color: tier.highlight ? 'var(--c-invert-fg)' : 'var(--c-text)',
+                  border: `1px solid ${tier.highlight ? 'var(--c-invert)' : 'var(--c-border)'}`,
+                  fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                {tier.cta}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </button>
+            </article>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', paddingTop: 32, borderTop: '1px solid var(--c-border)' }}>
+          {[
+            { k: 'Cancelas cuando quieras', v: 'un click. Sin fricción.' },
+            { k: '14 días a prueba', v: 'lo pagado vuelve si no convence.' },
+            { k: 'Sin anuncios, nunca', v: 'tu diagnóstico no se vende.' },
+          ].map((item, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-subtle)', marginBottom: 4 }}>{item.k}</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-muted)' }}>{item.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────
 
-type AppState = 'landing' | 'form' | 'loading' | 'result'
-
 export default function Home() {
-  const [appState, setAppState] = useState<AppState>('landing')
-  const [diagnostico, setDiagnostico] = useState('')
-  const [contexto, setContexto] = useState('')
-  const [resultado, setResultado] = useState<DiagnosticoResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const formRef = useRef<HTMLDivElement>(null)
-  const resultRef = useRef<HTMLDivElement>(null)
-
-  function handleReset() {
-    setAppState('landing')
-    setResultado(null)
-    setError(null)
-    setDiagnostico('')
-    setContexto('')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  function handleStartFromHero() {
-    setAppState('form')
-    setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 100)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!diagnostico.trim()) return
-
-    setAppState('loading')
-    setError(null)
-
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-      const res = await fetch(`${API_URL}/diagnostico`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ diagnostico, contexto }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Ocurrió un error inesperado')
-        setAppState('form')
-        return
-      }
-      setResultado(data)
-      setAppState('result')
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-    } catch {
-      setError('No se pudo conectar. Verifica tu conexión e intenta de nuevo.')
-      setAppState('form')
-    }
-  }
+  const [showLogin, setShowLogin] = useState(false)
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       <AppNav />
-
-      {/* Landing sections — always visible unless result */}
-      {appState !== 'result' && (
-        <>
-          <Hero onStart={handleStartFromHero} />
-          <div ref={formRef}>
-            <Formulario
-              diagnostico={diagnostico}
-              setDiagnostico={setDiagnostico}
-              contexto={contexto}
-              setContexto={setContexto}
-              loading={appState === 'loading'}
-              error={error}
-              onSubmit={handleSubmit}
-            />
-          </div>
-          {appState === 'loading' && <LoadingState />}
-          <WhatAliisDoes />
-          <TrustSection />
-          <Footer />
-        </>
-      )}
-
-      {/* Result */}
-      {appState === 'result' && resultado && (
-        <div ref={resultRef}>
-          <PackResult resultado={resultado} diagnostico={diagnostico} onReset={handleReset} />
-          <Footer />
-        </div>
-      )}
+      <Hero onCTA={() => setShowLogin(true)} />
+      <WhatAliisDoes />
+      <HowItWorks />
+      <TrustSection />
+      <LiveExample />
+      <Founders />
+      <PricingSection onCTA={() => setShowLogin(true)} />
+      <Footer />
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   )
 }
