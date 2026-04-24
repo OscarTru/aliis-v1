@@ -1,126 +1,21 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import type { DiagnosticoResponse } from './api/diagnostico/route'
-import Image from 'next/image'
+import Link from 'next/link'
+import { AppNav } from '../components/AppNav'
+import { Footer } from '../components/Footer'
+import { Eyebrow } from '../components/ui/Eyebrow'
+import { Capsule } from '../components/ui/Capsule'
+import { ButtonPrimary, ButtonGhost } from '../components/ui/Button'
+import { Glow } from '../components/ui/Glow'
+import { ScribbleBrain } from '../components/ui/ScribbleBrain'
+import type { DiagnosticoResponse } from '../lib/types'
 
 // ─── Design tokens (inline styles follow tokens.css) ──────────
 
 const EJEMPLOS = ['Migraña con aura', 'Vértigo posicional', 'Epilepsia focal', 'Temblor esencial', 'Insomnio crónico']
 
 // ─── Primitives ───────────────────────────────────────────────
-
-function Eyebrow({ children, centered = false, style = {} }: { children: React.ReactNode; centered?: boolean; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      fontFamily: 'var(--font-mono)',
-      fontSize: 11,
-      textTransform: 'uppercase',
-      letterSpacing: '.22em',
-      color: 'var(--c-text-subtle)',
-      textAlign: centered ? 'center' : 'left',
-      ...style,
-    }}>
-      {children}
-    </div>
-  )
-}
-
-function Capsule({ children, tone = 'default' }: { children: React.ReactNode; tone?: 'default' | 'teal' | 'ghost' }) {
-  const tones = {
-    default: { bg: 'var(--c-surface)', fg: 'var(--c-text-muted)', bd: 'var(--c-border)' },
-    teal: { bg: 'rgba(31,138,155,.08)', fg: 'var(--c-brand-teal-deep)', bd: 'rgba(31,138,155,.22)' },
-    ghost: { bg: 'transparent', fg: 'var(--c-text-subtle)', bd: 'var(--c-border)' },
-  }
-  const t = tones[tone]
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      padding: '6px 12px', borderRadius: 999,
-      background: t.bg, color: t.fg, border: `1px solid ${t.bd}`,
-      fontFamily: 'var(--font-mono)', fontSize: 10,
-      textTransform: 'uppercase', letterSpacing: '.18em',
-    }}>
-      {children}
-    </span>
-  )
-}
-
-function ButtonPrimary({ children, onClick, size = 'md', icon }: {
-  children: React.ReactNode; onClick?: () => void; size?: 'sm' | 'md' | 'lg'; icon?: 'arrow'
-}) {
-  const pad = { sm: '8px 16px', md: '12px 22px', lg: '14px 28px' }[size]
-  const fs = { sm: 13, md: 14, lg: 15 }[size]
-  return (
-    <button onClick={onClick} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      padding: pad, background: 'var(--c-invert)', color: 'var(--c-invert-fg)',
-      border: '1px solid var(--c-invert)', borderRadius: 999,
-      fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: fs,
-      cursor: 'pointer', transition: 'opacity .2s',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.opacity = '.85')}
-      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-    >
-      {children}
-      {icon === 'arrow' && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
-      )}
-    </button>
-  )
-}
-
-function ButtonGhost({ children, onClick, size = 'md' }: {
-  children: React.ReactNode; onClick?: () => void; size?: 'sm' | 'md' | 'lg'
-}) {
-  const pad = { sm: '8px 16px', md: '12px 22px', lg: '14px 28px' }[size]
-  const fs = { sm: 13, md: 14, lg: 15 }[size]
-  return (
-    <button onClick={onClick} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      padding: pad, background: 'transparent', color: 'var(--c-text)',
-      border: '1px solid var(--c-border)', borderRadius: 999,
-      fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: fs,
-      cursor: 'pointer', transition: 'border-color .2s',
-    }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--c-border-strong)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
-    >
-      {children}
-    </button>
-  )
-}
-
-function Glow() {
-  return (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-      <div style={{
-        width: '70%', aspectRatio: '1/1', borderRadius: '50%',
-        background: 'radial-gradient(circle,rgba(31,138,155,0.06),transparent 62%)',
-        animation: 'ce-breathe 8s ease-in-out infinite',
-      }} />
-    </div>
-  )
-}
-
-function ScribbleBrain({ size = 90 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 120 120" aria-hidden style={{ display: 'block' }}>
-      <g stroke="var(--c-brand-scribble)" fill="none" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M28,60 C18,50 18,32 34,26 C40,16 58,14 66,24 C78,18 94,28 92,42 C100,50 98,66 86,72 C86,86 70,94 58,86 C46,94 30,86 30,74 C22,70 22,62 28,60 Z" />
-        <path d="M40,42 C48,38 56,44 60,50" opacity=".7" />
-        <path d="M66,56 C74,54 80,60 78,66" opacity=".7" />
-        <path d="M46,66 C52,70 58,68 62,72" opacity=".6" />
-        <path d="M54,30 C58,36 56,44 62,48" opacity=".5" />
-        <circle cx="58" cy="58" r="1.8" fill="var(--c-brand-scribble)" stroke="none" opacity=".7" />
-        <circle cx="72" cy="48" r="1.2" fill="var(--c-brand-scribble)" stroke="none" opacity=".6" />
-        <circle cx="42" cy="56" r="1" fill="var(--c-brand-scribble)" stroke="none" opacity=".5" />
-      </g>
-    </svg>
-  )
-}
 
 function AINote() {
   return (
@@ -137,44 +32,6 @@ function AINote() {
         Cada explicación sigue el estilo de Cerebros Esponjosos. Aliis no reemplaza a tu médico — lo complementa.
       </div>
     </div>
-  )
-}
-
-// ─── Nav ──────────────────────────────────────────────────────
-
-function AppNav({ onReset }: { onReset: () => void }) {
-  return (
-    <header style={{
-      position: 'sticky', top: 0, zIndex: 40,
-      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-      background: 'color-mix(in srgb, var(--c-bg) 78%, transparent)',
-      borderBottom: '1px solid var(--c-border)',
-    }}>
-      <div style={{
-        maxWidth: '72rem', margin: '0 auto',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 24px', gap: 24,
-      }}>
-        <button onClick={onReset} style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-        }}>
-          <Image src="/assets/aliis-logo.png" alt="Aliis" width={30} height={30} style={{ objectFit: 'contain' }} />
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 19, letterSpacing: '-.02em', color: 'var(--c-text)' }}>
-            Aliis
-          </span>
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{
-            fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em',
-            textTransform: 'uppercase', color: 'var(--c-text-faint)',
-          }}>
-            Cerebros Esponjosos
-          </span>
-          <Capsule>Beta</Capsule>
-        </div>
-      </div>
-    </header>
   )
 }
 
@@ -211,7 +68,7 @@ function Hero({ onStart }: { onStart: () => void }) {
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
           <ButtonPrimary onClick={onStart} icon="arrow" size="lg">Pregúntale a Aliis</ButtonPrimary>
-          <ButtonGhost size="lg">Cómo funciona</ButtonGhost>
+          <ButtonGhost size="lg" href="/dashboard">Ver un ejemplo</ButtonGhost>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 56 }}>
           <Capsule tone="teal">✓ Basado en evidencia</Capsule>
@@ -687,9 +544,10 @@ function PackResult({ resultado, diagnostico, onReset }: {
 function WhatAliisDoes() {
   const items = [
     { n: '01', t: 'Traduce', i: 'lo que te dijeron', d: 'Del lenguaje médico al tuyo. Sin inflar, sin asustar. Pensado para que lo lea un familiar que nunca abrió un libro de medicina.' },
-    { n: '02', t: 'Cita sus fuentes,', i: 'siempre', d: 'Cada explicación sigue el estilo Cerebros Esponjosos — conversacional con evidencia real detrás. Si no hay evidencia, Aliis te lo dice.' },
-    { n: '03', t: 'Prepara tu próxima', i: 'consulta', d: 'Diez preguntas que importan, escritas para que las copies tal cual. Aliis estudia tu diagnóstico y sugiere qué contarle al neurólogo.' },
+    { n: '02', t: 'Cita sus fuentes,', i: 'siempre', d: 'Cada afirmación lleva su referencia desplegable. PubMed, DOI, guías clínicas oficiales. Si no hay evidencia, Aliis te lo dice.' },
+    { n: '03', t: 'Prepara tu próxima', i: 'consulta', d: 'Cinco preguntas que importan, escritas para que las copies tal cual. Aliis estudia tu diagnóstico y sugiere qué contarle al neurólogo.' },
     { n: '04', t: 'Te avisa', i: 'cuando algo no cuadra', d: 'Señales de alarma sin alarmismo. Cuándo vuelves a urgencias, cuándo llamas, cuándo respiras y esperas a la cita.' },
+    { n: '05', t: 'Aprende', i: 'contigo', d: 'Guarda tus diagnósticos, cruza síntomas, recuerda fármacos. Cada pregunta nueva llega con el contexto de todas las anteriores.' },
   ]
   return (
     <section style={{ borderTop: '1px solid var(--c-border)', padding: '100px 24px' }}>
@@ -793,50 +651,6 @@ function TrustSection() {
   )
 }
 
-// ─── Footer ───────────────────────────────────────────────────
-
-function Footer() {
-  return (
-    <footer style={{ borderTop: '1px solid var(--c-border)', padding: '72px 24px 36px' }}>
-      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32, marginBottom: 48 }}>
-          <div style={{ maxWidth: '28rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <Image src="/assets/aliis-logo.png" alt="Aliis" width={40} height={40} style={{ objectFit: 'contain' }} />
-              <span style={{ fontFamily: 'var(--font-serif)', fontSize: 24, letterSpacing: '-.02em', color: 'var(--c-text)' }}>Aliis</span>
-            </div>
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, color: 'var(--c-text-faint)', margin: 0, lineHeight: 1.55 }}>
-              Tu AI Assistant de salud cerebral. Un producto de Cerebros Esponjosos.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 56, fontFamily: 'var(--font-sans)', fontSize: 14 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 4 }}>Producto</div>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Cómo funciona</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Ejemplo real</a>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 4 }}>Cerebros Esponjosos</div>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Instagram</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Newsletter</a>
-            </div>
-          </div>
-        </div>
-        <div style={{
-          paddingTop: 24, borderTop: '1px solid var(--c-border)',
-          display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
-          fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase',
-          letterSpacing: '.2em', color: 'var(--c-text-faint)',
-        }}>
-          <span>© 2026 · Cerebros Esponjosos</span>
-          <span>Aliis no sustituye a tu neurólogo</span>
-          <span>Basado en evidencia</span>
-        </div>
-      </div>
-    </footer>
-  )
-}
-
 // ─── Page root ────────────────────────────────────────────────
 
 type AppState = 'landing' | 'form' | 'loading' | 'result'
@@ -874,7 +688,8 @@ export default function Home() {
     setError(null)
 
     try {
-      const res = await fetch('/api/diagnostico', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const res = await fetch(`${API_URL}/diagnostico`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ diagnostico, contexto }),
@@ -896,7 +711,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      <AppNav onReset={handleReset} />
+      <AppNav />
 
       {/* Landing sections — always visible unless result */}
       {appState !== 'result' && (
