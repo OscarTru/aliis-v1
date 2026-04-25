@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { AppNav } from '../../components/AppNav'
 import { Footer } from '../../components/Footer'
 import { Eyebrow } from '../../components/ui/Eyebrow'
 import { Capsule } from '../../components/ui/Capsule'
 import { LoginModal } from '../../components/LoginModal'
 import { PRICING_TIERS } from '../../lib/mock-data'
+import { createCheckoutSession } from '../actions/checkout'
 
 type Currency = 'EUR' | 'USD' | 'MXN'
 
@@ -43,6 +44,7 @@ const FAQ = [
 export default function PreciosPage() {
   const [currency, setCurrency] = useState<Currency>('EUR')
   const [showLogin, setShowLogin] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
@@ -170,7 +172,14 @@ export default function PreciosPage() {
               </ul>
 
               <button
-                onClick={() => setShowLogin(true)}
+                onClick={() => {
+                  if (tier.highlight) {
+                    startTransition(() => createCheckoutSession(currency.toLowerCase(), 'monthly'))
+                  } else {
+                    setShowLogin(true)
+                  }
+                }}
+                disabled={tier.highlight && isPending}
                 style={{
                   padding: '13px 20px',
                   borderRadius: 12,
@@ -180,14 +189,15 @@ export default function PreciosPage() {
                   fontFamily: 'var(--font-sans)',
                   fontSize: 15,
                   fontWeight: 500,
-                  cursor: 'pointer',
+                  cursor: tier.highlight && isPending ? 'default' : 'pointer',
+                  opacity: tier.highlight && isPending ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
                 }}
               >
-                {tier.cta}
+                {tier.highlight && isPending ? 'Redirigiendo…' : tier.cta}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
