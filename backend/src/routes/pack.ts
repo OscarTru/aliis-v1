@@ -14,9 +14,9 @@ function isValidRequest(body: unknown): body is GeneratePackRequest {
   if (!body || typeof body !== 'object') return false
   const b = body as Record<string, unknown>
   return (
-    typeof b.diagnostico === 'string' &&
-    typeof b.userId === 'string' &&
-    typeof b.userPlan === 'string'
+    typeof b.diagnostico === 'string' && (b.diagnostico as string).trim().length > 0 &&
+    typeof b.userId === 'string' && (b.userId as string).trim().length > 0 &&
+    typeof b.userPlan === 'string' && (b.userPlan as string).trim().length > 0
   )
 }
 
@@ -41,12 +41,16 @@ packRouter.post('/generate', async (req, res) => {
   // Free tier limit: 1 pack per 7 days
   if (userPlan === 'free') {
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const { count } = await supabase
+    const { count, error: countError } = await supabase
       .from('packs')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('created_at', since)
 
+    if (countError) {
+      res.status(500).json({ error: 'Error comprobando límite de uso.' })
+      return
+    }
     if ((count ?? 0) >= 1) {
       res.json({ limitReached: true })
       return
