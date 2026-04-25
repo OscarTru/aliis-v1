@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { AppShell } from '@/components/AppShell'
 import { PackList } from '@/components/PackList'
+import { cn } from '@/lib/utils'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
 
@@ -60,36 +61,30 @@ export default async function HistorialPage({
 
   return (
     <AppShell>
-      <main style={{ maxWidth: 680, margin: '0 auto', padding: '40px 32px 80px' }}>
+      <main className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
 
         {/* Header */}
-        <div style={{ marginBottom: 36 }}>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 8 }}>
+        <div className="mb-9">
+          <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-2">
             {totalPacks} {totalPacks === 1 ? 'explicación' : 'explicaciones'}
           </p>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(24px, 3.5vw, 36px)', letterSpacing: '-.025em', lineHeight: 1.1, marginBottom: 0, whiteSpace: 'nowrap' }}>
-            Mis <em style={{ color: 'var(--c-brand-teal)' }}>explicaciones</em>
+          <h1 className="font-serif text-[clamp(24px,3.5vw,36px)] tracking-tight leading-tight mb-0 whitespace-nowrap">
+            Mis <em className="text-primary">explicaciones</em>
           </h1>
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 28, flexWrap: 'wrap' }}>
+        <div className="flex gap-1.5 mb-7 flex-wrap">
           {FILTERS.map((f) => (
             <Link
               key={f.key}
               href={`/historial?filter=${f.key}`}
-              style={{
-                padding: '7px 16px',
-                borderRadius: 999,
-                border: `1px solid ${filter === f.key ? 'transparent' : 'var(--c-border)'}`,
-                background: filter === f.key ? '#0F1923' : 'transparent',
-                boxShadow: filter === f.key ? '0 0 0 1px rgba(31,138,155,.3), 0 2px 10px rgba(31,138,155,.12)' : 'none',
-                color: filter === f.key ? '#fff' : 'var(--c-text-muted)',
-                fontFamily: 'var(--font-sans)',
-                fontSize: 13,
-                textDecoration: 'none',
-                transition: 'all .12s',
-              }}
+              className={cn(
+                'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
+                filter === f.key
+                  ? 'border-transparent bg-[#0F1923] text-white shadow-[0_0_0_1px_rgba(31,138,155,.3),0_2px_10px_rgba(31,138,155,.12)]'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              )}
             >
               {f.label}
             </Link>
@@ -98,13 +93,13 @@ export default async function HistorialPage({
 
         {/* Empty state — no packs at all */}
         {packs.length === 0 && (
-          <div style={{ textAlign: 'center', paddingTop: 64 }}>
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--c-text-muted)', marginBottom: 24, lineHeight: 1.5 }}>
+          <div className="text-center pt-16">
+            <p className="font-serif italic text-[17px] text-muted-foreground mb-6 leading-relaxed">
               Todavía no tienes explicaciones.<br />Empieza con tu primer diagnóstico.
             </p>
             <Link
               href="/ingreso"
-              style={{ padding: '12px 28px', borderRadius: 999, background: '#0F1923', boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500 }}
+              className="inline-block px-7 py-3 rounded-full bg-[#0F1923] text-white no-underline font-sans text-sm font-medium shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
             >
               Entender mi diagnóstico
             </Link>
