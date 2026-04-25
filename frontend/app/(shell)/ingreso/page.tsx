@@ -125,7 +125,7 @@ export default function IngresoPage() {
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
                 Paso 1 de 3
               </p>
-              <h1 className="font-serif leading-[1.15] tracking-[-0.025em] mb-2" style={{ fontSize: 'clamp(26px, 5vw, 38px)' }}>
+              <h1 className="font-serif leading-[1.15] tracking-[-0.025em] mb-2 text-[clamp(26px,5vw,38px)]">
                 ¿Qué te dijo tu médico?
               </h1>
               <p className="font-sans text-[15px] text-muted-foreground mb-8 leading-relaxed">
@@ -182,7 +182,7 @@ export default function IngresoPage() {
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
                 Paso 2 de 3
               </p>
-              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2" style={{ fontSize: 'clamp(22px, 4vw, 32px)' }}>
+              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Cuándo te lo diagnosticaron?
               </h2>
               <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
@@ -257,7 +257,7 @@ export default function IngresoPage() {
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
                 Paso 3 de 3
               </p>
-              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2" style={{ fontSize: 'clamp(22px, 4vw, 32px)' }}>
+              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Qué te gustaría entender mejor?
               </h2>
               <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">

@@ -61,7 +61,7 @@ function ChapterCard({
       <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-2.5">
         {chapter.n} · {chapter.readTime}
       </div>
-      <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5" style={{ fontSize: 'clamp(26px, 3.5vw, 38px)' }}>
+      <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5 text-[clamp(26px,3.5vw,38px)]">
         {chapter.kicker} <em className="text-muted-foreground">{chapter.kickerItalic}</em>
       </h2>
       <p className="font-serif italic text-muted-foreground text-[16px] mb-8 leading-[1.55]">
