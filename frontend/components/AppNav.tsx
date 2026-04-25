@@ -33,22 +33,17 @@ export function AppNav() {
 
   return (
     <>
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        background: 'color-mix(in srgb, var(--c-bg) 78%, transparent)',
-        borderBottom: '1px solid var(--c-border)',
-      }}>
-        <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', gap: 24 }}>
-          <Link href={initial ? '/historial' : '/'} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} style={{ objectFit: 'contain' }} />
+      <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-border bg-background/80">
+        <div className="max-w-[72rem] mx-auto flex items-center justify-between px-6 py-3.5 gap-6">
+          <Link href={initial ? '/historial' : '/'} className="flex items-center no-underline">
+            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} className="object-contain" />
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="flex items-center gap-4">
 
             {/* Links de sección — solo en la landing */}
             {isLanding && (
-              <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <nav className="flex items-center gap-6">
                 {[
                   { label: 'Qué hace', id: 'que-hace' },
                   { label: 'Cómo funciona', id: 'como-funciona' },
@@ -57,43 +52,36 @@ export function AppNav() {
                   <button
                     key={id}
                     onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    className="font-sans text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer p-0 transition-colors"
                   >
                     {label}
                   </button>
                 ))}
-                <Link href="/precios" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>Precios</Link>
+                <Link href="/precios" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">Precios</Link>
               </nav>
             )}
 
             {/* Lado derecho — autenticado o no */}
             {initial ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="flex items-center gap-3">
                 {!isLanding && (
-                  <Link href="/ingreso" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
+                  <Link href="/ingreso" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">
                     Nuevo pack
                   </Link>
                 )}
                 {isLanding && (
-                  <Link href="/historial" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
+                  <Link href="/historial" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">
                     Mis explicaciones
                   </Link>
                 )}
-                <Link href="/historial" style={{
-                    width: 32, height: 32, borderRadius: 999,
-                    background: 'var(--c-brand-teal)', color: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-serif)', fontSize: 14, fontWeight: 600,
-                    textDecoration: 'none',
-                  }}
-                >
+                <Link href="/historial" className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-serif text-sm font-semibold no-underline">
                   {initial}
                 </Link>
               </div>
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                style={{ padding: '8px 18px', borderRadius: 999, border: '1px solid var(--c-border)', background: 'transparent', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text)', cursor: 'pointer' }}
+                className="px-4 py-2 rounded-full border border-border bg-transparent font-sans text-sm text-foreground cursor-pointer hover:bg-muted transition-colors"
               >
                 Iniciar sesión
               </button>

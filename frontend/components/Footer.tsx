@@ -2,64 +2,41 @@ import Image from 'next/image'
 
 export function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid var(--c-border)', padding: '72px 24px 36px' }}>
-      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 32,
-            marginBottom: 48,
-          }}
-        >
-          <div style={{ maxWidth: '28rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <Image src="/assets/aliis-original.png" alt="Aliis" width={90} height={36} style={{ objectFit: 'contain' }} />
+    <footer className="border-t border-border py-[72px] px-6 pb-9">
+      <div className="max-w-[72rem] mx-auto">
+        <div className="flex items-end justify-between flex-wrap gap-8 mb-12">
+          <div className="max-w-[28rem]">
+            <div className="flex items-center gap-3 mb-4">
+              <Image src="/assets/aliis-original.png" alt="Aliis" width={90} height={36} className="object-contain" />
             </div>
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, color: 'var(--c-text-faint)', margin: 0, lineHeight: 1.55 }}>
+            <p className="font-serif italic text-sm text-muted-foreground m-0 leading-relaxed">
               Entiende tu diagnóstico. Acompaña tu enfermedad. Un producto de Cerebros Esponjosos.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 56, fontFamily: 'var(--font-sans)', fontSize: 14 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 4 }}>
+          <div className="flex gap-14 font-sans text-sm">
+            <div className="flex flex-col gap-2.5">
+              <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
                 Aliis
               </div>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="/precios">Precios</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#demo">Ver un ejemplo real</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Términos y condiciones</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Política de privacidad</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Cookies</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Disclaimer</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/precios">Precios</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#demo">Ver un ejemplo real</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Términos y condiciones</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Política de privacidad</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Cookies</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Disclaimer</a>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 4 }}>
+            <div className="flex flex-col gap-2.5">
+              <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
                 Cerebros Esponjosos
               </div>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Instagram</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">TikTok</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">YouTube</a>
-              <a style={{ color: 'var(--c-text-muted)', textDecoration: 'none' }} href="#">Newsletter</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Instagram</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">TikTok</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">YouTube</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Newsletter</a>
             </div>
           </div>
         </div>
-        <div
-          style={{
-            paddingTop: 24,
-            borderTop: '1px solid var(--c-border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 12,
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            textTransform: 'uppercase',
-            letterSpacing: '.2em',
-            color: 'var(--c-text-faint)',
-          }}
-        >
+        <div className="pt-6 border-t border-border flex justify-between flex-wrap gap-3 font-mono text-xs tracking-widest uppercase text-muted-foreground">
           <span>© 2026 · Cerebros Esponjosos</span>
           <span>Aliis no diagnostica ni sustituye a tu médico</span>
           <span>Basado en evidencia científica</span>
