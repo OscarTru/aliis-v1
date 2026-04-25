@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      <AppNav user={{ initial: 'M' }} />
+      <AppNav />
 
       <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '60px 24px 100px' }}>
         {/* Header */}

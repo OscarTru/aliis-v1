@@ -41,7 +41,7 @@ export default function PackDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      <AppNav user={{ initial: 'M' }} />
+      <AppNav />
 
       <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '48px 24px 100px', display: 'flex', gap: 48, alignItems: 'flex-start' }}>
 
