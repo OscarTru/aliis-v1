@@ -29,16 +29,20 @@ export default function OnboardingPage() {
 
   async function finish() {
     setSaving(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('profiles').update({
-        name: name || null,
-        who: who || null,
-        onboarding_done: true,
-      }).eq('id', user.id)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({
+          name: name || null,
+          who: who || null,
+          onboarding_done: true,
+        }).eq('id', user.id)
+      }
+      router.push('/ingreso')
+    } finally {
+      setSaving(false)
     }
-    router.push('/ingreso')
   }
 
   return (
