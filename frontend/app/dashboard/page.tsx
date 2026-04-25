@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AppNav } from '../../components/AppNav'
 import { Footer } from '../../components/Footer'
 import { Eyebrow } from '../../components/ui/Eyebrow'
-import { Button } from '../../components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ScribbleBrain } from '../../components/ui/ScribbleBrain'
 import { MOCK_PACKS, TINT_GRADIENTS, type MockPack } from '../../lib/mock-data'
 
