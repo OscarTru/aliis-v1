@@ -18,6 +18,9 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
   const [view, setView] = useState<View>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -66,7 +69,14 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
     }
 
     if (view === 'signup') {
-      const { error: signUpErr } = await supabase.auth.signUp({ email, password })
+      if (!firstName.trim()) { setError('El nombre es obligatorio.'); setLoading(false); return }
+      if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); setLoading(false); return }
+      const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+      const { error: signUpErr } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name: fullName } },
+      })
       setLoading(false)
       if (signUpErr) { setError(err(signUpErr.message)); return }
       setView('verify-email')
@@ -150,6 +160,26 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {view === 'signup' && (
+                <div className="flex gap-2.5">
+                  <Input
+                    type="text"
+                    placeholder="Nombre"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Apellido"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                  />
+                </div>
+              )}
+
               <Input
                 type="email"
                 placeholder="tu@email.com"
@@ -165,6 +195,18 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
                   placeholder="Contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                />
+              )}
+
+              {view === 'signup' && (
+                <Input
+                  type="password"
+                  placeholder="Confirmar contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
                   className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
@@ -206,7 +248,14 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
                 </button>
               ) : (
                 <button
-                  onClick={() => { setView(view === 'login' ? 'signup' : 'login'); setError(null) }}
+                  onClick={() => {
+                    setView(view === 'login' ? 'signup' : 'login')
+                    setError(null)
+                    setPassword('')
+                    setConfirmPassword('')
+                    setFirstName('')
+                    setLastName('')
+                  }}
                   className="font-sans text-[13px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors"
                 >
                   {view === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
