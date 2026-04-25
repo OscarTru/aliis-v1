@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
             </p>
             <Button
               onClick={() => router.push('/historial')}
-              className="px-8 py-3 rounded-xl bg-[#0F1923] text-white font-sans font-medium hover:bg-[#0F1923]/90 shadow-[var(--c-btn-primary-shadow)]"
+              className="px-8 py-3 rounded-xl bg-foreground text-background font-sans font-medium hover:bg-foreground/90 shadow-[var(--c-btn-primary-shadow)]"
             >
               Ir a mis explicaciones
             </Button>
@@ -54,6 +54,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <Input
               type="password"
+              aria-label="Nueva contraseña"
               placeholder="Nueva contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -63,17 +64,18 @@ export default function ResetPasswordPage() {
             />
             <Input
               type="password"
+              aria-label="Confirmar contraseña"
               placeholder="Confirmar contraseña"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               required
               className="h-12 rounded-xl border-[1.5px] focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px] bg-muted font-sans text-[15px]"
             />
-            {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
+            {error && <p role="alert" className="text-destructive font-sans text-[13px] m-0">{error}</p>}
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 mt-1 rounded-xl bg-[#0F1923] text-white font-sans font-medium hover:bg-[#0F1923]/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70"
+              className="h-12 mt-1 rounded-xl bg-foreground text-background font-sans font-medium hover:bg-foreground/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70"
             >
               {loading ? 'Guardando…' : 'Guardar contraseña'}
             </Button>

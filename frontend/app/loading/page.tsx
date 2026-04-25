@@ -54,7 +54,7 @@ function LoadingContent() {
 
       <div className="text-center">
         <Eyebrow>· Destilando ·</Eyebrow>
-        <h1 className="font-serif text-[28px] tracking-[-0.02em] mt-3 min-h-[40px] transition-opacity duration-300">
+        <h1 aria-live="polite" className="font-serif text-[28px] tracking-[-0.02em] mt-3 min-h-[40px] transition-opacity duration-300">
           {STAGES[stageIdx]}
         </h1>
       </div>
@@ -66,10 +66,10 @@ function LoadingContent() {
             className={cn(
               'flex items-center gap-3 font-sans text-[14px]',
               i < stageIdx
-                ? 'text-[color:var(--c-brand-teal)]'
+                ? 'text-primary'
                 : i === stageIdx
                 ? 'text-foreground'
-                : 'text-[color:var(--c-text-faint)]'
+                : 'text-muted-foreground/60'
             )}
           >
             <span className="w-5 text-center shrink-0 inline-flex items-center justify-center">

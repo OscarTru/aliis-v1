@@ -8,6 +8,7 @@ import { UpgradeModal } from '@/components/UpgradeModal'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
 
@@ -144,7 +145,7 @@ export default function IngresoPage() {
                     onClick={() => { setDxInput(text); dxInputRef.current?.focus() }}
                     className="px-4 py-[10px] rounded-[10px] border border-border bg-muted font-sans text-[14px] text-muted-foreground cursor-pointer text-left flex items-center gap-[10px] hover:border-primary/40 transition-colors"
                   >
-                    <span className="text-[color:var(--c-brand-teal)] shrink-0">{icon}</span>
+                    <span className="text-primary shrink-0">{icon}</span>
                     {text}
                   </button>
                 ))}
@@ -153,24 +154,25 @@ export default function IngresoPage() {
               <form onSubmit={handleDxSubmit} className="flex flex-col gap-3">
                 <textarea
                   ref={dxInputRef}
+                  aria-label="Escribe tu diagnóstico"
                   value={dxInput}
                   onChange={(e) => setDxInput(e.target.value)}
                   placeholder="O escribe aquí lo que te dijeron…"
                   rows={3}
                   className="w-full px-4 py-[14px] rounded-[14px] border border-border bg-muted font-sans text-[15px] text-foreground outline-none resize-none leading-[1.5] box-border focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-colors"
                 />
-                <button
+                <Button
                   type="submit"
                   disabled={!dxInput.trim()}
                   className={cn(
-                    'px-4 py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                    'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                     dxInput.trim()
-                      ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                      ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                       : 'bg-border text-muted-foreground cursor-not-allowed'
                   )}
                 >
                   Continuar →
-                </button>
+                </Button>
               </form>
             </div>
           )}
@@ -196,7 +198,7 @@ export default function IngresoPage() {
                     className={cn(
                       'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
                       frecuencia === opt.value
-                        ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                        ? 'border-primary bg-primary/5'
                         : 'border-border bg-muted'
                     )}
                   >
@@ -205,7 +207,7 @@ export default function IngresoPage() {
                       <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
                     </div>
                     {frecuencia === opt.value && (
-                      <div className="w-5 h-5 rounded-full bg-[var(--c-brand-teal)] flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
                       </div>
                     )}
@@ -218,7 +220,7 @@ export default function IngresoPage() {
                   className={cn(
                     'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
                     frecuencia === '__custom'
-                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                      ? 'border-primary bg-primary/5'
                       : 'border-border bg-muted'
                   )}
                 >
@@ -230,23 +232,23 @@ export default function IngresoPage() {
                     value={frecuenciaCustom}
                     onChange={(e) => setFrecuenciaCustom(e.target.value)}
                     placeholder="Cuéntame un poco más…"
-                    className="h-12 rounded-[12px] border-[var(--c-brand-teal)] bg-muted font-sans text-[15px] focus-visible:ring-[var(--c-brand-teal)]/20"
+                    className="h-12 rounded-[12px] border-primary bg-muted font-sans text-[15px] focus-visible:ring-primary/20"
                   />
                 )}
               </div>
 
-              <button
+              <Button
                 onClick={() => { if (frecuenciaFinal()) setStep('dudas') }}
                 disabled={!frecuenciaFinal()}
                 className={cn(
-                  'w-full py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                  'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                   frecuenciaFinal()
-                    ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
                 Continuar →
-              </button>
+              </Button>
             </div>
           )}
 
@@ -271,7 +273,7 @@ export default function IngresoPage() {
                     className={cn(
                       'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
                       dudas === opt.value
-                        ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                        ? 'border-primary bg-primary/5'
                         : 'border-border bg-muted'
                     )}
                   >
@@ -280,7 +282,7 @@ export default function IngresoPage() {
                       <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
                     </div>
                     {dudas === opt.value && (
-                      <div className="w-5 h-5 rounded-full bg-[var(--c-brand-teal)] flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
                       </div>
                     )}
@@ -293,7 +295,7 @@ export default function IngresoPage() {
                   className={cn(
                     'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
                     dudas === '__custom'
-                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                      ? 'border-primary bg-primary/5'
                       : 'border-border bg-muted'
                   )}
                 >
@@ -305,23 +307,23 @@ export default function IngresoPage() {
                     value={dudasCustom}
                     onChange={(e) => setDudasCustom(e.target.value)}
                     placeholder="¿Qué quieres entender?"
-                    className="h-12 rounded-[12px] border-[var(--c-brand-teal)] bg-muted font-sans text-[15px] focus-visible:ring-[var(--c-brand-teal)]/20"
+                    className="h-12 rounded-[12px] border-primary bg-muted font-sans text-[15px] focus-visible:ring-primary/20"
                   />
                 )}
               </div>
 
-              <button
+              <Button
                 onClick={handleGenerate}
                 disabled={!dudasFinal() || loading}
                 className={cn(
-                  'w-full py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                  'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                   dudasFinal()
-                    ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
                 {loading ? 'Preparando tu pack…' : 'Generar mi pack'}
-              </button>
+              </Button>
 
               <button
                 onClick={() => setStep('frecuencia')}
@@ -337,7 +339,7 @@ export default function IngresoPage() {
             <div className="ce-fade">
               {/* Header skeleton */}
               <div className="mb-8">
-                <div className="font-mono text-[10px] tracking-[.18em] uppercase text-[var(--c-brand-teal)] mb-[10px]">
+                <div className="font-mono text-[10px] tracking-[.18em] uppercase text-primary mb-[10px]">
                   · Construyendo tu explicación ·
                 </div>
                 <div className="shimmer h-8 w-[70%] rounded-lg mb-2" />
@@ -360,7 +362,7 @@ export default function IngresoPage() {
                     animationDelay: `${ch.delay}s`,
                   }}
                 >
-                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-[var(--c-brand-teal)] mb-2">
+                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-primary mb-2">
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-3">
@@ -372,7 +374,7 @@ export default function IngresoPage() {
                 </div>
               ))}
 
-              <p className="font-sans text-[13px] text-[color:var(--c-text-faint)] text-center mt-5">
+              <p className="font-sans text-[13px] text-muted-foreground/60 text-center mt-5">
                 Esto toma unos segundos…
               </p>
             </div>

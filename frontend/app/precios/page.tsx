@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { AppShell } from '../../components/AppShell'
-import { Eyebrow } from '../../components/ui/Eyebrow'
-import { Capsule } from '../../components/ui/Capsule'
-import { LoginModal } from '../../components/LoginModal'
-import { PRICING_TIERS } from '../../lib/mock-data'
-import { createCheckoutSession } from '../actions/checkout'
+import { AppShell } from '@/components/AppShell'
+import { Capsule } from '@/components/ui/Capsule'
+import { LoginModal } from '@/components/LoginModal'
+import { PRICING_TIERS } from '@/lib/mock-data'
+import { createCheckoutSession } from '@/app/actions/checkout'
 import { cn } from '@/lib/utils'
 
 type Currency = 'EUR' | 'USD' | 'MXN'
@@ -55,9 +54,9 @@ export default function PreciosPage() {
           <div className="flex justify-center mb-[18px]">
             <Capsule tone="teal">💡 14 días gratis · cancelas cuando quieras</Capsule>
           </div>
-          <h1 className="font-serif leading-[1.05] tracking-[-0.02em] mb-[14px]" style={{ fontSize: 'clamp(2.5rem,5vw,3.5rem)' }}>
+          <h1 className="font-serif text-[clamp(2.5rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] mb-[14px]">
             Entiende tu cerebro{' '}
-            <em className="text-[color:var(--c-text-faint)]">por menos que un café al mes.</em>
+            <em className="text-muted-foreground/60">por menos que un café al mes.</em>
           </h1>
           <p className="font-sans text-[16px] text-muted-foreground max-w-[54ch] mx-auto">
             Gratis funciona para un diagnóstico puntual. Pro es para quien convive con el suyo.
@@ -85,7 +84,7 @@ export default function PreciosPage() {
         </div>
 
         {/* Pricing cards */}
-        <div className="grid gap-6 mb-14" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))' }}>
+        <div className="grid gap-6 mb-14 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
           {([PRICING_TIERS.gratis, PRICING_TIERS.pro] as const).map((tier) => (
             <article
               key={tier.name}
@@ -204,14 +203,14 @@ export default function PreciosPage() {
         </div>
 
         {/* Trust pillars */}
-        <div className="grid gap-6 p-10 bg-muted border border-border rounded-[20px] mb-14" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' }}>
+        <div className="grid gap-6 p-10 bg-muted border border-border rounded-[20px] mb-14 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
           {[
             { eyebrow: 'Evidencia', title: 'Basado en evidencia científica', body: 'Cada afirmación con su referencia. Desplegables para comprobar.' },
             { eyebrow: 'Límite', title: 'No reemplaza a tu médico', body: 'Disclaimer visible siempre. Es preparación, no diagnóstico.' },
             { eyebrow: 'Origen', title: 'Por Cerebros Esponjosos', body: 'La misma voz que ya sigues. La misma obsesión por explicar bien.' },
           ].map((p, i) => (
             <div key={i}>
-              <div className="font-mono text-[10px] tracking-[.22em] uppercase text-[color:var(--c-brand-teal-deep)] mb-[14px]">· {p.eyebrow} ·</div>
+              <div className="font-mono text-[10px] tracking-[.22em] uppercase text-primary/70 mb-[14px]">· {p.eyebrow} ·</div>
               <h4 className="font-serif text-[20px] leading-[1.25] tracking-[-0.01em] mb-[10px] mt-0">{p.title}</h4>
               <p className="font-sans text-[13.5px] leading-[1.65] text-muted-foreground m-0">{p.body}</p>
             </div>
@@ -221,7 +220,7 @@ export default function PreciosPage() {
         {/* FAQ */}
         <div>
           <h3 className="font-serif text-[28px] text-center mb-8">Preguntas frecuentes</h3>
-          <div className="grid gap-7" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))' }}>
+          <div className="grid gap-7 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             {FAQ.map((f, i) => (
               <div key={i}>
                 <div className="font-serif text-[17px] mb-2 leading-[1.35]">{f.q}</div>

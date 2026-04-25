@@ -61,7 +61,7 @@ export default function OnboardingPage() {
               key={s}
               className={cn(
                 'w-8 h-[3px] rounded-full',
-                s <= step ? 'bg-[var(--c-brand-teal)]' : 'bg-border'
+                s <= step ? 'bg-primary' : 'bg-border'
               )}
             />
           ))}
@@ -87,14 +87,14 @@ export default function OnboardingPage() {
             <div className="flex flex-col gap-3 mb-10">
               {PROMISES.map((p, i) => (
                 <div key={i} className="flex items-center gap-3 px-[18px] py-[14px] bg-muted rounded-[12px] text-left">
-                  <span className="text-[color:var(--c-brand-teal)] shrink-0 flex"><Check size={18} /></span>
+                  <span className="text-primary shrink-0 flex"><Check size={18} /></span>
                   <span className="font-sans text-[15px] text-foreground">{p}</span>
                 </div>
               ))}
             </div>
             <Button
               onClick={() => setStep(2)}
-              className="px-10 py-[14px] h-auto rounded-full bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90"
+              className="px-10 py-[14px] h-auto rounded-full bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90"
             >
               Continuar
             </Button>
@@ -111,6 +111,7 @@ export default function OnboardingPage() {
             </p>
             <Input
               type="text"
+              aria-label="Tu nombre"
               placeholder="Tu nombre"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -118,7 +119,7 @@ export default function OnboardingPage() {
             />
             <Button
               onClick={() => setStep(3)}
-              className="w-full h-12 rounded-[12px] bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90"
+              className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90"
             >
               Continuar
             </Button>
@@ -141,8 +142,8 @@ export default function OnboardingPage() {
                   className={cn(
                     'flex-1 px-4 py-5 rounded-[14px] border-2 font-sans text-[15px] font-medium text-foreground cursor-pointer transition-[border-color,background] duration-150',
                     who === opt
-                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.08)]'
-                      : 'border-border bg-muted hover:border-[var(--c-brand-teal)]/40'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-muted hover:border-primary/40'
                   )}
                 >
                   {opt === 'yo' ? 'Para mí' : 'Para un familiar'}
@@ -152,7 +153,7 @@ export default function OnboardingPage() {
             <Button
               onClick={finish}
               disabled={saving}
-              className="w-full h-12 rounded-[12px] bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90 disabled:opacity-70"
+              className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
             >
               {saving ? 'Guardando…' : 'Empezar'}
             </Button>
