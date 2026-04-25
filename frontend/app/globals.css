@@ -4,32 +4,96 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+@layer base {
+  :root {
+    /* shadcn HSL variables — light mode */
+    --background: 60 9% 98%;
+    --foreground: 240 4% 16%;
+    --card: 240 5% 96%;
+    --card-foreground: 240 4% 16%;
+    --popover: 60 9% 98%;
+    --popover-foreground: 240 4% 16%;
+    --primary: 188 67% 36%;
+    --primary-foreground: 210 47% 9%;
+    --secondary: 200 63% 13%;
+    --secondary-foreground: 60 9% 98%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 34%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 4% 16%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 188 67% 36%;
+    --radius: 0.75rem;
 
-  --c-bg: #fafaf9;
-  --c-surface: #f4f4f5;
-  --c-surface-2: rgba(0, 0, 0, 0.04);
-  --c-border: rgba(0, 0, 0, 0.08);
-  --c-border-strong: rgba(0, 0, 0, 0.18);
-  --c-text: #18181b;
-  --c-text-muted: #52525b;
-  --c-text-subtle: #71717a;
-  --c-text-faint: #a1a1aa;
-  --c-invert: #18181b;
-  --c-invert-fg: #ffffff;
+    /* Aliis semantic aliases (for any remaining references) */
+    --c-bg: hsl(var(--background));
+    --c-surface: hsl(var(--muted));
+    --c-surface-2: rgba(0,0,0,0.04);
+    --c-border: hsl(var(--border));
+    --c-border-strong: rgba(0,0,0,0.18);
+    --c-text: hsl(var(--foreground));
+    --c-text-muted: hsl(var(--muted-foreground));
+    --c-text-subtle: #71717a;
+    --c-text-faint: #a1a1aa;
+    --c-brand-teal: hsl(var(--primary));
+    --c-brand-teal-deep: #14606E;
+    --c-brand-teal-light: #8AC9D2;
+    --c-brand-ink: hsl(var(--secondary));
+    --c-brand-scribble: rgba(30,40,55,0.35);
+    --c-btn-primary: hsl(var(--primary-foreground));
+    --c-btn-primary-shadow: 0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15);
+    --c-btn-secondary-border: rgba(31,138,155,.35);
+    --c-invert: #18181b;
+    --c-invert-fg: #ffffff;
 
-  --c-brand-teal: #1F8A9B;
-  --c-brand-teal-deep: #14606E;
-  --c-brand-teal-light: #8AC9D2;
-  --c-brand-ink: #0F2633;
-  --c-brand-scribble: rgba(30, 40, 55, 0.35);
+    --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
 
-  --c-btn-primary: #0F1923;
-  --c-btn-primary-shadow: 0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15);
-  --c-btn-secondary-border: rgba(31,138,155,.35);
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 228 18% 8%;
+      --foreground: 240 5% 96%;
+      --card: 228 20% 12%;
+      --card-foreground: 240 5% 96%;
+      --popover: 228 18% 8%;
+      --popover-foreground: 240 5% 96%;
+      --primary: 188 67% 44%;
+      --primary-foreground: 210 47% 9%;
+      --secondary: 213 45% 18%;
+      --secondary-foreground: 240 5% 96%;
+      --muted: 228 20% 14%;
+      --muted-foreground: 240 5% 65%;
+      --accent: 228 20% 14%;
+      --accent-foreground: 240 5% 96%;
+      --destructive: 0 62% 55%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 240 4% 22%;
+      --input: 240 4% 22%;
+      --ring: 188 67% 44%;
+
+      /* Aliis dark aliases */
+      --c-bg: hsl(var(--background));
+      --c-surface: hsl(var(--muted));
+      --c-surface-2: rgba(255,255,255,0.04);
+      --c-border: hsl(var(--border));
+      --c-border-strong: rgba(255,255,255,0.18);
+      --c-text: hsl(var(--foreground));
+      --c-text-muted: hsl(var(--muted-foreground));
+      --c-text-subtle: #a1a1aa;
+      --c-text-faint: #71717a;
+      --c-brand-teal: hsl(var(--primary));
+      --c-brand-teal-deep: #25a8bb;
+      --c-brand-teal-light: #5bb8c5;
+      --c-brand-ink: hsl(var(--secondary));
+      --c-invert: #f4f4f5;
+      --c-invert-fg: #18181b;
+    }
+  }
 }
 
 * {
@@ -48,8 +112,8 @@ html {
 }
 
 body {
-  background: var(--c-bg);
-  color: var(--c-text);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   margin: 0;
 }
 
@@ -78,7 +142,7 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, var(--c-surface) 25%, #e8e8e9 50%, var(--c-surface) 75%);
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, #e8e8e9 50%, hsl(var(--muted)) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
