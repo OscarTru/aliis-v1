@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, Pill, ClipboardList, HelpCircle, Check } from 'lucide-react'
+import { Stethoscope, Pill, ClipboardList, HelpCircle } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 
 type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
 
@@ -115,272 +117,268 @@ export default function IngresoPage() {
   return (
     <>
       <AppShell>
-      <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 24px 80px' }}>
+        <main className="max-w-[560px] mx-auto px-6 pt-12 pb-20">
 
-        {/* ── Step 1: diagnóstico ── */}
-        {step === 'dx' && (
-          <div className="ce-fade">
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-muted)', marginBottom: 12, letterSpacing: '.04em', textTransform: 'uppercase' }}>Paso 1 de 3</p>
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(26px, 5vw, 38px)', letterSpacing: '-.025em', lineHeight: 1.15, marginBottom: 8 }}>
-              ¿Qué te dijo tu médico?
-            </h1>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 32, lineHeight: 1.6 }}>
-              Escribe el diagnóstico, copia lo que dice tu receta, o cuéntalo con tus palabras.
-            </p>
+          {/* ── Step 1: diagnóstico ── */}
+          {step === 'dx' && (
+            <div className="ce-fade">
+              <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
+                Paso 1 de 3
+              </p>
+              <h1 className="font-serif leading-[1.15] tracking-[-0.025em] mb-2" style={{ fontSize: 'clamp(26px, 5vw, 38px)' }}>
+                ¿Qué te dijo tu médico?
+              </h1>
+              <p className="font-sans text-[15px] text-muted-foreground mb-8 leading-relaxed">
+                Escribe el diagnóstico, copia lo que dice tu receta, o cuéntalo con tus palabras.
+              </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-              {[
-                { icon: <Stethoscope size={15} />, text: 'Migraña con aura' },
-                { icon: <Pill size={15} />, text: 'Epilepsia focal' },
-                { icon: <ClipboardList size={15} />, text: 'Esclerosis múltiple remitente-recurrente' },
-                { icon: <HelpCircle size={15} />, text: 'Neuralgia del trigémino' },
-              ].map(({ icon, text }) => (
-                <button key={text} onClick={() => { setDxInput(text); dxInputRef.current?.focus() }}
-                  style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--c-border)', background: 'var(--c-surface)', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ color: 'var(--c-brand-teal)', flexShrink: 0 }}>{icon}</span>
-                  {text}
+              <div className="flex flex-col gap-[10px] mb-6">
+                {[
+                  { icon: <Stethoscope size={15} />, text: 'Migraña con aura' },
+                  { icon: <Pill size={15} />, text: 'Epilepsia focal' },
+                  { icon: <ClipboardList size={15} />, text: 'Esclerosis múltiple remitente-recurrente' },
+                  { icon: <HelpCircle size={15} />, text: 'Neuralgia del trigémino' },
+                ].map(({ icon, text }) => (
+                  <button
+                    key={text}
+                    onClick={() => { setDxInput(text); dxInputRef.current?.focus() }}
+                    className="px-4 py-[10px] rounded-[10px] border border-border bg-muted font-sans text-[14px] text-muted-foreground cursor-pointer text-left flex items-center gap-[10px] hover:border-primary/40 transition-colors"
+                  >
+                    <span className="text-[color:var(--c-brand-teal)] shrink-0">{icon}</span>
+                    {text}
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleDxSubmit} className="flex flex-col gap-3">
+                <textarea
+                  ref={dxInputRef}
+                  value={dxInput}
+                  onChange={(e) => setDxInput(e.target.value)}
+                  placeholder="O escribe aquí lo que te dijeron…"
+                  rows={3}
+                  className="w-full px-4 py-[14px] rounded-[14px] border border-border bg-muted font-sans text-[15px] text-foreground outline-none resize-none leading-[1.5] box-border focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={!dxInput.trim()}
+                  className={cn(
+                    'px-4 py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                    dxInput.trim()
+                      ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                      : 'bg-border text-muted-foreground cursor-not-allowed'
+                  )}
+                >
+                  Continuar →
                 </button>
-              ))}
+              </form>
             </div>
+          )}
 
-            <form onSubmit={handleDxSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <textarea
-                ref={dxInputRef}
-                value={dxInput}
-                onChange={(e) => setDxInput(e.target.value)}
-                placeholder="O escribe aquí lo que te dijeron…"
-                rows={3}
-                style={{
-                  width: '100%', padding: '14px 16px', borderRadius: 14,
-                  border: '1px solid var(--c-border)', background: 'var(--c-surface)',
-                  fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)',
-                  outline: 'none', resize: 'none', lineHeight: 1.5, boxSizing: 'border-box',
-                }}
-              />
-              <button type="submit" disabled={!dxInput.trim()}
-                style={{
-                  padding: '14px', borderRadius: 12, border: 'none',
-                  background: dxInput.trim() ? '#0F1923' : 'var(--c-border)',
-                  boxShadow: dxInput.trim() ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
-                  color: dxInput.trim() ? '#fff' : 'var(--c-text-muted)',
-                  fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
-                  cursor: dxInput.trim() ? 'pointer' : 'not-allowed', transition: 'background .15s, box-shadow .15s',
-                }}>
+          {/* ── Step 2: frecuencia ── */}
+          {step === 'frecuencia' && (
+            <div className="ce-fade">
+              <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
+                Paso 2 de 3
+              </p>
+              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2" style={{ fontSize: 'clamp(22px, 4vw, 32px)' }}>
+                ¿Cuándo te lo diagnosticaron?
+              </h2>
+              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+                Nos ayuda a adaptar el tono de la explicación.
+              </p>
+
+              <div className="flex flex-col gap-[10px] mb-5">
+                {FRECUENCIA_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleFrecuenciaSelect(opt.value)}
+                    className={cn(
+                      'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
+                      frecuencia === opt.value
+                        ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                        : 'border-border bg-muted'
+                    )}
+                  >
+                    <div>
+                      <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{opt.label}</div>
+                      <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
+                    </div>
+                    {frecuencia === opt.value && (
+                      <div className="w-5 h-5 rounded-full bg-[var(--c-brand-teal)] flex items-center justify-center shrink-0">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+
+                {/* Opción libre */}
+                <button
+                  onClick={() => handleFrecuenciaSelect('__custom')}
+                  className={cn(
+                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
+                    frecuencia === '__custom'
+                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                      : 'border-border bg-muted'
+                  )}
+                >
+                  Otra situación…
+                </button>
+                {frecuencia === '__custom' && (
+                  <Input
+                    autoFocus
+                    value={frecuenciaCustom}
+                    onChange={(e) => setFrecuenciaCustom(e.target.value)}
+                    placeholder="Cuéntame un poco más…"
+                    className="h-12 rounded-[12px] border-[var(--c-brand-teal)] bg-muted font-sans text-[15px] focus-visible:ring-[var(--c-brand-teal)]/20"
+                  />
+                )}
+              </div>
+
+              <button
+                onClick={() => { if (frecuenciaFinal()) setStep('dudas') }}
+                disabled={!frecuenciaFinal()}
+                className={cn(
+                  'w-full py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                  frecuenciaFinal()
+                    ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                    : 'bg-border text-muted-foreground cursor-not-allowed'
+                )}
+              >
                 Continuar →
               </button>
-            </form>
-          </div>
-        )}
-
-        {/* ── Step 2: frecuencia ── */}
-        {step === 'frecuencia' && (
-          <div className="ce-fade">
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-muted)', marginBottom: 12, letterSpacing: '.04em', textTransform: 'uppercase' }}>Paso 2 de 3</p>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-.02em', lineHeight: 1.2, marginBottom: 8 }}>
-              ¿Cuándo te lo diagnosticaron?
-            </h2>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 28, lineHeight: 1.6 }}>
-              Nos ayuda a adaptar el tono de la explicación.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              {FRECUENCIA_OPTIONS.map((opt) => (
-                <button key={opt.value} onClick={() => handleFrecuenciaSelect(opt.value)}
-                  style={{
-                    padding: '16px 20px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                    border: `2px solid ${frecuencia === opt.value ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-                    background: frecuencia === opt.value ? 'rgba(31,138,155,.07)' : 'var(--c-surface)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                    transition: 'border-color .15s, background .15s',
-                  }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'var(--c-text)', marginBottom: 2 }}>{opt.label}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)' }}>{opt.sub}</div>
-                  </div>
-                  {frecuencia === opt.value && (
-                    <div style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--c-brand-teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
-                    </div>
-                  )}
-                </button>
-              ))}
-
-              {/* Opción libre */}
-              <button onClick={() => handleFrecuenciaSelect('__custom')}
-                style={{
-                  padding: '14px 20px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                  border: `2px solid ${frecuencia === '__custom' ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-                  background: frecuencia === '__custom' ? 'rgba(31,138,155,.07)' : 'var(--c-surface)',
-                  fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)',
-                  transition: 'border-color .15s, background .15s',
-                }}>
-                Otra situación…
-              </button>
-              {frecuencia === '__custom' && (
-                <input
-                  autoFocus
-                  value={frecuenciaCustom}
-                  onChange={(e) => setFrecuenciaCustom(e.target.value)}
-                  placeholder="Cuéntame un poco más…"
-                  style={{
-                    width: '100%', padding: '12px 16px', borderRadius: 12,
-                    border: '1px solid var(--c-brand-teal)', background: 'var(--c-surface)',
-                    fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)',
-                    outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-              )}
             </div>
+          )}
 
-            <button
-              onClick={() => { if (frecuenciaFinal()) setStep('dudas') }}
-              disabled={!frecuenciaFinal()}
-              style={{
-                width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                background: frecuenciaFinal() ? '#0F1923' : 'var(--c-border)',
-                boxShadow: frecuenciaFinal() ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
-                color: frecuenciaFinal() ? '#fff' : 'var(--c-text-muted)',
-                fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
-                cursor: frecuenciaFinal() ? 'pointer' : 'not-allowed', transition: 'background .15s, box-shadow .15s',
-              }}>
-              Continuar →
-            </button>
-          </div>
-        )}
+          {/* ── Step 3: dudas ── */}
+          {step === 'dudas' && (
+            <div className="ce-fade">
+              <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
+                Paso 3 de 3
+              </p>
+              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2" style={{ fontSize: 'clamp(22px, 4vw, 32px)' }}>
+                ¿Qué te gustaría entender mejor?
+              </h2>
+              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+                Aliis enfocará la explicación en lo que más te importa.
+              </p>
 
-        {/* ── Step 3: dudas ── */}
-        {step === 'dudas' && (
-          <div className="ce-fade">
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-muted)', marginBottom: 12, letterSpacing: '.04em', textTransform: 'uppercase' }}>Paso 3 de 3</p>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-.02em', lineHeight: 1.2, marginBottom: 8 }}>
-              ¿Qué te gustaría entender mejor?
-            </h2>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 28, lineHeight: 1.6 }}>
-              Aliis enfocará la explicación en lo que más te importa.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              {DUDAS_OPTIONS.map((opt) => (
-                <button key={opt.value} onClick={() => handleDudasSelect(opt.value)}
-                  style={{
-                    padding: '16px 20px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                    border: `2px solid ${dudas === opt.value ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-                    background: dudas === opt.value ? 'rgba(31,138,155,.07)' : 'var(--c-surface)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                    transition: 'border-color .15s, background .15s',
-                  }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, color: 'var(--c-text)', marginBottom: 2 }}>{opt.label}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)' }}>{opt.sub}</div>
-                  </div>
-                  {dudas === opt.value && (
-                    <div style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--c-brand-teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+              <div className="flex flex-col gap-[10px] mb-5">
+                {DUDAS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleDudasSelect(opt.value)}
+                    className={cn(
+                      'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
+                      dudas === opt.value
+                        ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                        : 'border-border bg-muted'
+                    )}
+                  >
+                    <div>
+                      <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{opt.label}</div>
+                      <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
                     </div>
+                    {dudas === opt.value && (
+                      <div className="w-5 h-5 rounded-full bg-[var(--c-brand-teal)] flex items-center justify-center shrink-0">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+
+                {/* Opción libre */}
+                <button
+                  onClick={() => handleDudasSelect('__custom')}
+                  className={cn(
+                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
+                    dudas === '__custom'
+                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.07)]'
+                      : 'border-border bg-muted'
                   )}
+                >
+                  Tengo otra pregunta…
                 </button>
-              ))}
-
-              {/* Opción libre */}
-              <button onClick={() => handleDudasSelect('__custom')}
-                style={{
-                  padding: '14px 20px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                  border: `2px solid ${dudas === '__custom' ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-                  background: dudas === '__custom' ? 'rgba(31,138,155,.07)' : 'var(--c-surface)',
-                  fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)',
-                  transition: 'border-color .15s, background .15s',
-                }}>
-                Tengo otra pregunta…
-              </button>
-              {dudas === '__custom' && (
-                <input
-                  autoFocus
-                  value={dudasCustom}
-                  onChange={(e) => setDudasCustom(e.target.value)}
-                  placeholder="¿Qué quieres entender?"
-                  style={{
-                    width: '100%', padding: '12px 16px', borderRadius: 12,
-                    border: '1px solid var(--c-brand-teal)', background: 'var(--c-surface)',
-                    fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)',
-                    outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-              )}
-            </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={!dudasFinal() || loading}
-              style={{
-                width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                background: dudasFinal() ? '#0F1923' : 'var(--c-border)',
-                boxShadow: dudasFinal() ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
-                color: dudasFinal() ? '#fff' : 'var(--c-text-muted)',
-                fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
-                cursor: dudasFinal() ? 'pointer' : 'not-allowed', transition: 'background .15s, box-shadow .15s',
-              }}>
-              {loading ? 'Preparando tu pack…' : 'Generar mi pack'}
-            </button>
-
-            <button onClick={() => setStep('frecuencia')}
-              style={{ marginTop: 12, width: '100%', background: 'none', border: 'none', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)', cursor: 'pointer' }}>
-              ← Volver
-            </button>
-          </div>
-        )}
-
-        {/* ── Generating ── */}
-        {step === 'generating' && (
-          <div className="ce-fade">
-            {/* Header skeleton */}
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-brand-teal)', marginBottom: 10 }}>
-                · Construyendo tu explicación ·
+                {dudas === '__custom' && (
+                  <Input
+                    autoFocus
+                    value={dudasCustom}
+                    onChange={(e) => setDudasCustom(e.target.value)}
+                    placeholder="¿Qué quieres entender?"
+                    className="h-12 rounded-[12px] border-[var(--c-brand-teal)] bg-muted font-sans text-[15px] focus-visible:ring-[var(--c-brand-teal)]/20"
+                  />
+                )}
               </div>
-              <div className="shimmer" style={{ height: 32, width: '70%', borderRadius: 8, marginBottom: 8 }} />
-              <div className="shimmer" style={{ height: 16, width: '45%', borderRadius: 6 }} />
-            </div>
 
-            {/* Chapter cards appearing one by one */}
-            {[
-              { label: '¿Qué es exactamente?', w: '55%', delay: 0 },
-              { label: '¿Qué pasa en mi cuerpo?', w: '62%', delay: 0.6 },
-              { label: '¿Qué esperar?', w: '48%', delay: 1.2 },
-              { label: '¿Qué preguntar en mi consulta?', w: '58%', delay: 1.8 },
-              { label: '¿Cuándo actuar?', w: '40%', delay: 2.4 },
-            ].map((ch, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: '18px 22px',
-                  background: 'var(--c-surface)',
-                  borderRadius: 14,
-                  border: '1px solid var(--c-border)',
-                  marginBottom: 10,
-                  opacity: 0,
-                  animation: `ce-fade-in 0.5s ease forwards`,
-                  animationDelay: `${ch.delay}s`,
-                }}
+              <button
+                onClick={handleGenerate}
+                disabled={!dudasFinal() || loading}
+                className={cn(
+                  'w-full py-[14px] rounded-[12px] border-none font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                  dudasFinal()
+                    ? 'bg-[#0F1923] text-white cursor-pointer shadow-[0_0_0_1px_rgba(31,138,155,.3),_0_4px_16px_rgba(31,138,155,.15)]'
+                    : 'bg-border text-muted-foreground cursor-not-allowed'
+                )}
               >
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-brand-teal)', marginBottom: 8 }}>
-                  {String(i + 1).padStart(2, '0')}
+                {loading ? 'Preparando tu pack…' : 'Generar mi pack'}
+              </button>
+
+              <button
+                onClick={() => setStep('frecuencia')}
+                className="mt-3 w-full bg-transparent border-none font-sans text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                ← Volver
+              </button>
+            </div>
+          )}
+
+          {/* ── Generating ── */}
+          {step === 'generating' && (
+            <div className="ce-fade">
+              {/* Header skeleton */}
+              <div className="mb-8">
+                <div className="font-mono text-[10px] tracking-[.18em] uppercase text-[var(--c-brand-teal)] mb-[10px]">
+                  · Construyendo tu explicación ·
                 </div>
-                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 16, letterSpacing: '-.01em', color: 'var(--c-text)', marginBottom: 12 }}>
-                  {ch.label}
-                </div>
-                <div className="shimmer" style={{ height: 11, borderRadius: 5, marginBottom: 6, width: ch.w }} />
-                <div className="shimmer" style={{ height: 11, borderRadius: 5, marginBottom: 6, width: '80%' }} />
-                <div className="shimmer" style={{ height: 11, borderRadius: 5, width: '35%' }} />
+                <div className="shimmer h-8 w-[70%] rounded-lg mb-2" />
+                <div className="shimmer h-4 w-[45%] rounded-md" />
               </div>
-            ))}
 
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-faint)', textAlign: 'center', marginTop: 20 }}>
-              Esto toma unos segundos…
-            </p>
-          </div>
-        )}
+              {/* Chapter cards appearing one by one */}
+              {[
+                { label: '¿Qué es exactamente?', w: '55%', delay: 0 },
+                { label: '¿Qué pasa en mi cuerpo?', w: '62%', delay: 0.6 },
+                { label: '¿Qué esperar?', w: '48%', delay: 1.2 },
+                { label: '¿Qué preguntar en mi consulta?', w: '58%', delay: 1.8 },
+                { label: '¿Cuándo actuar?', w: '40%', delay: 2.4 },
+              ].map((ch, i) => (
+                <div
+                  key={i}
+                  className="px-[22px] py-[18px] bg-muted rounded-[14px] border border-border mb-[10px] opacity-0"
+                  style={{
+                    animation: `ce-fade-in 0.5s ease forwards`,
+                    animationDelay: `${ch.delay}s`,
+                  }}
+                >
+                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-[var(--c-brand-teal)] mb-2">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-3">
+                    {ch.label}
+                  </div>
+                  <div className="shimmer h-[11px] rounded-[5px] mb-[6px]" style={{ width: ch.w }} />
+                  <div className="shimmer h-[11px] rounded-[5px] mb-[6px] w-[80%]" />
+                  <div className="shimmer h-[11px] rounded-[5px] w-[35%]" />
+                </div>
+              ))}
 
-      </main>
+              <p className="font-sans text-[13px] text-[color:var(--c-text-faint)] text-center mt-5">
+                Esto toma unos segundos…
+              </p>
+            </div>
+          )}
+
+        </main>
       </AppShell>
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}

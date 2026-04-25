@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 const PROMISES = [
   'Tu diagnóstico en palabras que puedes entender',
@@ -47,98 +50,112 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--c-border)' }}>
-        <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} style={{ objectFit: 'contain' }} />
-        {/* Progress bar */}
-        <div style={{ display: 'flex', gap: 6 }}>
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain" />
+        {/* Progress dots */}
+        <div className="flex gap-[6px]">
           {[1, 2, 3].map((s) => (
-            <div key={s} style={{ width: 32, height: 3, borderRadius: 999, background: s <= step ? 'var(--c-brand-teal)' : 'var(--c-border)' }} />
+            <div
+              key={s}
+              className={cn(
+                'w-8 h-[3px] rounded-full',
+                s <= step ? 'bg-[var(--c-brand-teal)]' : 'bg-border'
+              )}
+            />
           ))}
         </div>
-        <button onClick={skip} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)' }}>
+        <button
+          onClick={skip}
+          className="bg-transparent border-none cursor-pointer font-sans text-[14px] text-muted-foreground hover:text-foreground transition-colors"
+        >
           Saltar
         </button>
       </header>
 
       {/* Content */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', maxWidth: 480, margin: '0 auto', width: '100%' }}>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-[480px] mx-auto w-full">
         {step === 1 && (
-          <div className="ce-fade" style={{ textAlign: 'center', width: '100%' }}>
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, letterSpacing: '-.025em', marginBottom: 8 }}>
+          <div className="ce-fade text-center w-full">
+            <h1 className="font-serif text-[36px] tracking-[-0.025em] mb-2">
               Bienvenido a Aliis
             </h1>
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--c-text-muted)', marginBottom: 40 }}>
+            <p className="font-serif italic text-muted-foreground mb-10">
               Tu asistente para entender lo que el médico dijo
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
+            <div className="flex flex-col gap-3 mb-10">
               {PROMISES.map((p, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--c-surface)', borderRadius: 12, textAlign: 'left' }}>
-                  <span style={{ color: 'var(--c-brand-teal)', flexShrink: 0, display: 'flex' }}><Check size={18} /></span>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)' }}>{p}</span>
+                <div key={i} className="flex items-center gap-3 px-[18px] py-[14px] bg-muted rounded-[12px] text-left">
+                  <span className="text-[color:var(--c-brand-teal)] shrink-0 flex"><Check size={18} /></span>
+                  <span className="font-sans text-[15px] text-foreground">{p}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => setStep(2)} style={{ padding: '14px 40px', borderRadius: 999, background: 'var(--c-brand-teal)', color: '#fff', border: 'none', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+            <Button
+              onClick={() => setStep(2)}
+              className="px-10 py-[14px] h-auto rounded-full bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90"
+            >
               Continuar
-            </button>
+            </Button>
           </div>
         )}
 
         {step === 2 && (
-          <div className="ce-fade" style={{ width: '100%' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, letterSpacing: '-.02em', marginBottom: 8 }}>
+          <div className="ce-fade w-full">
+            <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-2">
               ¿Cómo te llamas?
             </h2>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 32 }}>
+            <p className="font-sans text-[15px] text-muted-foreground mb-8">
               Aliis te llamará por tu nombre en las explicaciones.
             </p>
-            <input
+            <Input
               type="text"
               placeholder="Tu nombre"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid var(--c-border)', background: 'var(--c-surface)', fontFamily: 'var(--font-sans)', fontSize: 16, color: 'var(--c-text)', outline: 'none', marginBottom: 24, boxSizing: 'border-box' }}
+              className="h-12 rounded-[12px] border-border bg-muted font-sans text-[16px] mb-6 focus-visible:ring-primary/20"
             />
-            <button onClick={() => setStep(3)} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--c-brand-teal)', color: '#fff', border: 'none', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+            <Button
+              onClick={() => setStep(3)}
+              className="w-full h-12 rounded-[12px] bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90"
+            >
               Continuar
-            </button>
+            </Button>
           </div>
         )}
 
         {step === 3 && (
-          <div className="ce-fade" style={{ width: '100%' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, letterSpacing: '-.02em', marginBottom: 8 }}>
+          <div className="ce-fade w-full">
+            <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-2">
               ¿Para quién es Aliis?
             </h2>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 32 }}>
+            <p className="font-sans text-[15px] text-muted-foreground mb-8">
               Adaptamos el tono según para quién estás buscando explicaciones.
             </p>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+            <div className="flex gap-3 mb-8">
               {(['yo', 'familiar'] as const).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setWho(opt)}
-                  style={{
-                    flex: 1, padding: '20px 16px', borderRadius: 14,
-                    border: `2px solid ${who === opt ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-                    background: who === opt ? 'rgba(31,138,155,.08)' : 'var(--c-surface)',
-                    fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
-                    color: 'var(--c-text)', cursor: 'pointer',
-                  }}
+                  className={cn(
+                    'flex-1 px-4 py-5 rounded-[14px] border-2 font-sans text-[15px] font-medium text-foreground cursor-pointer transition-[border-color,background] duration-150',
+                    who === opt
+                      ? 'border-[var(--c-brand-teal)] bg-[rgba(31,138,155,.08)]'
+                      : 'border-border bg-muted hover:border-[var(--c-brand-teal)]/40'
+                  )}
                 >
                   {opt === 'yo' ? 'Para mí' : 'Para un familiar'}
                 </button>
               ))}
             </div>
-            <button
+            <Button
               onClick={finish}
               disabled={saving}
-              style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--c-brand-teal)', color: '#fff', border: 'none', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
+              className="w-full h-12 rounded-[12px] bg-[var(--c-brand-teal)] text-white border-none font-sans text-[15px] font-medium hover:bg-[var(--c-brand-teal)]/90 disabled:opacity-70"
             >
               {saving ? 'Guardando…' : 'Empezar'}
-            </button>
+            </Button>
           </div>
         )}
       </main>

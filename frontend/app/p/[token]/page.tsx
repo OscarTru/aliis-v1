@@ -36,18 +36,11 @@ export default async function SharedPackPage({
 
   return (
     <>
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        backdropFilter: 'blur(16px)',
-        background: 'color-mix(in srgb, var(--c-bg) 78%, transparent)',
-        borderBottom: '1px solid var(--c-border)',
-        padding: '14px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} style={{ objectFit: 'contain' }} />
+      <header className="sticky top-0 z-40 backdrop-blur-[16px] bg-[color-mix(in_srgb,var(--c-bg)_78%,transparent)] border-b border-border px-6 py-[14px] flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-[10px] no-underline">
+          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain" />
         </Link>
-        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-faint)' }}>
+        <div className="font-sans text-[13px] text-[color:var(--c-text-faint)]">
           {sharedByName ? `Compartido por ${sharedByName}` : 'Explicación compartida'} · aliis.app
         </div>
       </header>

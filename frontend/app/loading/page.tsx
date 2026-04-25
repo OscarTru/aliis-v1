@@ -6,6 +6,7 @@ import { Check, Loader } from 'lucide-react'
 import { ScribbleBrain } from '@/components/ui/ScribbleBrain'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 const STAGES = [
   'Analizando tu diagnóstico…',
@@ -46,51 +47,32 @@ function LoadingContent() {
   }, [packId, router])
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      gap: 32,
-    }}>
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-8">
       <div className="ce-pulse">
         <ScribbleBrain size={80} />
       </div>
 
-      <div style={{ textAlign: 'center' }}>
+      <div className="text-center">
         <Eyebrow>· Destilando ·</Eyebrow>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 28,
-          letterSpacing: '-.02em',
-          marginTop: 12,
-          minHeight: 40,
-          transition: 'opacity 0.3s',
-        }}>
+        <h1 className="font-serif text-[28px] tracking-[-0.02em] mt-3 min-h-[40px] transition-opacity duration-300">
           {STAGES[stageIdx]}
         </h1>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
+      <div className="flex flex-col gap-[10px] w-full max-w-[320px]">
         {STAGES.map((stage, i) => (
           <div
             key={i}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              fontFamily: 'var(--font-sans)',
-              fontSize: 14,
-              color: i < stageIdx
-                ? 'var(--c-brand-teal)'
+            className={cn(
+              'flex items-center gap-3 font-sans text-[14px]',
+              i < stageIdx
+                ? 'text-[color:var(--c-brand-teal)]'
                 : i === stageIdx
-                ? 'var(--c-text)'
-                : 'var(--c-text-faint)',
-            }}
+                ? 'text-foreground'
+                : 'text-[color:var(--c-text-faint)]'
+            )}
           >
-            <span style={{ width: 20, textAlign: 'center', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="w-5 text-center shrink-0 inline-flex items-center justify-center">
               {i < stageIdx ? <Check size={14} /> : i === stageIdx ? <Loader size={14} /> : '○'}
             </span>
             {stage}
@@ -101,16 +83,7 @@ function LoadingContent() {
       {process.env.NODE_ENV === 'development' && packId && (
         <button
           onClick={() => router.push(`/pack/${packId}`)}
-          style={{
-            background: 'none',
-            border: '1px solid var(--c-border)',
-            borderRadius: 8,
-            padding: '8px 16px',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-            fontSize: 13,
-            color: 'var(--c-text-muted)',
-          }}
+          className="bg-transparent border border-border rounded-[8px] px-4 py-2 cursor-pointer font-sans text-[13px] text-muted-foreground hover:text-foreground transition-colors"
         >
           Saltar (demo)
         </button>

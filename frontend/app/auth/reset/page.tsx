@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -12,31 +14,11 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-  const [focusedField, setFocusedField] = useState<string | null>(null)
-
-  function inputStyle(field: string): React.CSSProperties {
-    const focused = focusedField === field
-    return {
-      width: '100%',
-      padding: '14px 16px',
-      borderRadius: 12,
-      border: `1.5px solid ${focused ? 'var(--c-brand-teal)' : 'var(--c-border)'}`,
-      background: focused ? 'rgba(31,138,155,0.04)' : 'var(--c-surface)',
-      fontFamily: 'var(--font-sans)',
-      fontSize: 15,
-      color: 'var(--c-text)',
-      outline: 'none',
-      transition: 'border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease',
-      boxShadow: focused ? '0 0 0 3px rgba(31,138,155,0.12)' : 'none',
-      boxSizing: 'border-box',
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirm) { setError('Las contraseñas no coinciden.'); return }
     if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return }
-
     setLoading(true)
     setError(null)
     const supabase = createClient()
@@ -47,97 +29,54 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-    }}>
-      <div style={{
-        background: 'var(--c-bg)',
-        border: '1px solid var(--c-border)',
-        borderRadius: 24,
-        padding: '48px 40px 40px',
-        maxWidth: 400,
-        width: '100%',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.10)',
-        animation: 'ce-fade-in 0.2s ease forwards',
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Image
-            src="/assets/aliis-original.png"
-            alt="Aliis"
-            width={72}
-            height={28}
-            style={{ objectFit: 'contain', marginBottom: 16 }}
-          />
-          <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--c-text-muted)' }}>
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="bg-background border border-border rounded-3xl p-12 max-w-[400px] w-full shadow-[0_32px_80px_rgba(0,0,0,0.10)] ce-fade">
+        <div className="text-center mb-8">
+          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain mx-auto mb-4" />
+          <p className="font-serif italic text-[17px] text-muted-foreground">
             {done ? 'Contraseña actualizada' : 'Elige una nueva contraseña'}
-          </div>
+          </p>
         </div>
 
         {done ? (
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)', lineHeight: 1.6, marginBottom: 28 }}>
+          <div className="text-center">
+            <p className="font-sans text-[15px] text-foreground leading-relaxed mb-7">
               Tu contraseña fue actualizada correctamente. Ya puedes entrar a tu cuenta.
             </p>
-            <button
+            <Button
               onClick={() => router.push('/historial')}
-              style={{
-                padding: '13px 32px', borderRadius: 12, border: 'none',
-                background: '#0F1923', color: '#fff',
-                fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-                boxShadow: 'var(--c-btn-primary-shadow)',
-              }}
+              className="px-8 py-3 rounded-xl bg-[#0F1923] text-white font-sans font-medium hover:bg-[#0F1923]/90 shadow-[var(--c-btn-primary-shadow)]"
             >
               Ir a mis explicaciones
-            </button>
+            </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <Input
               type="password"
               placeholder="Nueva contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
               required
               minLength={6}
-              style={inputStyle('password')}
+              className="h-12 rounded-xl border-[1.5px] focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px] bg-muted font-sans text-[15px]"
             />
-            <input
+            <Input
               type="password"
               placeholder="Confirmar contraseña"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              onFocus={() => setFocusedField('confirm')}
-              onBlur={() => setFocusedField(null)}
               required
-              style={inputStyle('confirm')}
+              className="h-12 rounded-xl border-[1.5px] focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px] bg-muted font-sans text-[15px]"
             />
-            {error && (
-              <p style={{ color: '#dc2626', fontFamily: 'var(--font-sans)', fontSize: 13, margin: 0 }}>
-                {error}
-              </p>
-            )}
-            <button
+            {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
+            <Button
               type="submit"
               disabled={loading}
-              style={{
-                padding: '14px 20px', borderRadius: 12, border: 'none',
-                background: '#0F1923', color: '#fff',
-                fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                marginTop: 4,
-                boxShadow: 'var(--c-btn-primary-shadow)',
-              }}
+              className="h-12 mt-1 rounded-xl bg-[#0F1923] text-white font-sans font-medium hover:bg-[#0F1923]/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70"
             >
               {loading ? 'Guardando…' : 'Guardar contraseña'}
-            </button>
+            </Button>
           </form>
         )}
       </div>
