@@ -96,7 +96,6 @@ export function Sidebar() {
 
             const linkContent = (
               <Link
-                key={item.href}
                 href={item.href}
                 className={cn(
                   'flex items-center gap-2.5 rounded-[10px] transition-colors duration-100 no-underline',
@@ -155,43 +154,30 @@ export function Sidebar() {
 
         {/* User info */}
         <div className="border-t border-border">
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/cuenta"
-                  className="flex items-center justify-center p-3 hover:bg-muted transition-colors no-underline"
+          <Link
+            href="/cuenta"
+            className={cn(
+              'flex items-center hover:bg-muted transition-colors no-underline',
+              collapsed ? 'justify-center p-3' : 'gap-2.5 px-3 py-3.5'
+            )}
+          >
+            <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-serif text-xs font-semibold shrink-0">
+              {initial ?? '?'}
+            </div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="font-sans text-xs text-muted-foreground truncate min-w-0 overflow-hidden whitespace-nowrap"
                 >
-                  <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-serif text-xs font-semibold shrink-0">
-                    {initial ?? '?'}
-                  </div>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{email ?? 'Mi cuenta'}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              href="/cuenta"
-              className="flex items-center gap-2.5 px-3 py-3.5 hover:bg-muted transition-colors no-underline"
-            >
-              <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-serif text-xs font-semibold shrink-0">
-                {initial ?? '?'}
-              </div>
-              <AnimatePresence>
-                {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="font-sans text-xs text-muted-foreground truncate min-w-0"
-                  >
-                    {email ?? ''}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-          )}
+                  {email ?? ''}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
         </div>
       </motion.aside>
     </TooltipProvider>
