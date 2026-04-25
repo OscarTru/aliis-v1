@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart } from 'lucide-react'
+import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart, Library } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -40,8 +40,9 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/ingreso',   label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
-  { href: '/historial', label: 'Mi expediente',     icon: <LayoutList size={18} /> },
+  { href: '/ingreso',    label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
+  { href: '/historial',  label: 'Mi expediente',     icon: <LayoutList size={18} /> },
+  { href: '/condiciones', label: 'Biblioteca',        icon: <Library size={18} /> },
 ]
 
 const BOTTOM_ITEMS: NavItem[] = [
