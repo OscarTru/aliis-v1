@@ -4,12 +4,33 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, LayoutList, Zap, UserCircle, ChevronLeft } from 'lucide-react'
+import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
+import { usePackContext } from '@/lib/pack-context'
+import { useConditionContext } from '@/lib/condition-context'
 import { cn } from '@/lib/utils'
+
+const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
+  'que-es': <BookOpen size={14} />,
+  'como-funciona': <Settings2 size={14} />,
+  'que-esperar': <CalendarDays size={14} />,
+  'diagnostico': <Stethoscope size={14} />,
+  'tratamiento': <Pill size={14} />,
+  'vivir-con': <Heart size={14} />,
+  'preguntas': <MessageCircle size={14} />,
+  'senales': <AlertTriangle size={14} />,
+}
+
+const CHAPTER_ICON_MAP: Record<string, React.ReactNode> = {
+  'que-es': <BookOpen size={14} />,
+  'como-funciona': <Settings2 size={14} />,
+  'que-esperar': <CalendarDays size={14} />,
+  'preguntas': <MessageCircle size={14} />,
+  'senales': <AlertTriangle size={14} />,
+}
 
 type NavItem = {
   href: string
@@ -29,6 +50,9 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { pack, activeIdx, readChapters, setActiveIdx } = usePackContext()
+  const { condition, activeIdx: conditionActiveIdx, setActiveIdx: setConditionActiveIdx } = useConditionContext()
+  const verifiedRefs = pack?.references.filter((r) => r.verified !== false) ?? []
   const [email, setEmail] = useState<string | null>(null)
   const [initial, setInitial] = useState<string | null>(null)
   const [plan, setPlan] = useState<string | null>(null)
@@ -171,11 +195,119 @@ export function Sidebar() {
         <Separator />
 
         {/* Main nav */}
-        <nav className={cn('flex flex-col gap-1 flex-1 py-3', collapsed ? 'px-2 items-center' : 'px-2')}>
+        <nav className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2 items-center' : 'px-2')}>
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </nav>
+
+        {/* Pack chapter nav — shown when viewing a pack */}
+        {pack && !collapsed && (
+          <>
+            <Separator />
+            <div className="px-3 pt-3 pb-1">
+              <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/50 mb-1">
+                Esta explicación
+              </div>
+              <div className="font-serif text-[12px] leading-[1.3] text-muted-foreground truncate">
+                {pack.dx}
+              </div>
+            </div>
+            <nav className="flex flex-col gap-0 px-2 pb-2 flex-1 overflow-y-auto">
+              {pack.chapters.map((ch, i) => {
+                const isActive = i === activeIdx
+                const isRead = readChapters.has(ch.id)
+                return (
+                  <button
+                    key={ch.id}
+                    onClick={() => setActiveIdx(i)}
+                    className={cn(
+                      'w-full text-left px-2.5 py-[7px] rounded-[9px] border-none cursor-pointer flex items-center gap-2 transition-colors duration-100',
+                      isActive ? 'bg-primary/10' : 'bg-transparent hover:bg-muted'
+                    )}
+                  >
+                    <span className={cn('shrink-0 inline-flex', isActive ? 'text-primary' : 'text-muted-foreground/50')}>
+                      {CHAPTER_ICON_MAP[ch.id] ?? '•'}
+                    </span>
+                    <span className={cn(
+                      'font-sans text-[12px] truncate leading-[1.2] flex-1',
+                      isActive ? 'font-medium text-primary' : 'text-muted-foreground'
+                    )}>
+                      {ch.kicker}
+                    </span>
+                    {isRead && !isActive && <div className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />}
+                  </button>
+                )
+              })}
+              {verifiedRefs.length > 0 && (
+                <button
+                  onClick={() => setActiveIdx(pack.chapters.length)}
+                  className={cn(
+                    'w-full text-left px-2.5 py-[7px] rounded-[9px] border-none cursor-pointer flex items-center gap-2',
+                    activeIdx === pack.chapters.length ? 'bg-primary/10' : 'bg-transparent hover:bg-muted'
+                  )}
+                >
+                  <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground/50')}>
+                    <BookMarked size={14} />
+                  </span>
+                  <span className={cn('font-sans text-[12px]', activeIdx === pack.chapters.length ? 'text-primary font-medium' : 'text-muted-foreground')}>
+                    Referencias
+                  </span>
+                </button>
+              )}
+              <Link
+                href={`/compartir/${pack.id}`}
+                className="flex items-center gap-2 px-2.5 py-[7px] rounded-[9px] no-underline font-sans text-[12px] text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <span className="flex text-muted-foreground/50"><Share2 size={14} /></span>
+                Compartir
+              </Link>
+            </nav>
+          </>
+        )}
+
+        {/* Condition section nav — shown when viewing a condition */}
+        {condition && !collapsed && (
+          <>
+            <Separator />
+            <div className="px-3 pt-3 pb-1">
+              <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/50 mb-1">
+                Biblioteca
+              </div>
+              <div className="font-serif text-[12px] leading-[1.3] text-muted-foreground truncate">
+                {condition.name}
+              </div>
+            </div>
+            <nav className="flex flex-col gap-0 px-2 pb-2 flex-1 overflow-y-auto">
+              {condition.sections.map((sec, i) => {
+                const isActive = i === conditionActiveIdx
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => setConditionActiveIdx(i)}
+                    className={cn(
+                      'w-full text-left px-2.5 py-[7px] rounded-[9px] border-none cursor-pointer flex items-center gap-2 transition-colors duration-100',
+                      isActive ? 'bg-primary/10' : 'bg-transparent hover:bg-muted'
+                    )}
+                  >
+                    <span className={cn('shrink-0 inline-flex', isActive ? 'text-primary' : 'text-muted-foreground/50')}>
+                      {SECTION_ICON_MAP[sec.slug] ?? '•'}
+                    </span>
+                    <span className={cn(
+                      'font-sans text-[12px] truncate leading-[1.2] flex-1',
+                      isActive ? 'font-medium text-primary' : 'text-muted-foreground'
+                    )}>
+                      {sec.title}
+                    </span>
+                  </button>
+                )
+              })}
+            </nav>
+          </>
+        )}
+
+        {/* Spacer when no pack and no condition */}
+        {!pack && !condition && <div className="flex-1" />}
 
         <Separator />
 
