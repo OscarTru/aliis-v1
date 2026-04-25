@@ -2,22 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-
-function ProgressRing({ pct }: { pct: number }) {
-  const r = 14
-  const circ = 2 * Math.PI * r
-  const dash = circ * pct
-  return (
-    <svg width={34} height={34} className="shrink-0 -rotate-90">
-      <circle cx={17} cy={17} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth={3} />
-      <circle cx={17} cy={17} r={r} fill="none" stroke="hsl(var(--primary))" strokeWidth={3}
-        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
-    </svg>
-  )
-}
 
 type Pack = {
   id: string
@@ -48,7 +35,7 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
     return (
       <div className="pt-12">
         <p className="font-serif italic text-[17px] text-muted-foreground leading-[1.5]">
-          No hay packs en esta categoría.
+          No hay diagnósticos en esta categoría.
         </p>
       </div>
     )
@@ -57,7 +44,6 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
   return (
     <div className="flex flex-col gap-3">
       {packs.map((p) => {
-        const statusLabel = p.pct === 0 ? 'Sin leer' : p.pct === 1 ? 'Completado' : `${p.read} de ${p.total} capítulos`
         const date = new Date(p.created_at).toLocaleDateString('es', { day: 'numeric', month: 'long' })
         const isConfirming = confirmId === p.id
         const isDeleting = deletingId === p.id
@@ -70,76 +56,93 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
               onClick={(e) => { if (isConfirming) e.preventDefault() }}
             >
               <div className={cn(
-                'flex gap-5 items-center px-6 py-5 bg-muted rounded-2xl border transition-colors duration-100',
-                isConfirming ? 'border-destructive/30' : 'border-border'
+                'group flex flex-col gap-0 bg-background rounded-2xl border overflow-hidden transition-colors duration-100',
+                isConfirming ? 'border-destructive/30' : 'border-border hover:border-foreground/20'
               )}>
-                {/* Progress ring */}
-                <div className="relative shrink-0">
-                  <ProgressRing pct={p.pct} />
-                  <div className={cn(
-                    'absolute inset-0 flex items-center justify-center font-mono text-[9px]',
-                    p.pct === 1 ? 'text-primary' : 'text-muted-foreground/60'
-                  )}>
-                    {p.pct === 1 ? '✓' : `${p.read}/${p.total}`}
-                  </div>
+                {/* Progress bar — top edge of card, full width */}
+                <div className="h-[3px] bg-muted w-full">
+                  <div
+                    className={cn('h-full transition-all duration-500', p.pct === 1 ? 'bg-primary' : 'bg-primary/50')}
+                    style={{ width: `${Math.round(p.pct * 100)}%` }}
+                  />
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-serif text-[19px] tracking-[-0.015em] text-foreground mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                    {p.dx}
+                {/* Card body */}
+                <div className="flex gap-4 items-start px-5 py-4">
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-serif text-[18px] tracking-[-0.015em] text-foreground mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {p.dx}
+                    </div>
+                    {p.summary && !isConfirming && (
+                      <p className="font-sans text-[13px] text-muted-foreground leading-[1.5] m-0 mb-3 line-clamp-2">
+                        {p.summary}
+                      </p>
+                    )}
+                    {isConfirming ? (
+                      <p className="font-sans text-[13px] text-destructive/90 leading-[1.4] mb-0 mt-1">
+                        ¿Borrar este diagnóstico? No se puede deshacer.
+                      </p>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Status badge */}
+                        <span className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[10px] tracking-[.08em] uppercase',
+                          p.pct === 0 ? 'bg-muted text-muted-foreground/60' :
+                          p.pct === 1 ? 'bg-primary/10 text-primary' :
+                                        'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400'
+                        )}>
+                          {p.pct === 0 ? 'Sin leer' : p.pct === 1 ? '✓ Completado' : `${p.read} de ${p.total} capítulos`}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground/40">{date}</span>
+                      </div>
+                    )}
                   </div>
-                  {p.summary && !isConfirming && (
-                    <p className="font-sans text-[13px] text-muted-foreground leading-[1.5] m-0 mb-2.5 line-clamp-2">
-                      {p.summary}
-                    </p>
-                  )}
+
+                  {/* Right: actions or chevron */}
                   {isConfirming ? (
-                    <p className="font-sans text-[13px] text-destructive/90 mt-1 leading-[1.4] mb-0">
-                      ¿Borrar esta explicación? No se puede deshacer.
-                    </p>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={(e) => { e.preventDefault(); handleDelete(p.id) }}
+                        disabled={isDeleting}
+                        className="px-[14px] py-[7px] rounded-lg border-none cursor-pointer bg-destructive text-destructive-foreground font-sans text-[13px] font-medium"
+                      >
+                        {isDeleting ? 'Borrando…' : 'Sí, borrar'}
+                      </button>
+                      <button
+                        onClick={(e) => { e.preventDefault(); setConfirmId(null) }}
+                        className="px-[10px] py-[7px] rounded-lg border border-border cursor-pointer bg-transparent flex items-center text-muted-foreground"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   ) : (
-                    <div className="flex items-center gap-3">
-                      <span className={cn(
-                        'font-mono text-[10px] tracking-[.08em] uppercase',
-                        p.pct === 1 ? 'text-primary' : 'text-muted-foreground/60'
-                      )}>
-                        {statusLabel}
-                      </span>
-                      <span className="w-[3px] h-[3px] rounded-full bg-border shrink-0" />
-                      <span className="font-mono text-[10px] text-muted-foreground/60">{date}</span>
+                    <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                      <button
+                        onClick={(e) => { e.preventDefault(); setConfirmId(p.id) }}
+                        className="p-1.5 rounded-[7px] border-none bg-transparent cursor-pointer text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
                     </div>
                   )}
                 </div>
 
-                {/* Right actions */}
-                {isConfirming ? (
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={(e) => { e.preventDefault(); handleDelete(p.id) }}
-                      disabled={isDeleting}
-                      className="px-[14px] py-[7px] rounded-lg border-none cursor-pointer bg-destructive text-destructive-foreground font-sans text-[13px] font-medium"
-                    >
-                      {isDeleting ? 'Borrando…' : 'Sí, borrar'}
-                    </button>
-                    <button
-                      onClick={(e) => { e.preventDefault(); setConfirmId(null) }}
-                      className="px-[10px] py-[7px] rounded-lg border border-border cursor-pointer bg-transparent flex items-center text-muted-foreground"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2.5 shrink-0">
-                    <button
-                      onClick={(e) => { e.preventDefault(); setConfirmId(p.id) }}
-                      className="p-1.5 rounded-[7px] border-none bg-transparent cursor-pointer flex items-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--border))" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
+                {/* Contextual CTA footer — only when not confirming */}
+                {!isConfirming && (
+                  <div className={cn(
+                    'px-5 py-3 border-t border-border/60 flex items-center justify-between',
+                    p.pct === 1 ? 'bg-primary/5' : 'bg-muted/40'
+                  )}>
+                    <span className="font-sans text-[12px] text-muted-foreground/70">
+                      {p.pct === 0 ? 'Empieza a leer tu diagnóstico' :
+                       p.pct === 1 ? 'Diagnóstico completado — prepara tu consulta' :
+                                     'Continúa donde lo dejaste'}
+                    </span>
+                    <span className="font-sans text-[12px] font-medium text-primary">
+                      {p.pct === 0 ? 'Leer →' : p.pct === 1 ? 'Revisar →' : 'Continuar →'}
+                    </span>
                   </div>
                 )}
               </div>

@@ -55,7 +55,7 @@ export default async function HistorialPage({
     { key: 'todos', label: 'Todos' },
     { key: 'sin-leer', label: 'Sin leer' },
     { key: 'a-medias', label: 'A medias' },
-    { key: 'leido', label: 'Mi expediente' },
+    { key: 'leido', label: 'Completados' },
   ]
 
   const totalPacks = packs.length
@@ -70,10 +70,10 @@ export default async function HistorialPage({
         {/* Header */}
         <div className="mb-9">
           <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-2">
-            {totalPacks} {totalPacks === 1 ? 'explicación' : 'explicaciones'}
+            {totalPacks} {totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}
           </p>
           <h1 className="font-serif text-[clamp(24px,3.5vw,36px)] tracking-tight leading-tight mb-0 whitespace-nowrap">
-            Mis <em className="text-primary">explicaciones</em>
+            Mi <em className="text-primary">expediente</em>
           </h1>
         </div>
 

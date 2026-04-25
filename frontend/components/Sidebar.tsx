@@ -19,8 +19,8 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/ingreso',   label: 'Nuevo pack',       icon: <Plus size={18} /> },
-  { href: '/historial', label: 'Mis explicaciones', icon: <LayoutList size={18} /> },
+  { href: '/ingreso',   label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
+  { href: '/historial', label: 'Mi expediente',     icon: <LayoutList size={18} /> },
 ]
 
 const BOTTOM_ITEMS: NavItem[] = [

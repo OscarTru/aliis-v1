@@ -321,7 +321,7 @@ export default function IngresoPage() {
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
-                {loading ? 'Preparando tu pack…' : 'Generar mi pack'}
+                {loading ? 'Preparando tu diagnóstico…' : 'Generar mi diagnóstico'}
               </Button>
 
               <button
