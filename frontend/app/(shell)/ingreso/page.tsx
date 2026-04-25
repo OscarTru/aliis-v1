@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Stethoscope, Pill, ClipboardList, HelpCircle } from 'lucide-react'
-import { AppShell } from '@/components/AppShell'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -117,8 +116,8 @@ export default function IngresoPage() {
 
   return (
     <>
-      <AppShell>
-        <main className="max-w-[560px] mx-auto px-6 pt-12 pb-20">
+      <>
+        <div className="max-w-[560px] mx-auto px-6 pt-12 pb-20">
 
           {/* ── Step 1: diagnóstico ── */}
           {step === 'dx' && (
@@ -380,8 +379,8 @@ export default function IngresoPage() {
             </div>
           )}
 
-        </main>
-      </AppShell>
+        </div>
+      </>
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>

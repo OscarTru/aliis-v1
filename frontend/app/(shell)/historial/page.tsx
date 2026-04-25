@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { AppShell } from '@/components/AppShell'
 import { PackList } from '@/components/PackList'
 import { cn } from '@/lib/utils'
 
@@ -60,8 +59,8 @@ export default async function HistorialPage({
   const totalPacks = packs.length
 
   return (
-    <AppShell>
-      <main className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
+    <>
+      <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
 
         {/* Header */}
         <div className="mb-9">
@@ -109,7 +108,7 @@ export default async function HistorialPage({
         {/* Pack list — client component handles delete + empty filter state */}
         {packs.length > 0 && <PackList initialPacks={filtered} />}
 
-      </main>
-    </AppShell>
+      </div>
+    </>
   )
 }

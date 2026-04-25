@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppShell } from '@/components/AppShell'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
@@ -164,7 +163,7 @@ export default function CuentaPage() {
   if (!profile) return null
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-[640px] mx-auto px-6 pt-12 pb-20">
 
         {/* Header */}
@@ -338,6 +337,6 @@ export default function CuentaPage() {
         onConfirm={handleDeleteAccount}
         onCancel={() => setShowDeleteDialog(false)}
       />
-    </AppShell>
+    </>
   )
 }

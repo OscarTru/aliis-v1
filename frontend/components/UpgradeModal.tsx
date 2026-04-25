@@ -1,13 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 export function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="max-w-[380px] rounded-3xl p-10 text-center border border-border bg-background">
+        <VisuallyHidden><DialogTitle>Actualiza tu plan</DialogTitle></VisuallyHidden>
         <div className="font-serif text-[28px] tracking-tight leading-tight mb-3">
           Has usado tu pack gratuito
         </div>

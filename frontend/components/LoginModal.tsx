@@ -6,7 +6,8 @@ import { Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
 import Image from 'next/image'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -82,6 +83,7 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="max-w-[400px] rounded-3xl p-10 border border-border bg-background shadow-2xl">
+        <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
         {/* Header */}
         <div className="text-center mb-8">
           <Image

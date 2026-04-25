@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { AppShell } from '@/components/AppShell'
 import { Capsule } from '@/components/ui/Capsule'
 import { LoginModal } from '@/components/LoginModal'
 import { PRICING_TIERS } from '@/lib/mock-data'
@@ -46,7 +45,7 @@ export default function PreciosPage() {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-[72rem] mx-auto px-6 pt-12 pb-[120px]">
 
         {/* Header */}
@@ -232,6 +231,6 @@ export default function PreciosPage() {
       </div>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-    </AppShell>
+    </>
   )
 }

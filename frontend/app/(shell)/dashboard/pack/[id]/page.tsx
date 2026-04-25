@@ -2,9 +2,9 @@
 
 import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppNav } from '../../../../components/AppNav'
-import { Eyebrow } from '../../../../components/ui/Eyebrow'
-import { MOCK_PACKS, type MockChapter } from '../../../../lib/mock-data'
+import { AppNav } from '@/components/AppNav'
+import { Eyebrow } from '@/components/ui/Eyebrow'
+import { MOCK_PACKS, type MockChapter } from '@/lib/mock-data'
 
 export default function PackDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
