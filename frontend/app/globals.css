@@ -73,3 +73,12 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+@keyframes ce-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ce-pulse {
+  animation: ce-pulse 1.8s ease-in-out infinite;
+}
