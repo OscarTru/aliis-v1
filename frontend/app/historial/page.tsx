@@ -82,7 +82,7 @@ export default async function HistorialPage({
               className={cn(
                 'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
                 filter === f.key
-                  ? 'border-transparent bg-[#0F1923] text-white shadow-[0_0_0_1px_rgba(31,138,155,.3),0_2px_10px_rgba(31,138,155,.12)]'
+                  ? 'border-transparent bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
                   : 'border-border text-muted-foreground hover:bg-muted'
               )}
             >
@@ -99,7 +99,7 @@ export default async function HistorialPage({
             </p>
             <Link
               href="/ingreso"
-              className="inline-block px-7 py-3 rounded-full bg-[#0F1923] text-white no-underline font-sans text-sm font-medium shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
+              className="inline-block px-7 py-3 rounded-full bg-foreground text-background no-underline font-sans text-sm font-medium shadow-[var(--c-btn-primary-shadow)]"
             >
               Entender mi diagnóstico
             </Link>

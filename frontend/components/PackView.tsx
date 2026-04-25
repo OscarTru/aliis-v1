@@ -16,7 +16,7 @@ function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: strin
       'p-[18px_22px] rounded-[14px] mb-2.5 border',
       isRed ? 'bg-[rgba(192,57,43,.05)] border-[rgba(192,57,43,.2)]' : 'bg-[rgba(161,98,7,.05)] border-[rgba(161,98,7,.2)]'
     )}>
-      <div className={cn('font-mono text-[10px] tracking-[.15em] uppercase mb-2', isRed ? 'text-[#c0392b]' : 'text-[#a16207]')}>
+      <div className={cn('font-mono text-[10px] tracking-[.15em] uppercase mb-2', isRed ? 'text-destructive' : 'text-amber-700')}>
         {isRed ? '— urgente' : '— consulta pronto'}
       </div>
       <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-1.5 leading-[1.3]">{t}</div>
@@ -58,7 +58,7 @@ function ChapterCard({
   return (
     <div className="h-full overflow-y-auto px-12 py-10 pb-20">
       {/* kicker */}
-      <div className="font-mono text-[11px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-2.5">
+      <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-2.5">
         {chapter.n} · {chapter.readTime}
       </div>
       <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5" style={{ fontSize: 'clamp(26px, 3.5vw, 38px)' }}>
@@ -114,7 +114,7 @@ function ChapterCard({
         </div>
       )}
 
-      <div className="mt-8 px-4 py-3 bg-muted rounded-[10px] font-sans text-[12px] text-[var(--c-text-faint)] italic">
+      <div className="mt-8 px-4 py-3 bg-muted rounded-[10px] font-sans text-[12px] text-muted-foreground/60 italic">
         Esta información es educativa y no reemplaza la consulta con tu médico.
       </div>
 
@@ -179,7 +179,7 @@ export function PackView({
               { href: '/historial', label: 'Mis explicaciones', icon: <LayoutList size={15} /> },
             ].map((item) => (
               <Link key={item.href} href={item.href} className="flex items-center gap-[9px] px-2.5 py-2 rounded-[9px] no-underline font-sans text-[13px] text-muted-foreground">
-                <span className="flex text-[var(--c-text-faint)]">{item.icon}</span>
+                <span className="flex text-muted-foreground/60">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
@@ -188,7 +188,7 @@ export function PackView({
 
         {/* Divider + pack label */}
         <div className="px-2.5 pt-3 pb-2 border-t border-border">
-          <div className="font-mono text-[9px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-1.5">
+          <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/60 mb-1.5">
             Esta explicación
           </div>
           <div className="font-serif text-[14px] tracking-[-0.01em] leading-[1.35] text-foreground">
@@ -210,7 +210,7 @@ export function PackView({
                   isActive ? 'bg-primary/10' : 'bg-transparent'
                 )}
               >
-                <span className={cn('shrink-0 inline-flex', isActive ? 'text-primary' : 'text-[var(--c-text-faint)]')}>{NAV_ICON_MAP[ch.id] ?? '•'}</span>
+                <span className={cn('shrink-0 inline-flex', isActive ? 'text-primary' : 'text-muted-foreground/60')}>{NAV_ICON_MAP[ch.id] ?? '•'}</span>
                 <div className="flex-1 min-w-0">
                   <div className={cn(
                     'font-sans text-[13px] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]',
@@ -221,7 +221,7 @@ export function PackView({
                   {ch.kickerItalic && (
                     <div className={cn(
                       'font-serif italic text-[12px] whitespace-nowrap overflow-hidden text-ellipsis opacity-80',
-                      isActive ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                      isActive ? 'text-primary' : 'text-muted-foreground/60'
                     )}>
                       {ch.kickerItalic}
                     </div>
@@ -245,7 +245,7 @@ export function PackView({
                 activeIdx === pack.chapters.length ? 'bg-primary/10' : 'bg-transparent'
               )}
             >
-              <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-[var(--c-text-faint)]')}><BookMarked size={15} /></span>
+              <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground/60')}><BookMarked size={15} /></span>
               <span className={cn('font-sans text-[13px]', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground')}>
                 Referencias
               </span>
@@ -253,7 +253,7 @@ export function PackView({
           )}
           {!isPublic && (
             <Link href={`/compartir/${pack.id}`} className="flex items-center gap-[9px] px-2.5 py-[9px] rounded-[9px] no-underline font-sans text-[13px] text-muted-foreground">
-              <span className="flex text-[var(--c-text-faint)]"><Share2 size={15} /></span>
+              <span className="flex text-muted-foreground/60"><Share2 size={15} /></span>
               Compartir
             </Link>
           )}
@@ -284,7 +284,7 @@ export function PackView({
                 disabled={activeIdx === 0}
                 className={cn(
                   'px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] flex items-center gap-1.5',
-                  activeIdx === 0 ? 'cursor-not-allowed text-[var(--c-text-faint)]' : 'cursor-pointer text-foreground'
+                  activeIdx === 0 ? 'cursor-not-allowed text-muted-foreground/60' : 'cursor-pointer text-foreground'
                 )}
               >
                 ← Anterior
@@ -310,7 +310,7 @@ export function PackView({
                   'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
                   isLast
                     ? 'border border-border bg-transparent text-muted-foreground'
-                    : 'border-none bg-[#0F1923] text-white shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]'
+                    : 'border-none bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
                 )}
               >
                 {isLast ? 'Ver referencias' : 'Siguiente'} →
@@ -320,7 +320,7 @@ export function PackView({
         ) : (
           /* References panel */
           <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
-            <div className="font-mono text-[11px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-5">
+            <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
               Referencias verificadas
             </div>
             <div className="flex flex-col gap-4">

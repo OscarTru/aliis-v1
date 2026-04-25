@@ -45,7 +45,7 @@ function SaveButton({ loading, onClick }: { loading: boolean; onClick: () => voi
     <button
       onClick={onClick}
       disabled={loading}
-      className="mt-2.5 px-5 py-2.5 rounded-[10px] border-none bg-[#0F1923] text-white font-sans text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] transition-opacity duration-150"
+      className="mt-2.5 px-5 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] transition-opacity duration-150"
     >
       {loading ? 'Guardando…' : 'Guardar'}
     </button>
@@ -285,7 +285,7 @@ export default function CuentaPage() {
             {profile.plan === 'free' && (
               <a
                 href="/precios"
-                className="px-4 py-2.5 rounded-[10px] border-none bg-[#0F1923] text-white font-sans text-sm font-medium no-underline shadow-[var(--c-btn-primary-shadow)] whitespace-nowrap"
+                className="px-4 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium no-underline shadow-[var(--c-btn-primary-shadow)] whitespace-nowrap"
               >
                 Actualizar
               </a>

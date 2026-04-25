@@ -78,7 +78,7 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
                   <ProgressRing pct={p.pct} />
                   <div className={cn(
                     'absolute inset-0 flex items-center justify-center font-mono text-[9px]',
-                    p.pct === 1 ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                    p.pct === 1 ? 'text-primary' : 'text-muted-foreground/60'
                   )}>
                     {p.pct === 1 ? '✓' : `${p.read}/${p.total}`}
                   </div>
@@ -102,12 +102,12 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
                     <div className="flex items-center gap-3">
                       <span className={cn(
                         'font-mono text-[10px] tracking-[.08em] uppercase',
-                        p.pct === 1 ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                        p.pct === 1 ? 'text-primary' : 'text-muted-foreground/60'
                       )}>
                         {statusLabel}
                       </span>
                       <span className="w-[3px] h-[3px] rounded-full bg-border shrink-0" />
-                      <span className="font-mono text-[10px] text-[var(--c-text-faint)]">{date}</span>
+                      <span className="font-mono text-[10px] text-muted-foreground/60">{date}</span>
                     </div>
                   )}
                 </div>
@@ -118,7 +118,7 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
                     <button
                       onClick={(e) => { e.preventDefault(); handleDelete(p.id) }}
                       disabled={isDeleting}
-                      className="px-[14px] py-[7px] rounded-lg border-none cursor-pointer bg-[#c0392b] text-white font-sans text-[13px] font-medium"
+                      className="px-[14px] py-[7px] rounded-lg border-none cursor-pointer bg-destructive text-destructive-foreground font-sans text-[13px] font-medium"
                     >
                       {isDeleting ? 'Borrando…' : 'Sí, borrar'}
                     </button>
@@ -133,7 +133,7 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
                   <div className="flex items-center gap-2.5 shrink-0">
                     <button
                       onClick={(e) => { e.preventDefault(); setConfirmId(p.id) }}
-                      className="p-1.5 rounded-[7px] border-none bg-transparent cursor-pointer flex items-center text-[var(--c-text-faint)] hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
+                      className="p-1.5 rounded-[7px] border-none bg-transparent cursor-pointer flex items-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
                     >
                       <Trash2 size={15} />
                     </button>

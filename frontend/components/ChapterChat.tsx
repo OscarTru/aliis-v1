@@ -99,7 +99,7 @@ export function ChapterChat({
               <div className={cn(
                 'max-w-[82%]',
                 m.role === 'user'
-                  ? 'bg-[#0F1923] shadow-[0_0_0_1px_rgba(31,138,155,.3)] rounded-[14px_14px_4px_14px] px-[14px] py-[10px]'
+                  ? 'bg-foreground shadow-[var(--c-btn-primary-shadow)] rounded-[14px_14px_4px_14px] px-[14px] py-[10px]'
                   : 'bg-muted border border-border rounded-[4px_14px_14px_14px] px-[18px] py-[14px]'
               )}>
                 {m.role === 'assistant' && m.text === '' ? (
@@ -146,15 +146,15 @@ export function ChapterChat({
           className={cn(
             'w-[34px] h-[34px] rounded-[10px] border-none shrink-0 flex items-center justify-center transition-colors duration-150',
             isActive
-              ? 'bg-[#0F1923] shadow-[0_0_0_1px_rgba(31,138,155,.3)] cursor-pointer text-white'
-              : 'bg-border cursor-not-allowed text-[var(--c-text-faint)]'
+              ? 'bg-foreground shadow-[var(--c-btn-primary-shadow)] cursor-pointer text-background'
+              : 'bg-border cursor-not-allowed text-muted-foreground/60'
           )}
         >
           <Send size={15} />
         </button>
       </div>
 
-      <p className="font-sans text-[11px] text-[var(--c-text-faint)] mt-2 leading-[1.4]">
+      <p className="font-sans text-[11px] text-muted-foreground/60 mt-2 leading-[1.4]">
         Esta conversación no reemplaza la consulta con tu médico.
       </p>
     </div>
