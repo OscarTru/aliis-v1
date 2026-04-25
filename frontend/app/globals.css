@@ -43,7 +43,7 @@
     --c-brand-teal-light: #8AC9D2;
     --c-brand-ink: hsl(var(--secondary));
     --c-brand-scribble: rgba(30,40,55,0.35);
-    --c-btn-primary: hsl(var(--primary-foreground));
+    --c-btn-primary: hsl(var(--secondary));
     --c-btn-primary-shadow: 0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15);
     --c-btn-secondary-border: rgba(31,138,155,.35);
     --c-invert: #18181b;
@@ -90,6 +90,7 @@
       --c-brand-teal-deep: #25a8bb;
       --c-brand-teal-light: #5bb8c5;
       --c-brand-ink: hsl(var(--secondary));
+      --c-btn-primary: hsl(var(--secondary));
       --c-invert: #f4f4f5;
       --c-invert-fg: #18181b;
     }
@@ -112,8 +113,6 @@ html {
 }
 
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
   margin: 0;
 }
 
@@ -142,7 +141,7 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, hsl(var(--muted)) 25%, #e8e8e9 50%, hsl(var(--muted)) 75%);
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--accent-foreground) / 0.08) 50%, hsl(var(--muted)) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
