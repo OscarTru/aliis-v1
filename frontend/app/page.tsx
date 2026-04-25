@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { AppNav } from '../components/AppNav'
 import { Footer } from '../components/Footer'
 import { LoginModal } from '../components/LoginModal'
@@ -9,6 +10,7 @@ import { Eyebrow } from '../components/ui/Eyebrow'
 import { Capsule } from '../components/ui/Capsule'
 import { Glow } from '../components/ui/Glow'
 import { PRICING_TIERS } from '../lib/mock-data'
+import { createClient } from '../lib/supabase'
 
 // ─── Hero ─────────────────────────────────────────────────────
 
@@ -64,7 +66,7 @@ function InputPreview({ onCTA }: { onCTA: () => void }) {
   )
 }
 
-function Hero({ onCTA }: { onCTA: () => void }) {
+function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => void }) {
   return (
     <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
@@ -88,15 +90,15 @@ function Hero({ onCTA }: { onCTA: () => void }) {
               Pregúntale a Aliis
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
-            <a href="/dashboard"
+            <button onClick={onVerEjemplo}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '14px 28px', background: 'transparent', color: 'var(--c-text)',
                 border: '1px solid var(--c-border)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15,
-                textDecoration: 'none', cursor: 'pointer',
+                cursor: 'pointer',
               }}>
               Ver un ejemplo
-            </a>
+            </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <Capsule tone="teal">✓ Basado en evidencia</Capsule>
@@ -418,12 +420,29 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
 // ─── Page root ────────────────────────────────────────────────
 
 export default function Home() {
+  const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
+
+  async function handleMainCTA() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      router.push('/ingreso')
+    } else {
+      setShowLogin(true)
+    }
+  }
+
+  async function handleVerEjemplo() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    router.push(user ? '/historial' : '#demo')
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       <AppNav />
-      <Hero onCTA={() => setShowLogin(true)} />
+      <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
       <WhatAliisDoes />
       <HowItWorks />
       <TrustSection />
