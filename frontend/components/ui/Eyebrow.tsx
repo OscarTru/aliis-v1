@@ -1,25 +1,27 @@
+import { cn } from '@/lib/utils'
+import React from 'react'
+
 export function Eyebrow({
   children,
   centered = false,
-  style = {},
+  className,
+  style,
 }: {
   children: React.ReactNode
   centered?: boolean
+  className?: string
   style?: React.CSSProperties
 }) {
   return (
-    <div
-      style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 11,
-        textTransform: 'uppercase',
-        letterSpacing: '.22em',
-        color: 'var(--c-text-subtle)',
-        textAlign: centered ? 'center' : 'left',
-        ...style,
-      }}
+    <p
+      className={cn(
+        'font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 m-0',
+        centered && 'text-center',
+        className
+      )}
+      style={style}
     >
       {children}
-    </div>
+    </p>
   )
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AppNav } from '../../components/AppNav'
 import { Footer } from '../../components/Footer'
 import { Eyebrow } from '../../components/ui/Eyebrow'
-import { ButtonPrimary } from '../../components/ui/Button'
+import { Button } from '../../components/ui/Button'
 import { ScribbleBrain } from '../../components/ui/ScribbleBrain'
 import { MOCK_PACKS, TINT_GRADIENTS, type MockPack } from '../../lib/mock-data'
 
@@ -84,9 +84,9 @@ export default function DashboardPage() {
               <em style={{ color: 'var(--c-text-faint)' }}>junto.</em>
             </h1>
           </div>
-          <ButtonPrimary icon="arrow" onClick={() => router.push('/')}>
+          <Button onClick={() => router.push('/')}>
             Nueva explicación
-          </ButtonPrimary>
+          </Button>
         </div>
 
         {/* Filters */}
@@ -125,9 +125,9 @@ export default function DashboardPage() {
             ¿Saliste hoy de consulta?{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>Pégalo ya, mientras está fresco.</em>
           </div>
-          <ButtonPrimary size="sm" icon="arrow" onClick={() => router.push('/')}>
+          <Button size="sm" onClick={() => router.push('/')}>
             Empezar nueva explicación
-          </ButtonPrimary>
+          </Button>
         </div>
       </div>
 
