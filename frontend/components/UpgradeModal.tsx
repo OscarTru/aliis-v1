@@ -1,56 +1,29 @@
 'use client'
 
 import Link from 'next/link'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: 'var(--c-bg)',
-          border: '1px solid var(--c-border)',
-          borderRadius: 24,
-          padding: '40px',
-          maxWidth: 380,
-          width: '100%',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ fontFamily: 'var(--font-serif)', fontSize: 28, letterSpacing: '-.02em', marginBottom: 12 }}>
+    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-[380px] rounded-3xl p-10 text-center border border-border bg-background">
+        <div className="font-serif text-[28px] tracking-tight leading-tight mb-3">
           Has usado tu pack gratuito
         </div>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text-muted)', marginBottom: 32, lineHeight: 1.6 }}>
+        <p className="font-sans text-[15px] text-muted-foreground leading-relaxed mb-8">
           Con Aliis Pro tienes packs ilimitados, referencias verificadas y acceso completo.
         </p>
-        <Link
-          href="/precios"
-          style={{
-            display: 'block', padding: '14px', borderRadius: 12,
-            background: 'var(--c-brand-teal)', color: '#fff',
-            textDecoration: 'none', fontFamily: 'var(--font-sans)',
-            fontSize: 15, fontWeight: 500, marginBottom: 12,
-          }}
-        >
-          Ver planes — desde €9.99/mes
-        </Link>
+        <Button asChild className="w-full h-12 rounded-xl bg-primary text-white font-sans text-[15px] font-medium hover:bg-primary/90 mb-3">
+          <Link href="/precios">Ver planes — desde €9.99/mes</Link>
+        </Button>
         <button
           onClick={onClose}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)',
-          }}
+          className="font-sans text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors"
         >
           Ahora no
         </button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
