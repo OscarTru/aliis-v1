@@ -145,7 +145,11 @@ export async function generatePack(
 
   try {
     return await attempt()
-  } catch {
-    return await attempt()
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg === 'No JSON in response' || msg === 'Invalid pack structure') {
+      return await attempt()
+    }
+    throw err
   }
 }
