@@ -42,6 +42,7 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
         .single()
       router.push(profile?.onboarding_done ? '/historial' : '/onboarding')
     }
+    setLoading(false)
     onClose()
   }
 
