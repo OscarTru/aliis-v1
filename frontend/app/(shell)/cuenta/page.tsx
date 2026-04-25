@@ -13,6 +13,7 @@ type Profile = {
   who: 'yo' | 'familiar' | null
   plan: 'free' | 'pro'
   email: string | null
+  trial_end: string | null
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -98,8 +99,8 @@ export default function CuentaPage() {
       const providers = user.identities?.map(i => i.provider) ?? []
       setIsGoogleUser(providers.includes('google') && !providers.includes('email'))
 
-      const { data: p } = await supabase.from('profiles').select('name,who,plan').eq('id', user.id).single()
-      setProfile({ name: p?.name ?? null, who: p?.who ?? null, plan: p?.plan ?? 'free', email: user.email ?? null })
+      const { data: p } = await supabase.from('profiles').select('name,who,plan,trial_end').eq('id', user.id).single()
+      setProfile({ name: p?.name ?? null, who: p?.who ?? null, plan: p?.plan ?? 'free', email: user.email ?? null, trial_end: p?.trial_end ?? null })
       setName(p?.name ?? '')
       setWho(p?.who ?? null)
     }
@@ -280,6 +281,11 @@ export default function CuentaPage() {
               <div className="font-sans text-[13px] text-muted-foreground">
                 {profile.plan === 'pro' ? 'Explicaciones ilimitadas, acceso completo.' : 'Explicaciones limitadas.'}
               </div>
+              {profile.plan === 'pro' && profile.trial_end && new Date(profile.trial_end) > new Date() && (
+                <div className="font-sans text-[13px] text-amber-600 mt-1">
+                  Período de prueba activo — termina el {new Date(profile.trial_end).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              )}
             </div>
             {profile.plan === 'free' && (
               <a

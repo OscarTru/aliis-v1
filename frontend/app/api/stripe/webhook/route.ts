@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { sendEmail } from '@/lib/resend'
+import { paymentConfirmationEmail } from '@/lib/emails'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -46,13 +48,42 @@ export async function POST(request: NextRequest) {
         const userId = session.metadata?.userId
 
         if (userId) {
+          const subscriptionId = session.subscription as string | null
+          let trialEnd: string | null = null
+          if (subscriptionId) {
+            const sub = await stripe.subscriptions.retrieve(subscriptionId)
+            if (sub.trial_end) {
+              trialEnd = new Date(sub.trial_end * 1000).toISOString()
+            }
+          }
+
           await admin
             .from('profiles')
             .update({
               plan: 'pro',
               stripe_customer_id: session.customer as string,
+              trial_end: trialEnd,
             })
             .eq('id', userId)
+
+          // Send payment confirmation email.
+          // Note: checkout.session.completed can re-fire on Stripe retries — duplicate
+          // emails are possible but acceptable at MVP scale.
+          try {
+            const email = session.customer_details?.email ?? null
+            if (email) {
+              const { data: profile } = await admin
+                .from('profiles')
+                .select('name')
+                .eq('id', userId)
+                .single()
+              const name: string | null = profile?.name ?? null
+              const { subject, html } = paymentConfirmationEmail(name)
+              await sendEmail({ to: email, subject, html })
+            }
+          } catch (emailErr) {
+            console.error('Payment confirmation email error:', emailErr)
+          }
         }
         break
       }
@@ -62,7 +93,7 @@ export async function POST(request: NextRequest) {
 
         await admin
           .from('profiles')
-          .update({ plan: 'free' })
+          .update({ plan: 'free', trial_end: null })
           .eq('stripe_customer_id', sub.customer as string)
         break
       }
@@ -71,10 +102,13 @@ export async function POST(request: NextRequest) {
         const sub = event.data.object as Stripe.Subscription
         const status = sub.status
         const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
+        const trialEnd = sub.trial_end
+          ? new Date(sub.trial_end * 1000).toISOString()
+          : null
 
         await admin
           .from('profiles')
-          .update({ plan })
+          .update({ plan, trial_end: trialEnd })
           .eq('stripe_customer_id', sub.customer as string)
         break
       }

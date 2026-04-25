@@ -1,6 +1,8 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PackList } from '@/components/PackList'
+import { UpgradeToast } from '@/components/UpgradeToast'
 import { cn } from '@/lib/utils'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
@@ -60,6 +62,9 @@ export default async function HistorialPage({
 
   return (
     <>
+      <Suspense fallback={null}>
+        <UpgradeToast />
+      </Suspense>
       <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
 
         {/* Header */}
