@@ -7,25 +7,20 @@ import { BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMa
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
 import { ChapterChat } from '@/components/ChapterChat'
+import { cn } from '@/lib/utils'
 
 function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: string }) {
   const isRed = tone === 'red'
-  const accent = isRed ? '#c0392b' : '#a16207'
-  const bg = isRed ? 'rgba(192,57,43,.05)' : 'rgba(161,98,7,.05)'
-  const border = isRed ? 'rgba(192,57,43,.2)' : 'rgba(161,98,7,.2)'
   return (
-    <div style={{
-      padding: '18px 22px',
-      borderRadius: 14,
-      background: bg,
-      border: `1px solid ${border}`,
-      marginBottom: 10,
-    }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', textTransform: 'uppercase', color: accent, marginBottom: 8 }}>
+    <div className={cn(
+      'p-[18px_22px] rounded-[14px] mb-2.5 border',
+      isRed ? 'bg-[rgba(192,57,43,.05)] border-[rgba(192,57,43,.2)]' : 'bg-[rgba(161,98,7,.05)] border-[rgba(161,98,7,.2)]'
+    )}>
+      <div className={cn('font-mono text-[10px] tracking-[.15em] uppercase mb-2', isRed ? 'text-[#c0392b]' : 'text-[#a16207]')}>
         {isRed ? '— urgente' : '— consulta pronto'}
       </div>
-      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 16, letterSpacing: '-.01em', color: 'var(--c-text)', marginBottom: 6, lineHeight: 1.3 }}>{t}</div>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', lineHeight: 1.6 }}>{d}</div>
+      <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-1.5 leading-[1.3]">{t}</div>
+      <div className="font-sans text-[14px] text-muted-foreground leading-[1.6]">{d}</div>
     </div>
   )
 }
@@ -61,41 +56,41 @@ function ChapterCard({
   }, [chapter.id, packId, userId, onRead])
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '40px 48px 80px' }}>
+    <div className="h-full overflow-y-auto px-12 py-10 pb-20">
       {/* kicker */}
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 10 }}>
+      <div className="font-mono text-[11px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-2.5">
         {chapter.n} · {chapter.readTime}
       </div>
-      <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(26px, 3.5vw, 38px)', letterSpacing: '-.022em', lineHeight: 1.12, marginBottom: 10 }}>
-        {chapter.kicker} <em style={{ color: 'var(--c-text-muted)' }}>{chapter.kickerItalic}</em>
+      <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5" style={{ fontSize: 'clamp(26px, 3.5vw, 38px)' }}>
+        {chapter.kicker} <em className="text-muted-foreground">{chapter.kickerItalic}</em>
       </h2>
-      <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--c-text-muted)', fontSize: 16, marginBottom: 32, lineHeight: 1.55 }}>
+      <p className="font-serif italic text-muted-foreground text-[16px] mb-8 leading-[1.55]">
         {chapter.tldr}
       </p>
 
       {chapter.paragraphs?.map((p, i) => (
-        <p key={i} style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.8, color: 'var(--c-text)', marginBottom: 20 }}>{p}</p>
+        <p key={i} className="font-sans text-[16px] leading-[1.8] text-foreground mb-5">{p}</p>
       ))}
 
       {chapter.callout && (
-        <div style={{ margin: '28px 0', padding: '20px 24px', background: 'rgba(31,138,155,.06)', border: '1px solid rgba(31,138,155,.18)', borderRadius: 14 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-brand-teal)', marginBottom: 10 }}>
+        <div className="my-7 p-[20px_24px] bg-[rgba(31,138,155,.06)] border border-[rgba(31,138,155,.18)] rounded-[14px]">
+          <div className="font-mono text-[10px] tracking-[.15em] uppercase text-primary mb-2.5">
             {chapter.callout.label}
           </div>
-          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 16, lineHeight: 1.6, color: 'var(--c-text)', margin: 0 }}>
+          <p className="font-serif text-[16px] leading-[1.6] text-foreground m-0">
             {chapter.callout.body}
           </p>
         </div>
       )}
 
       {chapter.timeline && (
-        <div style={{ margin: '28px 0', display: 'flex', flexDirection: 'column', gap: 0 }}>
+        <div className="my-7 flex flex-col gap-0">
           {chapter.timeline.map((item, i) => (
-            <div key={i} style={{ display: 'flex', gap: 20, alignItems: 'flex-start', paddingBottom: 20, borderLeft: '2px solid var(--c-border)', paddingLeft: 20, position: 'relative' }}>
-              <div style={{ position: 'absolute', left: -5, top: 4, width: 8, height: 8, borderRadius: 999, background: 'var(--c-brand-teal)' }} />
+            <div key={i} className="flex gap-5 items-start pb-5 border-l-2 border-border pl-5 relative">
+              <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
               <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c-brand-teal)', marginBottom: 4 }}>{item.w}</div>
-                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)', lineHeight: 1.55 }}>{item.t}</div>
+                <div className="font-mono text-[11px] text-primary mb-1">{item.w}</div>
+                <div className="font-sans text-[15px] text-foreground leading-[1.55]">{item.t}</div>
               </div>
             </div>
           ))}
@@ -103,23 +98,23 @@ function ChapterCard({
       )}
 
       {chapter.questions && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ul className="list-none p-0 mt-2 flex flex-col gap-2.5">
           {chapter.questions.map((q, i) => (
-            <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '14px 18px', background: 'var(--c-surface)', borderRadius: 12 }}>
-              <span style={{ color: 'var(--c-brand-teal)', flexShrink: 0, display: 'flex', paddingTop: 2 }}><HelpCircle size={16} /></span>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)', lineHeight: 1.5 }}>{q}</span>
+            <li key={i} className="flex gap-3.5 items-start px-[18px] py-3.5 bg-muted rounded-xl">
+              <span className="text-primary shrink-0 flex pt-0.5"><HelpCircle size={16} /></span>
+              <span className="font-sans text-[15px] text-foreground leading-[1.5]">{q}</span>
             </li>
           ))}
         </ul>
       )}
 
       {chapter.alarms && (
-        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div className="mt-2 flex flex-col gap-0.5">
           {chapter.alarms.map((a, i) => <AlarmBadge key={i} {...a} />)}
         </div>
       )}
 
-      <div style={{ marginTop: 32, padding: '12px 16px', background: 'var(--c-surface)', borderRadius: 10, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--c-text-faint)', fontStyle: 'italic' }}>
+      <div className="mt-8 px-4 py-3 bg-muted rounded-[10px] font-sans text-[12px] text-[var(--c-text-faint)] italic">
         Esta información es educativa y no reemplaza la consulta con tu médico.
       </div>
 
@@ -167,33 +162,24 @@ export function PackView({
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div className="flex h-screen overflow-hidden">
 
       {/* ── Sidebar ── */}
-      <aside style={{
-        width: 240,
-        flexShrink: 0,
-        borderRight: '1px solid var(--c-border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'auto',
-        padding: '20px 12px 16px',
-        background: 'var(--c-bg)',
-      }}>
+      <aside className="w-60 shrink-0 border-r border-border flex flex-col overflow-y-auto px-3 pt-5 pb-4 bg-background">
         {/* Logo — idéntico al AppShell */}
-        <Link href="/historial" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', padding: '0 6px', marginBottom: 20 }}>
-          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} style={{ objectFit: 'contain' }} />
+        <Link href="/historial" className="flex items-center gap-2.5 no-underline px-1.5 mb-5">
+          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain" />
         </Link>
 
         {/* App nav */}
         {!isPublic && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 16 }}>
+          <div className="flex flex-col gap-0.5 mb-4">
             {[
               { href: '/ingreso', label: 'Nuevo pack', icon: <Plus size={15} /> },
               { href: '/historial', label: 'Mis explicaciones', icon: <LayoutList size={15} /> },
             ].map((item) => (
-              <Link key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 9, textDecoration: 'none', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)' }}>
-                <span style={{ display: 'flex', color: 'var(--c-text-faint)' }}>{item.icon}</span>
+              <Link key={item.href} href={item.href} className="flex items-center gap-[9px] px-2.5 py-2 rounded-[9px] no-underline font-sans text-[13px] text-muted-foreground">
+                <span className="flex text-[var(--c-text-faint)]">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
@@ -201,17 +187,17 @@ export function PackView({
         )}
 
         {/* Divider + pack label */}
-        <div style={{ padding: '12px 10px 8px', borderTop: '1px solid var(--c-border)' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 6 }}>
+        <div className="px-2.5 pt-3 pb-2 border-t border-border">
+          <div className="font-mono text-[9px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-1.5">
             Esta explicación
           </div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14, letterSpacing: '-.01em', lineHeight: 1.35, color: 'var(--c-text)' }}>
+          <div className="font-serif text-[14px] tracking-[-0.01em] leading-[1.35] text-foreground">
             {pack.dx}
           </div>
         </div>
 
         {/* Chapter nav */}
-        <nav style={{ padding: '6px 0', flex: 1 }}>
+        <nav className="py-1.5 flex-1">
           {pack.chapters.map((ch, i) => {
             const isActive = i === activeIdx
             const isRead = readChapters.has(ch.id)
@@ -219,27 +205,30 @@ export function PackView({
               <button
                 key={ch.id}
                 onClick={() => setActiveIdx(i)}
-                style={{
-                  width: '100%', textAlign: 'left', padding: '9px 10px',
-                  borderRadius: 9, border: 'none', cursor: 'pointer',
-                  background: isActive ? 'rgba(31,138,155,.1)' : 'transparent',
-                  marginBottom: 1, display: 'flex', alignItems: 'center', gap: 9,
-                  transition: 'background .12s',
-                }}
+                className={cn(
+                  'w-full text-left px-2.5 py-[9px] rounded-[9px] border-none cursor-pointer mb-px flex items-center gap-[9px] transition-colors duration-100',
+                  isActive ? 'bg-primary/10' : 'bg-transparent'
+                )}
               >
-                <span style={{ flexShrink: 0, display: 'inline-flex', color: isActive ? 'var(--c-brand-teal)' : 'var(--c-text-faint)' }}>{NAV_ICON_MAP[ch.id] ?? '•'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: isActive ? 500 : 400, color: isActive ? 'var(--c-brand-teal)' : 'var(--c-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                <span className={cn('shrink-0 inline-flex', isActive ? 'text-primary' : 'text-[var(--c-text-faint)]')}>{NAV_ICON_MAP[ch.id] ?? '•'}</span>
+                <div className="flex-1 min-w-0">
+                  <div className={cn(
+                    'font-sans text-[13px] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]',
+                    isActive ? 'font-medium text-primary' : 'font-normal text-muted-foreground'
+                  )}>
                     {ch.kicker}
                   </div>
                   {ch.kickerItalic && (
-                    <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 12, color: isActive ? 'var(--c-brand-teal)' : 'var(--c-text-faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.8 }}>
+                    <div className={cn(
+                      'font-serif italic text-[12px] whitespace-nowrap overflow-hidden text-ellipsis opacity-80',
+                      isActive ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                    )}>
                       {ch.kickerItalic}
                     </div>
                   )}
                 </div>
                 {isRead && !isActive && (
-                  <div style={{ width: 5, height: 5, borderRadius: 999, background: 'var(--c-brand-teal)', flexShrink: 0 }} />
+                  <div className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />
                 )}
               </button>
             )
@@ -247,26 +236,24 @@ export function PackView({
         </nav>
 
         {/* References + actions */}
-        <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div className="border-t border-border pt-2.5 flex flex-col gap-0.5">
           {verifiedRefs.length > 0 && (
             <button
               onClick={() => setActiveIdx(pack.chapters.length)}
-              style={{
-                width: '100%', textAlign: 'left', padding: '9px 10px',
-                borderRadius: 9, border: 'none', cursor: 'pointer',
-                background: activeIdx === pack.chapters.length ? 'rgba(31,138,155,.1)' : 'transparent',
-                display: 'flex', alignItems: 'center', gap: 9,
-              }}
+              className={cn(
+                'w-full text-left px-2.5 py-[9px] rounded-[9px] border-none cursor-pointer flex items-center gap-[9px]',
+                activeIdx === pack.chapters.length ? 'bg-primary/10' : 'bg-transparent'
+              )}
             >
-              <span style={{ display: 'inline-flex', color: activeIdx === pack.chapters.length ? 'var(--c-brand-teal)' : 'var(--c-text-faint)' }}><BookMarked size={15} /></span>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: activeIdx === pack.chapters.length ? 'var(--c-brand-teal)' : 'var(--c-text-muted)' }}>
+              <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-[var(--c-text-faint)]')}><BookMarked size={15} /></span>
+              <span className={cn('font-sans text-[13px]', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground')}>
                 Referencias
               </span>
             </button>
           )}
           {!isPublic && (
-            <Link href={`/compartir/${pack.id}`} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 9, textDecoration: 'none', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)' }}>
-              <span style={{ display: 'flex', color: 'var(--c-text-faint)' }}><Share2 size={15} /></span>
+            <Link href={`/compartir/${pack.id}`} className="flex items-center gap-[9px] px-2.5 py-[9px] rounded-[9px] no-underline font-sans text-[13px] text-muted-foreground">
+              <span className="flex text-[var(--c-text-faint)]"><Share2 size={15} /></span>
               Compartir
             </Link>
           )}
@@ -274,12 +261,12 @@ export function PackView({
       </aside>
 
       {/* ── Main content ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {activeIdx < pack.chapters.length ? (
           <>
             {/* Chapter card */}
-            <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div className="flex-1 overflow-hidden">
               <ChapterCard
                 key={chapter.id}
                 chapter={chapter}
@@ -291,56 +278,40 @@ export function PackView({
             </div>
 
             {/* Bottom nav */}
-            <div style={{
-              borderTop: '1px solid var(--c-border)',
-              padding: '14px 48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'var(--c-bg)',
-              flexShrink: 0,
-            }}>
+            <div className="border-t border-border px-12 py-3.5 flex items-center justify-between bg-background shrink-0">
               <button
                 onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
                 disabled={activeIdx === 0}
-                style={{
-                  padding: '10px 20px', borderRadius: 999,
-                  border: '1px solid var(--c-border)', background: 'transparent',
-                  fontFamily: 'var(--font-sans)', fontSize: 14, cursor: activeIdx === 0 ? 'not-allowed' : 'pointer',
-                  color: activeIdx === 0 ? 'var(--c-text-faint)' : 'var(--c-text)',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
+                className={cn(
+                  'px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] flex items-center gap-1.5',
+                  activeIdx === 0 ? 'cursor-not-allowed text-[var(--c-text-faint)]' : 'cursor-pointer text-foreground'
+                )}
               >
                 ← Anterior
               </button>
 
               {/* dots */}
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <div className="flex gap-1.5 items-center">
                 {pack.chapters.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveIdx(i)}
-                    style={{
-                      width: i === activeIdx ? 20 : 6,
-                      height: 6, borderRadius: 999, border: 'none', cursor: 'pointer',
-                      background: i === activeIdx ? 'var(--c-brand-teal)' : 'var(--c-border)',
-                      transition: 'width .2s, background .2s', padding: 0,
-                    }}
+                    className={cn(
+                      'h-1.5 rounded-full border-none cursor-pointer p-0 transition-all duration-200',
+                      i === activeIdx ? 'w-5 bg-primary' : 'w-1.5 bg-border'
+                    )}
                   />
                 ))}
               </div>
 
               <button
                 onClick={() => setActiveIdx((i) => Math.min(pack.chapters.length, i + 1))}
-                style={{
-                  padding: '10px 20px', borderRadius: 999,
-                  border: isLast ? '1px solid var(--c-border)' : 'none',
-                  background: isLast ? 'transparent' : '#0F1923',
-                  boxShadow: isLast ? 'none' : '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
-                  fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500,
-                  cursor: 'pointer', color: isLast ? 'var(--c-text-muted)' : '#fff',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
+                className={cn(
+                  'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
+                  isLast
+                    ? 'border border-border bg-transparent text-muted-foreground'
+                    : 'border-none bg-[#0F1923] text-white shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]'
+                )}
               >
                 {isLast ? 'Ver referencias' : 'Siguiente'} →
               </button>
@@ -348,24 +319,24 @@ export function PackView({
           </>
         ) : (
           /* References panel */
-          <div style={{ flex: 1, overflowY: 'auto', padding: '40px 48px 80px' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 20 }}>
+          <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
+            <div className="font-mono text-[11px] tracking-[.15em] uppercase text-[var(--c-text-faint)] mb-5">
               Referencias verificadas
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="flex flex-col gap-4">
               {verifiedRefs.map((ref) => (
-                <div key={ref.id} style={{ padding: '18px 20px', background: 'var(--c-surface)', borderRadius: 12 }}>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+                <div key={ref.id} className="p-[18px_20px] bg-muted rounded-xl">
+                  <div className="font-sans text-[14px] font-medium mb-1">
                     {ref.authors} ({ref.year}). <em>{ref.journal}</em>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-muted)', marginBottom: 10 }}>
+                  <div className="font-serif italic text-[14px] text-muted-foreground mb-2.5">
                     "{ref.quote}"
                   </div>
                   <a
                     href={`https://doi.org/${ref.doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--c-brand-teal)', textDecoration: 'none' }}
+                    className="font-mono text-[12px] text-primary no-underline"
                   >
                     doi:{ref.doi} ↗
                   </a>
@@ -374,7 +345,7 @@ export function PackView({
             </div>
             <button
               onClick={() => setActiveIdx(pack.chapters.length - 1)}
-              style={{ marginTop: 32, padding: '10px 20px', borderRadius: 999, border: '1px solid var(--c-border)', background: 'transparent', fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text)', cursor: 'pointer' }}
+              className="mt-8 px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] text-foreground cursor-pointer"
             >
               ← Volver al último capítulo
             </button>

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Send } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Message = { role: 'user' | 'assistant'; text: string }
 
@@ -68,70 +69,50 @@ export function ChapterChat({
     }
   }
 
+  const isActive = Boolean(input.trim()) && !streaming
+
   return (
-    <div style={{
-      marginTop: 40,
-      paddingTop: 32,
-      borderTop: '1px solid var(--c-border)',
-    }}>
+    <div className="mt-10 pt-8 border-t border-border">
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-brand-teal)', marginBottom: 6 }}>
+      <div className="mb-5">
+        <div className="font-mono text-[10px] tracking-[.15em] uppercase text-primary mb-1.5">
           · Tu consejero ·
         </div>
-        <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, letterSpacing: '-.015em', color: 'var(--c-text)', margin: 0, lineHeight: 1.3 }}>
+        <p className="font-serif text-[18px] tracking-[-0.015em] text-foreground m-0 leading-[1.3]">
           ¿Te quedó claro? ¿Tienes más preguntas?
         </p>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)', marginTop: 6, lineHeight: 1.5 }}>
+        <p className="font-sans text-[13px] text-muted-foreground mt-1.5 leading-[1.5]">
           Pregúntame lo que quieras sobre {dx}. Estoy aquí para explicarte con más detalle.
         </p>
       </div>
 
       {/* Messages */}
       {messages.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+        <div className="flex flex-col gap-4 mb-5">
           {messages.map((m, i) => (
-            <div key={i} style={{
-              display: 'flex',
-              justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
-            }}>
+            <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
               {m.role === 'assistant' && (
-                <div style={{
-                  width: 28, height: 28, borderRadius: 999, background: 'var(--c-brand-teal)',
-                  flexShrink: 0, marginRight: 10, marginTop: 2,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-serif)', fontSize: 12, color: '#fff', fontWeight: 600,
-                }}>
+                <div className="w-7 h-7 rounded-full bg-primary shrink-0 mr-2.5 mt-0.5 flex items-center justify-center font-serif text-[12px] text-white font-semibold">
                   A
                 </div>
               )}
-              <div style={{
-                maxWidth: '82%',
-                padding: m.role === 'user' ? '10px 14px' : '14px 18px',
-                borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '4px 14px 14px 14px',
-                background: m.role === 'user' ? '#0F1923' : 'var(--c-surface)',
-                border: m.role === 'assistant' ? '1px solid var(--c-border)' : 'none',
-                boxShadow: m.role === 'user' ? '0 0 0 1px rgba(31,138,155,.3)' : 'none',
-              }}>
+              <div className={cn(
+                'max-w-[82%]',
+                m.role === 'user'
+                  ? 'bg-[#0F1923] shadow-[0_0_0_1px_rgba(31,138,155,.3)] rounded-[14px_14px_4px_14px] px-[14px] py-[10px]'
+                  : 'bg-muted border border-border rounded-[4px_14px_14px_14px] px-[18px] py-[14px]'
+              )}>
                 {m.role === 'assistant' && m.text === '' ? (
-                  <div style={{ display: 'flex', gap: 4, padding: '2px 0' }}>
+                  <div className="flex gap-1 py-0.5">
                     {[0, 1, 2].map((j) => (
-                      <div key={j} className="ce-pulse" style={{
-                        width: 6, height: 6, borderRadius: 999,
-                        background: 'var(--c-brand-teal)',
-                        animationDelay: `${j * 0.2}s`,
-                      }} />
+                      <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary" style={{ animationDelay: `${j * 0.2}s` }} />
                     ))}
                   </div>
                 ) : (
-                  <p style={{
-                    fontFamily: m.role === 'user' ? 'var(--font-sans)' : 'var(--font-sans)',
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    color: m.role === 'user' ? '#fff' : 'var(--c-text)',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                  }}>
+                  <p className={cn(
+                    'font-sans text-[14px] leading-[1.65] m-0 whitespace-pre-wrap',
+                    m.role === 'user' ? 'text-white' : 'text-foreground'
+                  )}>
                     {m.text}
                   </p>
                 )}
@@ -143,15 +124,7 @@ export function ChapterChat({
       )}
 
       {/* Input */}
-      <div style={{
-        display: 'flex',
-        gap: 10,
-        alignItems: 'flex-end',
-        background: 'var(--c-surface)',
-        border: '1px solid var(--c-border)',
-        borderRadius: 14,
-        padding: '10px 12px',
-      }}>
+      <div className="flex gap-2.5 items-end bg-muted border border-border rounded-[14px] px-3 py-2.5">
         <textarea
           ref={textareaRef}
           value={input}
@@ -160,12 +133,7 @@ export function ChapterChat({
           placeholder={`Pregunta algo sobre ${dx}…`}
           rows={1}
           disabled={streaming}
-          style={{
-            flex: 1, border: 'none', background: 'transparent', outline: 'none',
-            fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text)',
-            resize: 'none', lineHeight: 1.5,
-            minHeight: 22, maxHeight: 120, overflowY: 'auto',
-          }}
+          className="flex-1 border-none bg-transparent outline-none font-sans text-[14px] text-foreground resize-none leading-[1.5] min-h-[22px] max-h-[120px] overflow-y-auto"
           onInput={(e) => {
             const t = e.currentTarget
             t.style.height = 'auto'
@@ -174,22 +142,19 @@ export function ChapterChat({
         />
         <button
           onClick={send}
-          disabled={!input.trim() || streaming}
-          style={{
-            width: 34, height: 34, borderRadius: 10, border: 'none', flexShrink: 0,
-            background: input.trim() && !streaming ? '#0F1923' : 'var(--c-border)',
-            boxShadow: input.trim() && !streaming ? '0 0 0 1px rgba(31,138,155,.3)' : 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: input.trim() && !streaming ? 'pointer' : 'not-allowed',
-            transition: 'background .15s, box-shadow .15s',
-            color: input.trim() && !streaming ? '#fff' : 'var(--c-text-faint)',
-          }}
+          disabled={!isActive}
+          className={cn(
+            'w-[34px] h-[34px] rounded-[10px] border-none shrink-0 flex items-center justify-center transition-colors duration-150',
+            isActive
+              ? 'bg-[#0F1923] shadow-[0_0_0_1px_rgba(31,138,155,.3)] cursor-pointer text-white'
+              : 'bg-border cursor-not-allowed text-[var(--c-text-faint)]'
+          )}
         >
           <Send size={15} />
         </button>
       </div>
 
-      <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--c-text-faint)', marginTop: 8, lineHeight: 1.4 }}>
+      <p className="font-sans text-[11px] text-[var(--c-text-faint)] mt-2 leading-[1.4]">
         Esta conversación no reemplaza la consulta con tu médico.
       </p>
     </div>

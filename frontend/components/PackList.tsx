@@ -4,15 +4,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Trash2, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 function ProgressRing({ pct }: { pct: number }) {
   const r = 14
   const circ = 2 * Math.PI * r
   const dash = circ * pct
   return (
-    <svg width={34} height={34} style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}>
-      <circle cx={17} cy={17} r={r} fill="none" stroke="var(--c-border)" strokeWidth={3} />
-      <circle cx={17} cy={17} r={r} fill="none" stroke="var(--c-brand-teal)" strokeWidth={3}
+    <svg width={34} height={34} className="shrink-0 -rotate-90">
+      <circle cx={17} cy={17} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth={3} />
+      <circle cx={17} cy={17} r={r} fill="none" stroke="hsl(var(--primary))" strokeWidth={3}
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
     </svg>
   )
@@ -45,8 +46,8 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
 
   if (packs.length === 0) {
     return (
-      <div style={{ paddingTop: 48 }}>
-        <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--c-text-muted)', lineHeight: 1.5 }}>
+      <div className="pt-12">
+        <p className="font-serif italic text-[17px] text-muted-foreground leading-[1.5]">
           No hay packs en esta categoría.
         </p>
       </div>
@@ -54,7 +55,7 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {packs.map((p) => {
         const statusLabel = p.pct === 0 ? 'Sin leer' : p.pct === 1 ? 'Completado' : `${p.read} de ${p.total} capítulos`
         const date = new Date(p.created_at).toLocaleDateString('es', { day: 'numeric', month: 'long' })
@@ -62,104 +63,81 @@ export function PackList({ initialPacks }: { initialPacks: Pack[] }) {
         const isDeleting = deletingId === p.id
 
         return (
-          <div key={p.id} style={{ position: 'relative' }}>
+          <div key={p.id} className="relative">
             <Link
               href={`/pack/${p.id}`}
-              style={{ textDecoration: 'none', display: 'block', opacity: isDeleting ? 0.4 : 1, transition: 'opacity .2s' }}
+              className={cn('no-underline block transition-opacity duration-200', isDeleting ? 'opacity-40' : 'opacity-100')}
               onClick={(e) => { if (isConfirming) e.preventDefault() }}
             >
-              <div style={{
-                padding: '20px 24px',
-                background: 'var(--c-surface)',
-                borderRadius: 16,
-                border: `1px solid ${isConfirming ? 'rgba(192,57,43,.3)' : 'var(--c-border)'}`,
-                display: 'flex',
-                gap: 20,
-                alignItems: 'center',
-                transition: 'border-color .12s',
-              }}>
+              <div className={cn(
+                'flex gap-5 items-center px-6 py-5 bg-muted rounded-2xl border transition-colors duration-100',
+                isConfirming ? 'border-destructive/30' : 'border-border'
+              )}>
                 {/* Progress ring */}
-                <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div className="relative shrink-0">
                   <ProgressRing pct={p.pct} />
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 9, color: p.pct === 1 ? 'var(--c-brand-teal)' : 'var(--c-text-faint)' }}>
+                  <div className={cn(
+                    'absolute inset-0 flex items-center justify-center font-mono text-[9px]',
+                    p.pct === 1 ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                  )}>
                     {p.pct === 1 ? '✓' : `${p.read}/${p.total}`}
                   </div>
                 </div>
 
                 {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 19, letterSpacing: '-.015em', color: 'var(--c-text)', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-serif text-[19px] tracking-[-0.015em] text-foreground mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
                     {p.dx}
                   </div>
                   {p.summary && !isConfirming && (
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-muted)', lineHeight: 1.5, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p className="font-sans text-[13px] text-muted-foreground leading-[1.5] m-0 mb-2.5 line-clamp-2">
                       {p.summary}
                     </p>
                   )}
                   {isConfirming ? (
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'rgba(192,57,43,.9)', margin: '4px 0 0', lineHeight: 1.4 }}>
+                    <p className="font-sans text-[13px] text-destructive/90 mt-1 leading-[1.4] mb-0">
                       ¿Borrar esta explicación? No se puede deshacer.
                     </p>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.08em', color: p.pct === 1 ? 'var(--c-brand-teal)' : 'var(--c-text-faint)', textTransform: 'uppercase' }}>
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        'font-mono text-[10px] tracking-[.08em] uppercase',
+                        p.pct === 1 ? 'text-primary' : 'text-[var(--c-text-faint)]'
+                      )}>
                         {statusLabel}
                       </span>
-                      <span style={{ width: 3, height: 3, borderRadius: 999, background: 'var(--c-border)', flexShrink: 0 }} />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-text-faint)' }}>{date}</span>
+                      <span className="w-[3px] h-[3px] rounded-full bg-border shrink-0" />
+                      <span className="font-mono text-[10px] text-[var(--c-text-faint)]">{date}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Right actions */}
                 {isConfirming ? (
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={(e) => { e.preventDefault(); handleDelete(p.id) }}
                       disabled={isDeleting}
-                      style={{
-                        padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                        background: '#c0392b', color: '#fff',
-                        fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500,
-                      }}
+                      className="px-[14px] py-[7px] rounded-lg border-none cursor-pointer bg-[#c0392b] text-white font-sans text-[13px] font-medium"
                     >
                       {isDeleting ? 'Borrando…' : 'Sí, borrar'}
                     </button>
                     <button
                       onClick={(e) => { e.preventDefault(); setConfirmId(null) }}
-                      style={{
-                        padding: '7px 10px', borderRadius: 8, border: '1px solid var(--c-border)',
-                        cursor: 'pointer', background: 'transparent',
-                        display: 'flex', alignItems: 'center', color: 'var(--c-text-muted)',
-                      }}
+                      className="px-[10px] py-[7px] rounded-lg border border-border cursor-pointer bg-transparent flex items-center text-muted-foreground"
                     >
                       <X size={14} />
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <div className="flex items-center gap-2.5 shrink-0">
                     <button
                       onClick={(e) => { e.preventDefault(); setConfirmId(p.id) }}
-                      style={{
-                        padding: '6px', borderRadius: 7, border: 'none',
-                        background: 'transparent', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', color: 'var(--c-text-faint)',
-                        transition: 'color .12s, background .12s',
-                      }}
-                      onMouseEnter={(e) => {
-                        const b = e.currentTarget as HTMLButtonElement
-                        b.style.color = '#c0392b'
-                        b.style.background = 'rgba(192,57,43,.07)'
-                      }}
-                      onMouseLeave={(e) => {
-                        const b = e.currentTarget as HTMLButtonElement
-                        b.style.color = 'var(--c-text-faint)'
-                        b.style.background = 'transparent'
-                      }}
+                      className="p-1.5 rounded-[7px] border-none bg-transparent cursor-pointer flex items-center text-[var(--c-text-faint)] hover:text-destructive hover:bg-destructive/10 transition-colors duration-100"
                     >
                       <Trash2 size={15} />
                     </button>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-border)" strokeWidth="2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--border))" strokeWidth="2">
                       <path d="M9 18l6-6-6-6" />
                     </svg>
                   </div>
