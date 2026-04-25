@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 type Profile = {
   name: string | null
@@ -203,12 +204,13 @@ export default function CuentaPage() {
                   key={option}
                   onClick={() => saveWho(option)}
                   disabled={whoLoading}
-                  className={[
+                  aria-pressed={who === option}
+                  className={cn(
                     'px-5 py-2 rounded-[10px] border-[1.5px] font-sans text-sm cursor-pointer transition-all duration-150',
                     who === option
-                      ? 'border-primary bg-primary/8 text-primary'
+                      ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-transparent text-muted-foreground',
-                  ].join(' ')}
+                  )}
                 >
                   {option === 'yo' ? 'Para mí' : 'Para un familiar'}
                 </button>
