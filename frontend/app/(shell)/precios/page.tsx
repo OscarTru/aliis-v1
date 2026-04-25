@@ -141,7 +141,7 @@ export default function PreciosPage() {
                     <div>
                       <div className="font-sans text-[15px] leading-[1.4]">{f.text}</div>
                       {f.sub && (
-                        <div className="font-serif italic text-[13px] text-[color:var(--c-text-faint)] mt-[2px]">
+                        <div className="font-serif italic text-[13px] text-muted-foreground/60 mt-[2px]">
                           {f.sub}
                         </div>
                       )}
@@ -184,8 +184,8 @@ export default function PreciosPage() {
           <table className="w-full border-collapse font-sans text-[14px]">
             <thead>
               <tr className="bg-background">
-                <th className="text-left px-6 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-[color:var(--c-text-subtle)]">Funcionalidad</th>
-                <th className="text-center px-4 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-[color:var(--c-text-subtle)]">Gratis</th>
+                <th className="text-left px-6 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Funcionalidad</th>
+                <th className="text-center px-4 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Gratis</th>
                 <th className="text-center px-4 py-[14px] font-medium font-mono text-[10px] tracking-[.2em] uppercase text-foreground">Pro</th>
               </tr>
             </thead>
