@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { AppNav } from '../../components/AppNav'
-import { Footer } from '../../components/Footer'
+import { AppShell } from '../../components/AppShell'
 import { Eyebrow } from '../../components/ui/Eyebrow'
 import { Capsule } from '../../components/ui/Capsule'
 import { LoginModal } from '../../components/LoginModal'
@@ -47,10 +46,8 @@ export default function PreciosPage() {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      <AppNav />
-
-      <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '72px 24px 120px' }}>
+    <AppShell>
+      <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '48px 24px 120px' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -260,8 +257,7 @@ export default function PreciosPage() {
         </div>
       </div>
 
-      <Footer />
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-    </div>
+    </AppShell>
   )
 }

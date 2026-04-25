@@ -21,7 +21,9 @@ function isValidRequest(body: unknown): body is GeneratePackRequest {
 }
 
 packRouter.post('/generate', async (req, res) => {
+  console.log('[pack/generate] body:', JSON.stringify(req.body))
   if (!isValidRequest(req.body)) {
+    console.log('[pack/generate] invalid request body')
     res.status(400).json({ error: 'diagnostico, userId y userPlan son requeridos' })
     return
   }
@@ -58,7 +60,16 @@ packRouter.post('/generate', async (req, res) => {
   }
 
   // Layer 1: classify intent
-  const intent = await classifyIntent(dx)
+  console.log('[pack/generate] classifying intent for:', dx)
+  let intent
+  try {
+    intent = await classifyIntent(dx)
+  } catch (err) {
+    console.error('[pack/generate] classifier error:', err)
+    res.status(500).json({ error: 'Error en clasificador.' })
+    return
+  }
+  console.log('[pack/generate] intent:', intent)
 
   if (intent === 'EMERG') {
     res.json({ emergencyResponse: EMERGENCY_RESPONSE })
@@ -74,13 +85,24 @@ packRouter.post('/generate', async (req, res) => {
   }
 
   // Layer 2: enrich context
-  const context = await enrichContext(userId, contexto)
+  console.log('[pack/generate] enriching context')
+  let context
+  try {
+    context = await enrichContext(userId, contexto)
+  } catch (err) {
+    console.error('[pack/generate] enricher error:', err)
+    res.status(500).json({ error: 'Error enriqueciendo contexto.' })
+    return
+  }
 
   // Layer 3: generate pack
+  console.log('[pack/generate] generating pack')
   let generated
   try {
     generated = await generatePack(dx, context)
-  } catch {
+    console.log('[pack/generate] pack generated OK')
+  } catch (err) {
+    console.error('[pack/generate] generator error:', err)
     res.status(500).json({ error: 'Error generando el pack. Intenta de nuevo.' })
     return
   }

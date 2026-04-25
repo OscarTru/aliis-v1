@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase'
-import { AppNav } from '@/components/AppNav'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PackView } from '@/components/PackView'
 import type { Pack } from '@/lib/types'
 
@@ -32,10 +31,5 @@ export default async function PackPage({
     references: row.refs ?? [],
   }
 
-  return (
-    <>
-      <AppNav />
-      <PackView pack={pack} userId={user?.id} />
-    </>
-  )
+  return <PackView pack={pack} userId={user?.id} />
 }

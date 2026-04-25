@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PackView } from '@/components/PackView'
 import type { Pack } from '@/lib/types'
 import Image from 'next/image'
@@ -45,8 +45,7 @@ export default async function SharedPackPage({
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <Image src="/assets/aliis-logo.png" alt="Aliis" width={26} height={26} style={{ objectFit: 'contain' }} />
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--c-text)' }}>Aliis</span>
+          <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} style={{ objectFit: 'contain' }} />
         </Link>
         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--c-text-faint)' }}>
           {sharedByName ? `Compartido por ${sharedByName}` : 'Explicación compartida'} · aliis.app

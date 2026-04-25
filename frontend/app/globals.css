@@ -26,16 +26,25 @@
   --c-brand-teal-light: #8AC9D2;
   --c-brand-ink: #0F2633;
   --c-brand-scribble: rgba(30, 40, 55, 0.35);
+
+  --c-btn-primary: #0F1923;
+  --c-btn-primary-shadow: 0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15);
+  --c-btn-secondary-border: rgba(31,138,155,.35);
 }
 
 * {
   box-sizing: border-box;
 }
 
+section[id] {
+  scroll-margin-top: 72px;
+}
+
 html {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {

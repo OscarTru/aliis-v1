@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { LoginModal } from './LoginModal'
 import { createClient } from '@/lib/supabase'
 
 export function AppNav() {
   const router = useRouter()
+  const pathname = usePathname()
+  const isLanding = pathname === '/'
   const [showLogin, setShowLogin] = useState(false)
   const [initial, setInitial] = useState<string | null>(null)
 
@@ -38,34 +40,55 @@ export function AppNav() {
         borderBottom: '1px solid var(--c-border)',
       }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', gap: 24 }}>
-          <Link href={initial ? '/historial' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <Image src="/assets/aliis-logo.png" alt="Aliis" width={30} height={30} style={{ objectFit: 'contain' }} />
-            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 19, letterSpacing: '-.02em', color: 'var(--c-text)' }}>Aliis</span>
+          <Link href={initial ? '/historial' : '/'} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} style={{ objectFit: 'contain' }} />
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {!initial && (
-              <Link href="/precios" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
-                Precios
-              </Link>
+
+            {/* Links de sección — solo en la landing */}
+            {isLanding && (
+              <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                {[
+                  { label: 'Qué hace', id: 'que-hace' },
+                  { label: 'Cómo funciona', id: 'como-funciona' },
+                  { label: 'Ejemplo real', id: 'ejemplo' },
+                ].map(({ label, id }) => (
+                  <button
+                    key={id}
+                    onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <Link href="/precios" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>Precios</Link>
+              </nav>
             )}
+
+            {/* Lado derecho — autenticado o no */}
             {initial ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Link href="/ingreso" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
-                  Nuevo pack
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  title="Cerrar sesión"
-                  style={{
+                {!isLanding && (
+                  <Link href="/ingreso" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
+                    Nuevo pack
+                  </Link>
+                )}
+                {isLanding && (
+                  <Link href="/historial" style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', textDecoration: 'none' }}>
+                    Mis explicaciones
+                  </Link>
+                )}
+                <Link href="/historial" style={{
                     width: 32, height: 32, borderRadius: 999,
-                    background: 'var(--c-brand-teal-light)', color: 'var(--c-brand-ink)',
+                    background: 'var(--c-brand-teal)', color: '#fff',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-serif)', fontSize: 14, border: 'none', cursor: 'pointer',
+                    fontFamily: 'var(--font-serif)', fontSize: 14, fontWeight: 600,
+                    textDecoration: 'none',
                   }}
                 >
                   {initial}
-                </button>
+                </Link>
               </div>
             ) : (
               <button

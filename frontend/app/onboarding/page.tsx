@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 const PROMISES = [
@@ -49,7 +50,7 @@ export default function OnboardingPage() {
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--c-border)' }}>
-        <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} style={{ objectFit: 'contain' }} />
+        <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} style={{ objectFit: 'contain' }} />
         {/* Progress bar */}
         <div style={{ display: 'flex', gap: 6 }}>
           {[1, 2, 3].map((s) => (
@@ -74,7 +75,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
               {PROMISES.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--c-surface)', borderRadius: 12, textAlign: 'left' }}>
-                  <span style={{ color: 'var(--c-brand-teal)', fontSize: 18, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: 'var(--c-brand-teal)', flexShrink: 0, display: 'flex' }}><Check size={18} /></span>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--c-text)' }}>{p}</span>
                 </div>
               ))}

@@ -6,13 +6,13 @@ import { createClient } from '@supabase/supabase-js'
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('ANTHROPIC_API_KEY missing'); process.exit(1)
 }
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-  console.error('SUPABASE_URL or SUPABASE_SERVICE_KEY missing'); process.exit(1)
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing'); process.exit(1)
 }
 
 export const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
 const app = express()

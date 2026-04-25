@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase'
-import { AppNav } from '@/components/AppNav'
-import { ScribbleBrain } from '@/components/ui/ScribbleBrain'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { AppShell } from '@/components/AppShell'
+import { PackList } from '@/components/PackList'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
 
@@ -39,7 +39,7 @@ export default async function HistorialPage({
     const total = Array.isArray(p.chapters) ? p.chapters.length : 5
     const read = readsByPack[p.id]?.size ?? 0
     const pct = total > 0 ? read / total : 0
-    return { ...p, read, total, pct }
+    return { id: p.id, dx: p.dx, summary: p.summary, created_at: p.created_at, read, total, pct }
   })
 
   const filtered = withProgress.filter((p) => {
@@ -53,32 +53,42 @@ export default async function HistorialPage({
     { key: 'todos', label: 'Todos' },
     { key: 'sin-leer', label: 'Sin leer' },
     { key: 'a-medias', label: 'A medias' },
-    { key: 'leido', label: 'Leído' },
+    { key: 'leido', label: 'Mi expediente' },
   ]
 
+  const totalPacks = packs.length
+
   return (
-    <>
-      <AppNav />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '40px 24px 80px' }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, letterSpacing: '-.025em', marginBottom: 32 }}>
-          Mis explicaciones
-        </h1>
+    <AppShell>
+      <main style={{ maxWidth: 680, margin: '0 auto', padding: '40px 32px 80px' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 36 }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-faint)', marginBottom: 8 }}>
+            {totalPacks} {totalPacks === 1 ? 'explicación' : 'explicaciones'}
+          </p>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(24px, 3.5vw, 36px)', letterSpacing: '-.025em', lineHeight: 1.1, marginBottom: 0, whiteSpace: 'nowrap' }}>
+            Mis <em style={{ color: 'var(--c-brand-teal)' }}>explicaciones</em>
+          </h1>
+        </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 28, flexWrap: 'wrap' }}>
           {FILTERS.map((f) => (
             <Link
               key={f.key}
               href={`/historial?filter=${f.key}`}
               style={{
-                padding: '8px 18px',
+                padding: '7px 16px',
                 borderRadius: 999,
-                border: '1px solid var(--c-border)',
-                background: filter === f.key ? 'var(--c-brand-teal)' : 'transparent',
+                border: `1px solid ${filter === f.key ? 'transparent' : 'var(--c-border)'}`,
+                background: filter === f.key ? '#0F1923' : 'transparent',
+                boxShadow: filter === f.key ? '0 0 0 1px rgba(31,138,155,.3), 0 2px 10px rgba(31,138,155,.12)' : 'none',
                 color: filter === f.key ? '#fff' : 'var(--c-text-muted)',
                 fontFamily: 'var(--font-sans)',
-                fontSize: 14,
+                fontSize: 13,
                 textDecoration: 'none',
+                transition: 'all .12s',
               }}
             >
               {f.label}
@@ -86,50 +96,25 @@ export default async function HistorialPage({
           ))}
         </div>
 
-        {/* Empty state */}
-        {filtered.length === 0 && (
+        {/* Empty state — no packs at all */}
+        {packs.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 64 }}>
-            <ScribbleBrain size={60} />
-            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 18, color: 'var(--c-text-muted)', marginTop: 20, marginBottom: 24 }}>
-              {packs.length === 0 ? 'Todavía no hay explicaciones aquí.' : 'No hay packs en esta categoría.'}
+            <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 17, color: 'var(--c-text-muted)', marginBottom: 24, lineHeight: 1.5 }}>
+              Todavía no tienes explicaciones.<br />Empieza con tu primer diagnóstico.
             </p>
             <Link
               href="/ingreso"
-              style={{ padding: '12px 28px', borderRadius: 999, background: 'var(--c-brand-teal)', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-sans)', fontSize: 15 }}
+              style={{ padding: '12px 28px', borderRadius: 999, background: '#0F1923', boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500 }}
             >
               Entender mi diagnóstico
             </Link>
           </div>
         )}
 
-        {/* Pack list */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {filtered.map((p) => (
-            <Link
-              key={p.id}
-              href={`/pack/${p.id}`}
-              style={{ textDecoration: 'none', display: 'block', padding: '20px 24px', background: 'var(--c-surface)', borderRadius: 16, border: '1px solid var(--c-border)' }}
-            >
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--c-text)', marginBottom: 6 }}>
-                {p.dx}
-              </div>
-              {p.summary && (
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--c-text-muted)', marginBottom: 14, lineHeight: 1.5, margin: '0 0 14px' }}>
-                  {p.summary}
-                </p>
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ flex: 1, height: 4, borderRadius: 999, background: 'var(--c-border)' }}>
-                  <div style={{ width: `${p.pct * 100}%`, height: '100%', borderRadius: 999, background: 'var(--c-brand-teal)' }} />
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c-text-faint)', flexShrink: 0 }}>
-                  {p.read}/{p.total}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {/* Pack list — client component handles delete + empty filter state */}
+        {packs.length > 0 && <PackList initialPacks={filtered} />}
+
       </main>
-    </>
+    </AppShell>
   )
 }

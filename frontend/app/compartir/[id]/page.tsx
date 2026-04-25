@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { AppNav } from '@/components/AppNav'
+import { AppShell } from '@/components/AppShell'
 import { createClient } from '@/lib/supabase'
 
 export default function CompartirPage() {
@@ -34,8 +34,7 @@ export default function CompartirPage() {
   }
 
   return (
-    <>
-      <AppNav />
+    <AppShell>
       <main style={{ maxWidth: 480, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, letterSpacing: '-.02em', marginBottom: 12 }}>
           Compartir explicación
@@ -73,6 +72,6 @@ export default function CompartirPage() {
           </div>
         )}
       </main>
-    </>
+    </AppShell>
   )
 }

@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Check, Loader } from 'lucide-react'
 import { ScribbleBrain } from '@/components/ui/ScribbleBrain'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { createClient } from '@/lib/supabase'
@@ -89,8 +90,8 @@ function LoadingContent() {
                 : 'var(--c-text-faint)',
             }}
           >
-            <span style={{ width: 20, textAlign: 'center', flexShrink: 0 }}>
-              {i < stageIdx ? '✓' : i === stageIdx ? '⟳' : '○'}
+            <span style={{ width: 20, textAlign: 'center', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              {i < stageIdx ? <Check size={14} /> : i === stageIdx ? <Loader size={14} /> : '○'}
             </span>
             {stage}
           </div>
