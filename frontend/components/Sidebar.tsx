@@ -133,33 +133,46 @@ export function Sidebar() {
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className="flex flex-col shrink-0 border-r border-border bg-background overflow-hidden h-screen sticky top-0 select-none"
       >
-        {/* Logo */}
-        <div className={cn('flex items-center h-14 px-4 shrink-0', collapsed && 'justify-center px-0')}>
-          <Link href="/historial" className="flex items-center no-underline">
+        {/* Logo + toggle */}
+        <div className={cn('flex items-center h-14 shrink-0', collapsed ? 'justify-center' : 'px-4 gap-2')}>
+          <Link href="/historial" className="flex items-center no-underline flex-1 min-w-0">
             <AnimatePresence mode="wait" initial={false}>
               {collapsed ? (
-                <motion.div
-                  key="icon"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
+                <motion.div key="icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
                   <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} className="object-contain" />
                 </motion.div>
               ) : (
-                <motion.div
-                  key="full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                >
+                <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
                   <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={30} className="object-contain" />
                 </motion.div>
               )}
             </AnimatePresence>
           </Link>
+
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors duration-100"
+              aria-label="Colapsar"
+            >
+              <PanelLeftClose size={15} />
+            </button>
+          )}
+
+          {collapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setCollapsed(false)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors duration-100"
+                  aria-label="Expandir"
+                >
+                  <PanelLeftOpen size={15} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-sans text-xs">Expandir</TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         <Separator />
@@ -215,19 +228,6 @@ export function Sidebar() {
           </AnimatePresence>
         </Link>
 
-        {/* Collapse toggle */}
-        <div className={cn('border-t border-border', collapsed ? 'flex justify-center py-2' : 'px-2 py-2')}>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className={cn(
-              'flex items-center justify-center rounded-xl p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-100',
-              collapsed ? 'w-10 h-10' : 'w-full'
-            )}
-            aria-label={collapsed ? 'Expandir' : 'Colapsar'}
-          >
-            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
-        </div>
       </motion.aside>
     </TooltipProvider>
   )
