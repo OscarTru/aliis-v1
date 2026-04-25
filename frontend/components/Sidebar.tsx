@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, LayoutList, Zap, UserCircle, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Plus, LayoutList, Zap, UserCircle, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -131,11 +131,29 @@ export function Sidebar() {
       <motion.aside
         animate={{ width: collapsed ? 64 : 224 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="flex flex-col shrink-0 border-r border-border bg-background overflow-hidden h-screen sticky top-0 select-none"
+        className="relative flex flex-col shrink-0 border-r border-border bg-background overflow-visible h-screen sticky top-0 select-none"
       >
-        {/* Logo + toggle */}
-        <div className={cn('flex items-center h-14 shrink-0', collapsed ? 'justify-center' : 'px-4 gap-2')}>
-          <Link href="/historial" className="flex items-center no-underline flex-1 min-w-0">
+        {/* Floating toggle button — sits on the border between sidebar and content */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              aria-label={collapsed ? 'Expandir' : 'Colapsar'}
+              className="absolute -right-3 top-[52px] z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
+            >
+              <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronLeft size={12} />
+              </motion.div>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="font-sans text-xs">
+            {collapsed ? 'Expandir' : 'Colapsar'}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Logo */}
+        <div className={cn('flex items-center h-14 shrink-0 overflow-hidden', collapsed ? 'justify-center px-0' : 'px-4')}>
+          <Link href="/historial" className="flex items-center no-underline">
             <AnimatePresence mode="wait" initial={false}>
               {collapsed ? (
                 <motion.div key="icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
@@ -148,31 +166,6 @@ export function Sidebar() {
               )}
             </AnimatePresence>
           </Link>
-
-          {!collapsed && (
-            <button
-              onClick={() => setCollapsed(true)}
-              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors duration-100"
-              aria-label="Colapsar"
-            >
-              <PanelLeftClose size={15} />
-            </button>
-          )}
-
-          {collapsed && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setCollapsed(false)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors duration-100"
-                  aria-label="Expandir"
-                >
-                  <PanelLeftOpen size={15} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="font-sans text-xs">Expandir</TooltipContent>
-            </Tooltip>
-          )}
         </div>
 
         <Separator />
