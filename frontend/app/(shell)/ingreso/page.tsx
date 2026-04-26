@@ -11,6 +11,14 @@ import { Button } from '@/components/ui/button'
 
 type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
 
+const CHAPTERS = [
+  { n: '01', label: '¿Qué es exactamente?', w: '55%', delay: 0 },
+  { n: '02', label: '¿Qué pasa en mi cuerpo?', w: '62%', delay: 0.6 },
+  { n: '03', label: '¿Qué esperar?', w: '48%', delay: 1.2 },
+  { n: '04', label: '¿Qué preguntar en mi consulta?', w: '58%', delay: 1.8 },
+  { n: '05', label: '¿Cuándo actuar?', w: '40%', delay: 2.4 },
+]
+
 const FRECUENCIA_OPTIONS = [
   { value: 'Recién diagnosticado', label: 'Recién me lo dijeron', sub: 'Menos de un mes' },
   { value: 'Hace meses', label: 'Llevo unos meses', sub: 'Entre 1 y 12 meses' },
@@ -34,12 +42,43 @@ export default function IngresoPage() {
   const [dudas, setDudas] = useState('')
   const [dudasCustom, setDudasCustom] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingPackId, setPendingPackId] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const dxInputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Reset to dx step on every mount so "Nuevo diagnóstico" always starts fresh
+  useEffect(() => {
+    setStep('dx')
+    setDx('')
+    setDxInput('')
+    setFrecuencia('')
+    setFrecuenciaCustom('')
+    setDudas('')
+    setDudasCustom('')
+    setPendingPackId(null)
+  }, [])
 
   useEffect(() => {
     if (step === 'dx') dxInputRef.current?.focus()
   }, [step])
+
+  // Poll Supabase while generating — redirect when pack is ready
+  useEffect(() => {
+    if (!pendingPackId) return
+    const supabase = createClient()
+    const poll = setInterval(async () => {
+      const { data } = await supabase
+        .from('packs')
+        .select('id')
+        .eq('id', pendingPackId)
+        .single()
+      if (data) {
+        clearInterval(poll)
+        router.push(`/pack/${pendingPackId}`)
+      }
+    }, 2000)
+    return () => clearInterval(poll)
+  }, [pendingPackId, router])
 
   function handleDxSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -108,7 +147,11 @@ export default function IngresoPage() {
       }
 
       if (data.limitReached) { setShowUpgrade(true); setStep('dudas'); return }
-      if (data.pack?.id) router.push(`/loading?packId=${data.pack.id}`)
+      if (data.pack?.id) { setPendingPackId(data.pack.id); return }
+      // Unexpected response — go back so user isn't stuck
+      setStep('dudas')
+    } catch {
+      setStep('dudas')
     } finally {
       setLoading(false)
     }
@@ -336,7 +379,6 @@ export default function IngresoPage() {
           {/* ── Generating ── */}
           {step === 'generating' && (
             <div className="ce-fade">
-              {/* Header skeleton */}
               <div className="mb-8">
                 <div className="font-mono text-[10px] tracking-[.18em] uppercase text-primary mb-[10px]">
                   · Construyendo tu explicación ·
@@ -345,28 +387,14 @@ export default function IngresoPage() {
                 <div className="shimmer h-4 w-[45%] rounded-md" />
               </div>
 
-              {/* Chapter cards appearing one by one */}
-              {[
-                { label: '¿Qué es exactamente?', w: '55%', delay: 0 },
-                { label: '¿Qué pasa en mi cuerpo?', w: '62%', delay: 0.6 },
-                { label: '¿Qué esperar?', w: '48%', delay: 1.2 },
-                { label: '¿Qué preguntar en mi consulta?', w: '58%', delay: 1.8 },
-                { label: '¿Cuándo actuar?', w: '40%', delay: 2.4 },
-              ].map((ch, i) => (
+              {CHAPTERS.map((ch, i) => (
                 <div
                   key={i}
                   className="px-[22px] py-[18px] bg-muted rounded-[14px] border border-border mb-[10px] opacity-0"
-                  style={{
-                    animation: `ce-fade-in 0.5s ease forwards`,
-                    animationDelay: `${ch.delay}s`,
-                  }}
+                  style={{ animation: `ce-fade-in 0.5s ease forwards`, animationDelay: `${ch.delay}s` }}
                 >
-                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-primary mb-2">
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-3">
-                    {ch.label}
-                  </div>
+                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-primary mb-2">{ch.n}</div>
+                  <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-3">{ch.label}</div>
                   <div className="shimmer h-[11px] rounded-[5px] mb-[6px]" style={{ width: ch.w }} />
                   <div className="shimmer h-[11px] rounded-[5px] mb-[6px] w-[80%]" />
                   <div className="shimmer h-[11px] rounded-[5px] w-[35%]" />
