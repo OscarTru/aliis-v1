@@ -10,10 +10,18 @@ export function ChapterChat({
   dx,
   chapterTitle,
   chapterContent,
+  packId,
+  userId,
+  chapterId,
+  packContext,
 }: {
   dx: string
   chapterTitle: string
   chapterContent: string
+  packId?: string
+  userId?: string
+  chapterId?: string
+  packContext?: string
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')

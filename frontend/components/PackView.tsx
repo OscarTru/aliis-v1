@@ -26,9 +26,9 @@ function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: strin
 }
 
 function ChapterCard({
-  chapter, packId, userId, dx, onRead, conditionSlug,
+  chapter, packId, userId, dx, onRead, conditionSlug, packContext,
 }: {
-  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null
+  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string
 }) {
   const markedRef = useRef(false)
 
@@ -121,6 +121,9 @@ function ChapterCard({
 
       <ChapterChat
         dx={dx}
+        packId={packId}
+        userId={userId}
+        chapterId={chapter.id}
         chapterTitle={`${chapter.kicker} ${chapter.kickerItalic}`}
         chapterContent={[
           chapter.tldr,
@@ -130,6 +133,7 @@ function ChapterCard({
           ...(chapter.questions ?? []),
           ...(chapter.alarms?.map((a) => `${a.t}: ${a.d}`) ?? []),
         ].filter(Boolean).join('\n\n')}
+        packContext={packContext}
       />
     </div>
   )
@@ -160,6 +164,9 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
               dx={pack.dx}
               onRead={markRead}
               conditionSlug={conditionSlug}
+              packContext={pack.chapters.map((ch) =>
+                [`## ${ch.kicker} ${ch.kickerItalic}`, ch.tldr, ...(ch.paragraphs ?? [])].join('\n')
+              ).join('\n\n')}
             />
           </div>
 
