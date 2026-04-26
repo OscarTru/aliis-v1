@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PageHeader } from '@/components/PageHeader'
 import { DiarioNotesSection } from '@/components/DiarioNotesSection'
@@ -8,7 +9,8 @@ export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const uid = user?.id ?? ''
+  if (!user) redirect('/login')
+  const uid = user.id
 
   const [notesResult, symptomsResult] = await Promise.all([
     supabase
