@@ -43,7 +43,7 @@ function ChapterCard({
       onRead?.(chapter.id)
       const supabase = createClient()
       await supabase.from('chapter_reads').upsert({ pack_id: packId, user_id: userId, chapter_id: chapter.id })
-    }, 10000)
+    }, 30000)
     return () => clearTimeout(timer)
   }, [chapter.id, packId, userId, onRead])
 
@@ -140,6 +140,11 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
   const verifiedRefs = pack.references.filter((r) => r.verified !== false)
   const chapter = pack.chapters[activeIdx]
   const isLast = activeIdx === pack.chapters.length - 1
+  const total = pack.chapters.length
+  // Progress based on chapters the user has actually visited via Next (activeIdx + 1 as high-water mark)
+  // readChapters (from timer) drives the DB, but we show nav-based progress for immediate feedback
+  const visitedCount = Math.max(readChapters.size, activeIdx + 1)
+  const progressPct = Math.min(visitedCount / total, 1)
 
   const packContext = pack.chapters.map((ch) =>
     [`## ${ch.kicker} ${ch.kickerItalic}`, ch.tldr, ...(ch.paragraphs ?? [])].join('\n')
@@ -176,42 +181,43 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
             />
           </div>
 
-          <div className="border-t border-border px-12 py-3.5 flex items-center justify-between bg-background shrink-0">
-            <button
-              onClick={() => setActiveIdx(Math.max(0, activeIdx - 1))}
-              disabled={activeIdx === 0}
-              className={cn(
-                'px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] flex items-center gap-1.5',
-                activeIdx === 0 ? 'cursor-not-allowed text-muted-foreground/60' : 'cursor-pointer text-foreground'
-              )}
-            >
-              ← Anterior
-            </button>
-
-            <div className="flex gap-1.5 items-center">
-              {pack.chapters.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveIdx(i)}
-                  className={cn(
-                    'h-1.5 rounded-full border-none cursor-pointer p-0 transition-all duration-200',
-                    i === activeIdx ? 'w-5 bg-primary' : 'w-1.5 bg-border'
-                  )}
-                />
-              ))}
+          <div className="border-t border-border bg-background shrink-0">
+            {/* Progress bar — fills as user navigates chapters */}
+            <div className="h-[2px] bg-muted w-full">
+              <div
+                className="h-full bg-primary transition-all duration-500 ease-out"
+                style={{ width: `${Math.round(progressPct * 100)}%` }}
+              />
             </div>
 
-            <button
-              onClick={() => setActiveIdx(Math.min(pack.chapters.length, activeIdx + 1))}
-              className={cn(
-                'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
-                isLast
-                  ? 'border border-border bg-transparent text-muted-foreground'
-                  : 'border-none bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
-              )}
-            >
-              {isLast ? 'Ver referencias' : 'Siguiente'} →
-            </button>
+            <div className="px-12 py-3.5 flex items-center justify-between">
+              <button
+                onClick={() => setActiveIdx(Math.max(0, activeIdx - 1))}
+                disabled={activeIdx === 0}
+                className={cn(
+                  'px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] flex items-center gap-1.5',
+                  activeIdx === 0 ? 'cursor-not-allowed text-muted-foreground/60' : 'cursor-pointer text-foreground'
+                )}
+              >
+                ← Anterior
+              </button>
+
+              <span className="font-mono text-[11px] text-muted-foreground/50 tracking-[.08em]">
+                {activeIdx + 1} / {total}
+              </span>
+
+              <button
+                onClick={() => setActiveIdx(Math.min(pack.chapters.length, activeIdx + 1))}
+                className={cn(
+                  'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
+                  isLast
+                    ? 'border border-border bg-transparent text-muted-foreground'
+                    : 'border-none bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
+                )}
+              >
+                {isLast ? 'Ver referencias' : 'Siguiente'} →
+              </button>
+            </div>
           </div>
         </>
       ) : (

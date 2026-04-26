@@ -73,7 +73,7 @@ export default async function HistorialPage({
             {totalPacks} {totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}
           </p>
           <h1 className="font-serif text-[clamp(24px,3.5vw,36px)] tracking-tight leading-tight mb-0 whitespace-nowrap">
-            Mi <em className="text-primary">expediente</em>
+            Mi <em>expediente</em>
           </h1>
         </div>
 
