@@ -29,7 +29,8 @@ export function ChatDrawer({
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
-  const hadHistoryRef = useRef(false)
+  const [hadHistory, setHadHistory] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -42,7 +43,7 @@ export function ChatDrawer({
   useEffect(() => {
     if (!chatOpen || !packId || !userId) return
     let cancelled = false
-    hadHistoryRef.current = false
+    setHadHistory(false)
     setLoadingHistory(true)
     const supabase = createClient()
     supabase
@@ -51,10 +52,11 @@ export function ChatDrawer({
       .eq('pack_id', packId)
       .eq('user_id', userId)
       .order('created_at', { ascending: true })
+      .limit(200)
       .then(({ data, error }) => {
         if (cancelled) return
         if (!error && data && data.length > 0) {
-          hadHistoryRef.current = true
+          setHadHistory(true)
           const msgs = data.map((r) => ({ role: r.role as 'user' | 'assistant', text: r.text }))
           setMessages(msgs)
           setUserMessageCount(msgs.filter((m) => m.role === 'user').length)
@@ -79,6 +81,11 @@ export function ChatDrawer({
       })
   }, [chatOpen, packId, userId, notes, setNotes])
 
+  // Abort in-flight stream when drawer closes
+  useEffect(() => {
+    if (!chatOpen) abortRef.current?.abort()
+  }, [chatOpen])
+
   // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -99,8 +106,11 @@ export function ChatDrawer({
     const q = input.trim()
     if (!q || streaming) return
 
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     const next: Message[] = [...messages, { role: 'user', text: q }]
-    setMessages(next)
     setInput('')
     setStreaming(true)
     setMessages([...next, { role: 'assistant', text: '' }])
@@ -118,6 +128,7 @@ export function ChatDrawer({
           packId,
           chapterId: 'pack',
         }),
+        signal: controller.signal,
       })
 
       if (!res.ok || !res.body) {
@@ -137,9 +148,14 @@ export function ChatDrawer({
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
       }
       full += decoder.decode()
-      if (full) {
-        setMessages([...next, { role: 'assistant', text: full }])
-        setUserMessageCount((c) => c + 1)
+      setMessages([...next, {
+        role: 'assistant',
+        text: full || 'Sin respuesta. Intenta de nuevo.',
+      }])
+      if (full) setUserMessageCount((c) => c + 1)
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        setMessages([...next, { role: 'assistant', text: 'Hubo un error de conexión. Intenta de nuevo.' }])
       }
     } finally {
       setStreaming(false)
@@ -162,7 +178,13 @@ export function ChatDrawer({
         setNotesError(data.error ?? 'Error al generar apuntes')
         return
       }
-      setNotes(data as PackNote)
+      if (data?.id && data?.content) {
+        setNotes(data as PackNote)
+      } else {
+        setNotesError('Respuesta inválida del servidor.')
+      }
+    } catch {
+      setNotesError('Error de conexión. Intenta de nuevo.')
     } finally {
       setGenerating(false)
     }
@@ -245,7 +267,7 @@ export function ChatDrawer({
                 </div>
               )}
 
-              {!loadingHistory && hadHistoryRef.current && messages.length > 0 && (
+              {!loadingHistory && hadHistory && messages.length > 0 && (
                 <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/40 mb-3">
                   Conversación guardada
                 </div>
