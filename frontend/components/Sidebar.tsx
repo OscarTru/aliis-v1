@@ -43,7 +43,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/ingreso',    label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
   { href: '/historial',  label: 'Mi expediente',     icon: <LayoutList size={18} /> },
-  { href: '/condiciones', label: 'Biblioteca',        icon: <Library size={18} /> },
+  { href: '/condiciones', label: 'Diagnósticos',       icon: <Library size={18} /> },
 ]
 
 const BOTTOM_ITEMS: NavItem[] = [
@@ -262,7 +262,7 @@ export function Sidebar() {
             <Separator />
             <div className="px-3 pt-3 pb-1">
               <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/50 mb-1">
-                Biblioteca
+                Diagnósticos
               </div>
               <div className="font-serif text-[12px] leading-[1.3] text-muted-foreground truncate">
                 {condition.name}

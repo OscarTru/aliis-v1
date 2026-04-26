@@ -14,7 +14,7 @@ export default async function BibliotecaPage() {
     <div className="max-w-[900px] mx-auto px-8 pt-10 pb-20">
       <PageHeader
         eyebrow="Neurología · Aliis"
-        title="Biblioteca de condiciones"
+        title="Biblioteca de diagnósticos"
         subtitle="Explicaciones enciclopédicas escritas por residentes de neurología."
       />
       <ConditionList conditions={conditions ?? []} />

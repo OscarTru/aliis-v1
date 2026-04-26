@@ -63,7 +63,7 @@ export function ConditionList({ conditions }: { conditions: Condition[] }) {
         <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mb-5">
           {filtered.length === 0
             ? 'Sin resultados'
-            : `${filtered.length} ${filtered.length === 1 ? 'condición' : 'condiciones'}`}
+            : `${filtered.length} ${filtered.length === 1 ? 'diagnóstico' : 'diagnósticos'}`}
         </p>
       )}
 
@@ -71,7 +71,7 @@ export function ConditionList({ conditions }: { conditions: Condition[] }) {
       {query.trim() && filtered.length === 0 && (
         <div className="text-center py-14">
           <p className="font-serif italic text-[17px] text-muted-foreground leading-[1.5]">
-            No encontramos "{query}" en la biblioteca.
+            No encontramos "{query}" en la biblioteca de diagnósticos.
           </p>
           <p className="font-sans text-[13px] text-muted-foreground/60 mt-2">
             Prueba con otro término o genera tu explicación desde{' '}
@@ -116,7 +116,7 @@ export function ConditionList({ conditions }: { conditions: Condition[] }) {
             onClick={() => setVisible((v) => v + PAGE_SIZE)}
             className="px-7 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] text-foreground cursor-pointer hover:bg-muted transition-colors duration-150"
           >
-            Ver más condiciones
+            Ver más diagnósticos
           </button>
         </div>
       )}

@@ -110,10 +110,10 @@ function ChapterCard({
         >
           <div className="flex-1 min-w-0">
             <div className="font-mono text-[9px] tracking-[.18em] uppercase text-primary/70 mb-1">
-              Biblioteca · Aliis
+              Diagnósticos · Aliis
             </div>
             <div className="font-sans text-[14px] font-medium text-foreground group-hover:text-primary transition-colors">
-              Leer más sobre esta condición →
+              Leer más sobre este diagnóstico →
             </div>
           </div>
         </Link>
