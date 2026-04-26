@@ -97,3 +97,13 @@ export interface Condition {
   created_at: string
   sections: ConditionSection[]
 }
+
+export interface ChatMessage {
+  id?: string
+  pack_id: string
+  user_id: string
+  chapter_id: string
+  role: 'user' | 'assistant'
+  text: string
+  created_at?: string
+}
