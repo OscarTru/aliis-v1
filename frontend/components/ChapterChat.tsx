@@ -30,9 +30,11 @@ export function ChapterChat({
   const [loadingHistory, setLoadingHistory] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const hadPersistedHistoryRef = useRef(false)
 
   useEffect(() => {
     if (!packId || !chapterId || !userId) return
+    hadPersistedHistoryRef.current = false
     setMessages([])
     setLoadingHistory(true)
     const supabase = createClient()
@@ -43,8 +45,11 @@ export function ChapterChat({
       .eq('chapter_id', chapterId)
       .eq('user_id', userId)
       .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[ChapterChat] history load failed', error)
+        } else if (data && data.length > 0) {
+          hadPersistedHistoryRef.current = true
           setMessages(data.map((row) => ({ role: row.role as 'user' | 'assistant', text: row.text })))
         }
         setLoadingHistory(false)
@@ -73,7 +78,6 @@ export function ChapterChat({
           chapterContent,
           packContext,
           packId,
-          userId,
           chapterId,
         }),
       })
@@ -94,6 +98,8 @@ export function ChapterChat({
         setMessages([...next, { role: 'assistant', text: full }])
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
       }
+      full += decoder.decode() // flush remaining bytes
+      if (full) setMessages([...next, { role: 'assistant', text: full }])
     } finally {
       setStreaming(false)
       setTimeout(() => textareaRef.current?.focus(), 50)
@@ -135,7 +141,7 @@ export function ChapterChat({
       )}
 
       {/* Prior history label */}
-      {!loadingHistory && messages.length > 0 && packId && (
+      {!loadingHistory && hadPersistedHistoryRef.current && messages.length > 0 && (
         <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/40 mb-3">
           Conversación guardada
         </div>
