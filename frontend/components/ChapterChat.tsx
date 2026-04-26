@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 type Message = { role: 'user' | 'assistant'; text: string }
@@ -10,24 +11,45 @@ export function ChapterChat({
   dx,
   chapterTitle,
   chapterContent,
+  packContext,
   packId,
   userId,
   chapterId,
-  packContext,
 }: {
   dx: string
   chapterTitle: string
   chapterContent: string
+  packContext?: string
   packId?: string
   userId?: string
   chapterId?: string
-  packContext?: string
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (!packId || !chapterId || !userId) return
+    setMessages([])
+    setLoadingHistory(true)
+    const supabase = createClient()
+    supabase
+      .from('pack_chats')
+      .select('role, text, created_at')
+      .eq('pack_id', packId)
+      .eq('chapter_id', chapterId)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMessages(data.map((row) => ({ role: row.role as 'user' | 'assistant', text: row.text })))
+        }
+        setLoadingHistory(false)
+      })
+  }, [packId, chapterId, userId])
 
   async function send() {
     const q = input.trim()
@@ -38,14 +60,22 @@ export function ChapterChat({
     setInput('')
     setStreaming(true)
 
-    // Add empty assistant message to stream into
     setMessages([...next, { role: 'assistant', text: '' }])
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, dx, chapterTitle, chapterContent }),
+        body: JSON.stringify({
+          question: q,
+          dx,
+          chapterTitle,
+          chapterContent,
+          packContext,
+          packId,
+          userId,
+          chapterId,
+        }),
       })
 
       if (!res.ok || !res.body) {
@@ -93,6 +123,23 @@ export function ChapterChat({
           Pregúntame lo que quieras sobre {dx}. Estoy aquí para explicarte con más detalle.
         </p>
       </div>
+
+      {/* History loading state */}
+      {loadingHistory && (
+        <div className="flex gap-1.5 items-center mb-4">
+          {[0, 1, 2].map((j) => (
+            <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary/40" style={{ animationDelay: `${j * 0.2}s` }} />
+          ))}
+          <span className="font-sans text-[12px] text-muted-foreground/60 ml-1">Cargando conversación anterior…</span>
+        </div>
+      )}
+
+      {/* Prior history label */}
+      {!loadingHistory && messages.length > 0 && packId && (
+        <div className="font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/40 mb-3">
+          Conversación guardada
+        </div>
+      )}
 
       {/* Messages */}
       {messages.length > 0 && (
