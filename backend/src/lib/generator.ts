@@ -132,12 +132,6 @@ CONTENIDO CURADO:
 ${formatted}`
 }
 
-function buildSystemPrompt(libraryMatch?: MatchedCondition | null): string {
-  let prompt = GENERATOR_SYSTEM_BASE
-  if (libraryMatch) prompt += '\n' + buildLibrarySection(libraryMatch)
-  prompt += '\n' + TOOLS_SECTION
-  return prompt
-}
 
 function isValidGeneratedPack(v: unknown): v is GeneratedPack {
   if (!v || typeof v !== 'object') return false
@@ -183,13 +177,19 @@ export async function generatePack(
     .filter(Boolean)
     .join('\n')
 
-  const systemPrompt = buildSystemPrompt(libraryMatch)
-
   async function attempt(): Promise<GeneratedPack> {
+    const staticPrompt = GENERATOR_SYSTEM_BASE + '\n' + TOOLS_SECTION
+    const systemBlocks: Anthropic.TextBlockParam[] = [
+      { type: 'text', text: staticPrompt, cache_control: { type: 'ephemeral' } },
+      ...(libraryMatch && libraryMatch.sections.length > 0
+        ? [{ type: 'text' as const, text: buildLibrarySection(libraryMatch), cache_control: { type: 'ephemeral' } as const }]
+        : []),
+    ]
+
     const response = await client.messages.create({
       model: 'claude-opus-4-7',
       max_tokens: 4096,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      system: systemBlocks,
       messages: [{ role: 'user', content: userPrompt }],
     })
 
