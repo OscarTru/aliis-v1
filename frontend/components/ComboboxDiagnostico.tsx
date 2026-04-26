@@ -24,8 +24,6 @@ const MAX_SUGGESTIONS = 6
 export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }: Props) {
   const [open, setOpen] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLUListElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [displayedValue, setDisplayedValue] = useState(value)
 
@@ -34,11 +32,20 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
     setDisplayedValue(value)
   }, [value])
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
   const suggestions = useMemo(() => {
     const q = displayedValue.trim()
     if (q.length < 2) return conditions.slice(0, 4)
     return conditions.filter((c) => fuzzyMatch(q, c.name)).slice(0, MAX_SUGGESTIONS)
   }, [displayedValue, conditions])
+
+  const showFreeText = displayedValue.trim().length >= 2
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value
@@ -52,6 +59,7 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
   }, [onChange])
 
   function selectCondition(c: ConditionSuggestion) {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     setDisplayedValue(c.name)
     onChange(c.name, c.slug)
     setOpen(false)
@@ -59,6 +67,7 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
   }
 
   function selectFreeText() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     const text = displayedValue.trim()
     onChange(text, null)
     setOpen(false)
@@ -66,7 +75,7 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    const total = suggestions.length + 1 // +1 for "Usar texto literal"
+    const total = suggestions.length + (showFreeText ? 1 : 0)
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActiveIdx((i) => (i + 1) % total)
@@ -91,12 +100,11 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
       <div className="relative">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
         <input
-          ref={inputRef}
           type="text"
           value={displayedValue}
           onChange={handleInputChange}
           onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onBlur={() => setOpen(false)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? 'Escribe tu diagnóstico o busca en la biblioteca…'}
           className="w-full pl-10 pr-4 py-[14px] rounded-[14px] border border-border bg-muted font-sans text-[15px] text-foreground outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-colors placeholder:text-muted-foreground/50"
@@ -105,7 +113,7 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
       </div>
 
       <AnimatePresence>
-        {open && (suggestions.length > 0 || displayedValue.trim().length >= 2) && (
+        {open && (suggestions.length > 0 || showFreeText) && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -113,27 +121,33 @@ export function ComboboxDiagnostico({ value, onChange, conditions, placeholder }
             transition={{ duration: 0.2 }}
             className="absolute z-50 w-full mt-1.5 bg-background border border-border rounded-[14px] shadow-lg overflow-hidden"
           >
-            <ul ref={listRef} className="py-1.5">
+            <ul className="py-1.5">
               {suggestions.map((c, i) => (
                 <li key={c.id}>
                   <button
-                    onMouseDown={() => selectCondition(c)}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      selectCondition(c)
+                    }}
                     className={cn(
                       'w-full text-left px-4 py-3 flex items-center justify-between gap-3 transition-colors',
                       activeIdx === i ? 'bg-muted' : 'hover:bg-muted/60'
                     )}
                   >
                     <span className="font-sans text-[15px] text-foreground">{c.name}</span>
-                    <span className="shrink-0 font-mono text-[9px] tracking-[.15em] uppercase text-primary/70 bg-primary/8 px-2 py-0.5 rounded-full">
+                    <span className="shrink-0 font-mono text-[9px] tracking-[.15em] uppercase text-primary/70 bg-primary/[0.08] px-2 py-0.5 rounded-full">
                       En biblioteca
                     </span>
                   </button>
                 </li>
               ))}
-              {displayedValue.trim().length >= 2 && (
+              {showFreeText && (
                 <li>
                   <button
-                    onMouseDown={selectFreeText}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      selectFreeText()
+                    }}
                     className={cn(
                       'w-full text-left px-4 py-3 font-sans text-[14px] text-muted-foreground transition-colors border-t border-border',
                       activeIdx === suggestions.length ? 'bg-muted' : 'hover:bg-muted/60'
