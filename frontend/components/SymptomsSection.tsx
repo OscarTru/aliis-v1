@@ -1,0 +1,355 @@
+'use client'
+
+import { useState } from 'react'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Trash2, Plus } from 'lucide-react'
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
+import type { SymptomLog } from '@/lib/types'
+
+const METRICS = [
+  { key: 'glucose',      label: 'Glucosa',    unit: 'mg/dL', color: 'hsl(var(--primary))' },
+  { key: 'bp_systolic',  label: 'Sistólica',  unit: 'mmHg',  color: '#e74c3c' },
+  { key: 'bp_diastolic', label: 'Diastólica', unit: 'mmHg',  color: '#e67e22' },
+  { key: 'heart_rate',   label: 'FC',         unit: 'lpm',   color: '#8e44ad' },
+  { key: 'weight',       label: 'Peso',       unit: 'kg',    color: '#27ae60' },
+  { key: 'temperature',  label: 'Temp',       unit: '°C',    color: '#2980b9' },
+] as const
+
+type MetricKey = typeof METRICS[number]['key']
+
+function LogModal({
+  open,
+  onClose,
+  onSaved,
+}: {
+  open: boolean
+  onClose: () => void
+  onSaved: (log: SymptomLog) => void
+}) {
+  const [fields, setFields] = useState({
+    glucose: '',
+    bp_systolic: '',
+    bp_diastolic: '',
+    heart_rate: '',
+    weight: '',
+    temperature: '',
+    note: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const numericKeys = ['glucose', 'bp_systolic', 'bp_diastolic', 'heart_rate', 'weight', 'temperature'] as const
+  const hasNumeric = numericKeys.some(k => fields[k].trim() !== '')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+
+    const body: Record<string, number | string | null> = {}
+    numericKeys.forEach(k => {
+      const v = fields[k].trim()
+      if (v !== '') body[k] = parseFloat(v)
+    })
+    if (fields.note.trim()) body.note = fields.note.trim()
+
+    const res = await fetch('/api/symptoms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+
+    if (!res.ok) {
+      setError(data.error ?? 'Error al guardar')
+      setSaving(false)
+      return
+    }
+
+    onSaved(data)
+    setFields({ glucose: '', bp_systolic: '', bp_diastolic: '', heart_rate: '', weight: '', temperature: '', note: '' })
+    setSaving(false)
+    onClose()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-[20px]">Nuevo registro</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Glucosa</label>
+            <input
+              type="number"
+              value={fields.glucose}
+              onChange={e => setFields(f => ({ ...f, glucose: e.target.value }))}
+              placeholder="mg/dL"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Tensión arterial</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={fields.bp_systolic}
+                onChange={e => setFields(f => ({ ...f, bp_systolic: e.target.value }))}
+                placeholder="Sistólica mmHg"
+                className="flex-1 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              />
+              <input
+                type="number"
+                value={fields.bp_diastolic}
+                onChange={e => setFields(f => ({ ...f, bp_diastolic: e.target.value }))}
+                placeholder="Diastólica mmHg"
+                className="flex-1 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Frecuencia cardíaca</label>
+            <input
+              type="number"
+              value={fields.heart_rate}
+              onChange={e => setFields(f => ({ ...f, heart_rate: e.target.value }))}
+              placeholder="lpm"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Peso</label>
+              <input
+                type="number"
+                value={fields.weight}
+                onChange={e => setFields(f => ({ ...f, weight: e.target.value }))}
+                placeholder="kg"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              />
+            </div>
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Temperatura</label>
+              <input
+                type="number"
+                value={fields.temperature}
+                onChange={e => setFields(f => ({ ...f, temperature: e.target.value }))}
+                placeholder="°C"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Nota</label>
+            <textarea
+              value={fields.note}
+              onChange={e => setFields(f => ({ ...f, note: e.target.value }))}
+              placeholder="¿Cómo te sentías?"
+              rows={3}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 resize-none"
+            />
+          </div>
+
+          {error && <p className="font-sans text-[12px] text-destructive">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={!hasNumeric || saving}
+            className={cn(
+              'w-full py-2.5 rounded-full font-sans text-[14px] font-medium transition-colors border-none',
+              hasNumeric && !saving
+                ? 'bg-foreground text-background cursor-pointer'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
+            )}
+          >
+            {saving ? 'Guardando...' : 'Guardar registro'}
+          </button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function MetricPills({ log }: { log: SymptomLog }) {
+  const pills: string[] = []
+  if (log.glucose !== null) pills.push(`Glucosa ${log.glucose} mg/dL`)
+  if (log.bp_systolic !== null && log.bp_diastolic !== null) pills.push(`TA ${log.bp_systolic}/${log.bp_diastolic}`)
+  else if (log.bp_systolic !== null) pills.push(`Sistólica ${log.bp_systolic}`)
+  else if (log.bp_diastolic !== null) pills.push(`Diastólica ${log.bp_diastolic}`)
+  if (log.heart_rate !== null) pills.push(`FC ${log.heart_rate} lpm`)
+  if (log.weight !== null) pills.push(`Peso ${log.weight} kg`)
+  if (log.temperature !== null) pills.push(`Temp ${log.temperature}°C`)
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {pills.map((p, i) => (
+        <span key={i} className="px-2.5 py-0.5 rounded-full bg-muted font-sans text-[11px] text-muted-foreground">
+          {p}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) {
+  const [logs, setLogs] = useState<SymptomLog[]>(initialLogs)
+  const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
+    new Set(METRICS.map(m => m.key))
+  )
+  const [modalOpen, setModalOpen] = useState(false)
+
+  function toggleMetric(key: MetricKey) {
+    setActiveMetrics(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function handleSaved(log: SymptomLog) {
+    setLogs(prev => [log, ...prev])
+  }
+
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/symptoms/${id}`, { method: 'DELETE' })
+    if (res.ok) setLogs(prev => prev.filter(l => l.id !== id))
+  }
+
+  const chartData = [...logs]
+    .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
+    .map(l => ({
+      date: format(new Date(l.logged_at), 'dd/MM'),
+      glucose: l.glucose,
+      bp_systolic: l.bp_systolic,
+      bp_diastolic: l.bp_diastolic,
+      heart_rate: l.heart_rate,
+      weight: l.weight,
+      temperature: l.temperature,
+    }))
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50">
+          Síntomas y signos vitales
+        </p>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
+        >
+          <Plus size={13} />
+          Registrar
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {METRICS.map(m => (
+          <button
+            key={m.key}
+            onClick={() => toggleMetric(m.key)}
+            className={cn(
+              'px-3 py-1 rounded-full font-sans text-[12px] border transition-colors cursor-pointer',
+              activeMetrics.has(m.key)
+                ? 'bg-foreground text-background border-transparent'
+                : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {chartData.length < 2 ? (
+        <p className="font-sans text-[13px] text-muted-foreground italic py-6 text-center">
+          Necesitas al menos 2 registros para ver tendencias.
+        </p>
+      ) : (
+        <div className="mb-8 h-[220px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'var(--font-mono)' }} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} />
+              <Tooltip
+                contentStyle={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12,
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 8,
+                  background: 'hsl(var(--background))',
+                }}
+              />
+              {METRICS.filter(m => activeMetrics.has(m.key)).map(m => (
+                <Line
+                  key={m.key}
+                  type="monotone"
+                  dataKey={m.key}
+                  stroke={m.color}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                  name={m.label}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {logs.length === 0 ? (
+        <p className="font-sans text-[13px] text-muted-foreground italic text-center py-4">
+          No hay registros aún.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {logs.map(log => (
+            <div key={log.id} className="flex items-start gap-3 p-4 bg-muted rounded-xl">
+              <div className="flex-1 flex flex-col gap-1.5">
+                <span className="font-mono text-[10px] tracking-[.1em] uppercase text-muted-foreground/60">
+                  {format(new Date(log.logged_at), "d MMM yyyy · HH:mm", { locale: es })}
+                </span>
+                <MetricPills log={log} />
+                {log.note && (
+                  <p className="font-serif italic text-[13px] text-muted-foreground leading-[1.5] m-0">
+                    {log.note}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => handleDelete(log.id)}
+                className="shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors border-none bg-transparent cursor-pointer p-1"
+                aria-label="Eliminar registro"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
+    </div>
+  )
+}
