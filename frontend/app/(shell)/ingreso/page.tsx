@@ -140,13 +140,19 @@ export default function IngresoPage() {
 
   // Load conditions for combobox
   useEffect(() => {
+    let mounted = true
     const supabase = createClient()
     supabase
       .from('conditions')
       .select('id, slug, name')
       .eq('published', true)
       .order('name')
-      .then(({ data }) => setConditions(data ?? []))
+      .then(({ data, error }) => {
+        if (!mounted) return
+        if (error) console.error('[conditions] failed to load:', error.message)
+        setConditions(data ?? [])
+      })
+    return () => { mounted = false }
   }, [])
 
   // Drive the SVG circle directly via ref — bypasses React render cycle for smooth animation
