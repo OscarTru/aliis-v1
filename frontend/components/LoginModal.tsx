@@ -174,10 +174,10 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
         {/* Logo — siempre visible */}
         <div className="text-center mb-6">
           <Image
-            src="/assets/aliis-original.png"
+            src="/assets/aliis-black.png"
             alt="Aliis"
-            width={72}
-            height={28}
+            width={96}
+            height={36}
             className="object-contain mx-auto mb-4"
           />
         </div>
@@ -225,7 +225,7 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
                 type="button"
                 onClick={() => handleGoogleSignIn(false)}
                 disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-foreground font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
+                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
               >
                 <GoogleIcon />
                 {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
@@ -281,7 +281,7 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
                 type="button"
                 onClick={() => handleGoogleSignIn(true)}
                 disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-foreground font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
+                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
               >
                 <GoogleIcon />
                 {googleLoading ? 'Verificando…' : 'Continuar con Google'}

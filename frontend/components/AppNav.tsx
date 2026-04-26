@@ -36,7 +36,7 @@ export function AppNav() {
       <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-border bg-background/80">
         <div className="max-w-[72rem] mx-auto flex items-center justify-between px-6 py-3.5 gap-6">
           <Link href={initial ? '/historial' : '/'} className="flex items-center no-underline">
-            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} className="object-contain" />
+            <Image src="/assets/aliis-black.png" alt="Aliis" width={80} height={32} className="object-contain" />
           </Link>
 
           <div className="flex items-center gap-4">

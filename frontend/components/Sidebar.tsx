@@ -47,9 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/condiciones', label: 'Diagnósticos',      icon: <Library size={18} /> },
 ]
 
-const BOTTOM_ITEMS: NavItem[] = [
-  { href: '/cuenta',   label: 'Mi cuenta',       icon: <UserCircle size={18} /> },
-]
+const BOTTOM_ITEMS: NavItem[] = []
 
 // Defined outside Sidebar so React never sees it as a new component type on re-render
 function NavLink({ item, collapsed, pathname }: { item: NavItem; collapsed: boolean; pathname: string }) {
@@ -103,6 +101,7 @@ export function Sidebar() {
   const { condition, activeIdx: conditionActiveIdx, setActiveIdx: setConditionActiveIdx } = useConditionContext()
   const verifiedRefs = pack?.references.filter((r) => r.verified !== false) ?? []
   const [email, setEmail] = useState<string | null>(null)
+  const [name, setName] = useState<string | null>(null)
   const [initial, setInitial] = useState<string | null>(null)
   const [plan, setPlan] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
@@ -129,18 +128,24 @@ export function Sidebar() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setEmail(user.email ?? null)
-      setInitial(user.email?.[0]?.toUpperCase() ?? null)
-      const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('plan,name').eq('id', user.id).single()
       setPlan(profile?.plan ?? 'free')
+      const n = profile?.name ?? null
+      setName(n)
+      setInitial((n?.[0] ?? user.email?.[0] ?? '?').toUpperCase())
     }
     loadUser()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user
       setEmail(u?.email ?? null)
-      setInitial(u?.email?.[0]?.toUpperCase() ?? null)
-      if (!u) { setPlan(null); return }
-      supabase.from('profiles').select('plan').eq('id', u.id).single()
-        .then(({ data }) => setPlan(data?.plan ?? 'free'))
+      if (!u) { setPlan(null); setName(null); setInitial(null); return }
+      supabase.from('profiles').select('plan,name').eq('id', u.id).single()
+        .then(({ data }) => {
+          setPlan(data?.plan ?? 'free')
+          const n = data?.name ?? null
+          setName(n)
+          setInitial((n?.[0] ?? u.email?.[0] ?? '?').toUpperCase())
+        })
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -213,7 +218,7 @@ export function Sidebar() {
                 {pack.dx}
               </div>
             </div>
-            <nav className="flex flex-col gap-0 px-2 pb-2 flex-1 overflow-y-auto">
+            <nav className="flex flex-col gap-0 px-2 pb-2 overflow-y-auto max-h-[40vh]">
               {pack.chapters.map((ch, i) => {
                 const isActive = i === activeIdx
                 const isRead = readChapters.has(ch.id)
@@ -297,7 +302,7 @@ export function Sidebar() {
                 {condition.name}
               </div>
             </div>
-            <nav className="flex flex-col gap-0 px-2 pb-2 flex-1 overflow-y-auto">
+            <nav className="flex flex-col gap-0 px-2 pb-2 overflow-y-auto max-h-[40vh]">
               {condition.sections.map((sec, i) => {
                 const isActive = i === conditionActiveIdx
                 return (
@@ -325,17 +330,17 @@ export function Sidebar() {
           </>
         )}
 
-        {/* Spacer when no pack and no condition */}
-        {!pack && !condition && <div className="flex-1" />}
+        {/* Spacer — always pushes bottom nav down */}
+        <div className="flex-1" />
 
-        <Separator />
-
-        {/* Bottom nav */}
-        <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2 items-center' : 'px-2')}>
-          {bottomNav.map((item) => (
-            <NavLink key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
-          ))}
-        </div>
+        {/* Bottom nav (upgrade item only when free) */}
+        {bottomNav.length > 0 && (
+          <div className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2 items-center' : 'px-2')}>
+            {bottomNav.map((item) => (
+              <NavLink key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
+            ))}
+          </div>
+        )}
 
         {/* User */}
         <Link
@@ -353,13 +358,11 @@ export function Sidebar() {
             collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
           )}>
             <p className="font-sans text-xs text-foreground font-medium truncate whitespace-nowrap leading-tight">
-              {email ?? ''}
+              {name ?? email ?? ''}
             </p>
-            {plan && (
-              <p className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground leading-tight">
-                {plan === 'pro' ? 'Pro' : 'Gratis'}
-              </p>
-            )}
+            <p className="font-mono text-[10px] text-muted-foreground leading-tight truncate whitespace-nowrap">
+              {name ? (email ?? '') : (plan === 'pro' ? 'Pro' : 'Gratis')}
+            </p>
           </div>
         </Link>
 

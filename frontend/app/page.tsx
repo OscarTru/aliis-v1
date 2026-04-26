@@ -80,7 +80,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
             <em style={{ color: 'var(--c-text-faint)' }}>Aliis no te deja solo con tu diagnóstico.</em>
           </h1>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 0 32px' }}>
-            Te explica lo que te dijeron, traduce la receta y te acompaña durante toda tu enfermedad. Cada respuesta con su fuente — PubMed, DOI, guías clínicas. Sin inventar nada.
+            Tu expediente médico explicado capítulo a capítulo. Con fuentes verificables, un diario de síntomas, chatbot por capítulo y más de 60 diagnósticos revisados por especialistas.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
             <button onClick={onCTA}
@@ -116,11 +116,11 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
 
 function WhatAliisDoes() {
   const items = [
-    { n: '01', t: 'Traduce', i: 'el parte médico', d: 'De términos que no entiendes a lo que eso significa para tu vida. Sin tecnicismos, sin alarmar, sin quitar rigor.' },
-    { n: '02', t: 'Cada cosa que te dice,', i: 'viene firmada', d: 'PubMed, DOI, guías clínicas. Si no hay evidencia que soporte una respuesta, Aliis te lo dice. Sin inventar nada.' },
-    { n: '03', t: 'Te prepara para', i: 'la siguiente cita', d: 'Las preguntas que no sabes que tienes que hacer. Aliis las escribe por ti para que llegues a consulta y aproveches cada minuto.' },
-    { n: '04', t: 'Te dice cuándo preocuparte', i: '— y cuándo no', d: 'Señales de alarma sin alarmismo. La diferencia entre volver hoy a urgencias o esperar tranquilo a la cita.' },
-    { n: '05', t: 'Te acompaña durante', i: 'toda tu enfermedad', d: 'Recuerda cada diagnóstico, cada fármaco, cada síntoma. Cada vez que vuelves, Aliis ya sabe todo lo que pasó antes.' },
+    { n: '01', t: 'Explica tu diagnóstico', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma, preguntas para tu médico. Todo en el lenguaje que necesitas, con la fuente detrás.' },
+    { n: '02', t: 'Cada afirmación', i: 'viene con su fuente', d: 'PubMed, DOI, guías clínicas. Si no hay evidencia que soporte algo, Aliis te lo dice. Sin inventar nada.' },
+    { n: '03', t: 'Pregúntale', i: 'lo que no quedó claro', d: 'Cada capítulo tiene su propio chatbot. Pregunta con tus palabras y Aliis responde en contexto — sin empezar de cero cada vez.' },
+    { n: '04', t: 'Lleva tu diario', i: 'de síntomas y apuntes', d: 'Registra cómo te sientes día a día. Agrega apuntes a cada diagnóstico. Llega a tu próxima cita con todo ordenado.' },
+    { n: '05', t: 'Explora la biblioteca', i: 'de diagnósticos', d: 'Más de 60 condiciones revisadas por especialistas. Neurología, cardiología, digestivo y más — organizadas para que encuentres lo que necesitas.' },
   ]
   return (
     <section id="que-hace" style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
@@ -152,9 +152,9 @@ function WhatAliisDoes() {
 
 function HowItWorks() {
   const steps = [
-    { n: 'Le pegas', t: 'lo que te dieron en consulta', d: 'El informe, la receta, o lo que recuerdas. Texto, foto o audio — Aliis lo lee.' },
-    { n: 'Aliis te lo explica', t: 'con la fuente abierta', d: 'Cada afirmación viene citada. Despliégala cuando quieras comprobarla. Si algo no tiene evidencia, Aliis te lo dice.' },
-    { n: 'Vuelves cada vez', t: 'que lo necesitas', d: 'Antes de cada cita, cuando te surja una duda, cuando cambie algo. Aliis recuerda todo lo anterior y sigue desde ahí.' },
+    { n: 'Describes', t: 'tu diagnóstico', d: 'Pega el texto de la consulta, escribe el nombre, o busca entre más de 60 condiciones. Aliis lo identifica.' },
+    { n: 'Recibes', t: 'tu expediente completo', d: 'Capítulos estructurados: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico. Cada dato con su fuente.' },
+    { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario, el chatbot por capítulo, la biblioteca. Todo en el mismo lugar, siempre disponible.' },
   ]
   return (
     <section id="como-funciona" style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
@@ -184,9 +184,9 @@ function HowItWorks() {
 
 function TrustSection() {
   const pillars = [
-    { eyebrow: 'Evidencia', title: 'Con fuente o no lo decimos', body: 'Cada afirmación viene con su referencia — PubMed, DOI, guías clínicas. Despliégala cuando quieras. Si no hay evidencia que soporte algo, Aliis te lo dice.', stat: '14,800', statLabel: 'referencias indexadas' },
-    { eyebrow: 'Límite', title: 'Aliis no diagnostica. Explica.', body: 'Aliis es acompañamiento, no diagnóstico. En cada respuesta viene lo que deberías preguntarle al neurólogo — para que cada cita valga más.', stat: '100%', statLabel: 'respuestas con disclaimer' },
-    { eyebrow: 'Origen', title: 'Por médicos que ya conoces', body: 'Oscar y Stephanie llevan años traduciendo medicina difícil en Cerebros Esponjosos. Aliis es la misma voz, la misma obsesión por el rigor — disponible cuando la necesitas.', stat: '575k', statLabel: 'personas que ya confían en cómo explicamos medicina' },
+    { eyebrow: 'Evidencia', title: 'Con fuente o no lo decimos', body: 'Cada capítulo cita su referencia — PubMed, DOI, guías clínicas. Despliégala cuando quieras. Si algo no tiene evidencia sólida, Aliis te lo dice antes que inventarse una respuesta.', stat: '+60', statLabel: 'condiciones con revisión especializada' },
+    { eyebrow: 'Límite', title: 'Aliis no diagnostica. Explica.', body: 'Aliis es acompañamiento, no diagnóstico. En cada explicación viene lo que deberías preguntarle a tu médico — para que cada cita valga más y no salgas con más dudas que antes.', stat: '100%', statLabel: 'explicaciones con preguntas para tu médico' },
+    { eyebrow: 'Origen', title: 'Por médicos que ya conoces', body: 'Oscar y Stephanie son residentes de neurología que llevan años traduciendo medicina difícil para 575k personas en Cerebros Esponjosos. Aliis es la misma voz — disponible cuando no tienes un médico al lado.', stat: '575k', statLabel: 'personas que ya confían en cómo explicamos medicina' },
   ]
   return (
     <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Pencil, Check, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
@@ -11,6 +12,9 @@ import { cn } from '@/lib/utils'
 
 type Profile = {
   name: string | null
+  last_name: string | null
+  birth_date: string | null
+  location: string | null
   who: 'yo' | 'familiar' | null
   plan: 'free' | 'pro'
   email: string | null
@@ -64,7 +68,21 @@ export default function CuentaPage() {
 
   // Name
   const [name, setName] = useState('')
+  const [nameEditing, setNameEditing] = useState(false)
   const [nameLoading, setNameLoading] = useState(false)
+
+  // Extra profile fields
+  const [lastName, setLastName] = useState('')
+  const [lastNameEditing, setLastNameEditing] = useState(false)
+  const [lastNameLoading, setLastNameLoading] = useState(false)
+
+  const [birthDate, setBirthDate] = useState('')
+  const [birthDateEditing, setBirthDateEditing] = useState(false)
+  const [birthDateLoading, setBirthDateLoading] = useState(false)
+
+  const [location, setLocation] = useState('')
+  const [locationEditing, setLocationEditing] = useState(false)
+  const [locationLoading, setLocationLoading] = useState(false)
 
   // Who
   const [who, setWho] = useState<'yo' | 'familiar' | null>(null)
@@ -105,9 +123,12 @@ export default function CuentaPage() {
       const providers = user.identities?.map(i => i.provider) ?? []
       setIsGoogleUser(providers.includes('google') && !providers.includes('email'))
 
-      const { data: p } = await supabase.from('profiles').select('name,who,plan,trial_end,subscription_status,stripe_customer_id').eq('id', user.id).single()
+      const { data: p } = await supabase.from('profiles').select('name,last_name,birth_date,location,who,plan,trial_end,subscription_status,stripe_customer_id').eq('id', user.id).single()
       setProfile({
         name: p?.name ?? null,
+        last_name: p?.last_name ?? null,
+        birth_date: p?.birth_date ?? null,
+        location: p?.location ?? null,
         who: p?.who ?? null,
         plan: p?.plan ?? 'free',
         email: user.email ?? null,
@@ -115,7 +136,12 @@ export default function CuentaPage() {
         subscription_status: p?.subscription_status ?? null,
         stripe_customer_id: p?.stripe_customer_id ?? null,
       })
-      setName(p?.name ?? '')
+      const savedName = p?.name ?? ''
+      const googleName = user.user_metadata?.full_name ?? ''
+      setName(savedName || googleName)
+      setLastName(p?.last_name ?? '')
+      setBirthDate(p?.birth_date ?? '')
+      setLocation(p?.location ?? '')
       setWho(p?.who ?? null)
     }
     load()
@@ -127,7 +153,38 @@ export default function CuentaPage() {
     const supabase = createClient()
     const { error } = await supabase.from('profiles').update({ name: name.trim() || null }).eq('id', userId)
     setNameLoading(false)
+    if (!error) setNameEditing(false)
     showToast(error ? 'Error al guardar.' : 'Nombre actualizado.', !error)
+  }
+
+  async function saveLastName() {
+    if (!userId) return
+    setLastNameLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('profiles').update({ last_name: lastName.trim() || null }).eq('id', userId)
+    setLastNameLoading(false)
+    if (!error) setLastNameEditing(false)
+    showToast(error ? 'Error al guardar.' : 'Apellido actualizado.', !error)
+  }
+
+  async function saveBirthDate() {
+    if (!userId) return
+    setBirthDateLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('profiles').update({ birth_date: birthDate || null }).eq('id', userId)
+    setBirthDateLoading(false)
+    if (!error) setBirthDateEditing(false)
+    showToast(error ? 'Error al guardar.' : 'Fecha actualizada.', !error)
+  }
+
+  async function saveLocation() {
+    if (!userId) return
+    setLocationLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('profiles').update({ location: location.trim() || null }).eq('id', userId)
+    setLocationLoading(false)
+    if (!error) setLocationEditing(false)
+    showToast(error ? 'Error al guardar.' : 'Ubicación actualizada.', !error)
   }
 
   async function saveWho(value: 'yo' | 'familiar') {
@@ -209,14 +266,97 @@ export default function CuentaPage() {
         {/* Perfil */}
         <Section title="Perfil">
           <Row label="Nombre">
-            <Input
-              type="text"
-              placeholder="Tu nombre"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
-            />
-            <SaveButton loading={nameLoading} onClick={saveName} />
+            {nameEditing ? (
+              <>
+                <Input
+                  type="text"
+                  placeholder="Tu nombre"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  autoFocus
+                  className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                />
+                <div className="flex gap-2 mt-2.5">
+                  <button
+                    onClick={saveName}
+                    disabled={nameLoading}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"
+                  >
+                    <Check size={14} />
+                    {nameLoading ? 'Guardando…' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={() => { setNameEditing(false); setName(profile.name ?? '') }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"
+                  >
+                    <X size={14} />
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-[15px] text-foreground">
+                  {name || <span className="text-muted-foreground">Sin nombre</span>}
+                </span>
+                <button
+                  onClick={() => setNameEditing(true)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
+          </Row>
+          <Row label="Apellido">
+            {lastNameEditing ? (
+              <>
+                <Input type="text" placeholder="Tu apellido" value={lastName} onChange={e => setLastName(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
+                <div className="flex gap-2 mt-2.5">
+                  <button onClick={saveLastName} disabled={lastNameLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{lastNameLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={() => { setLastNameEditing(false); setLastName(profile.last_name ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-[15px] text-foreground">{lastName || <span className="text-muted-foreground">Sin apellido</span>}</span>
+                <button onClick={() => setLastNameEditing(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"><Pencil size={14} /></button>
+              </div>
+            )}
+          </Row>
+          <Row label="Fecha de nacimiento">
+            {birthDateEditing ? (
+              <>
+                <Input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
+                <div className="flex gap-2 mt-2.5">
+                  <button onClick={saveBirthDate} disabled={birthDateLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{birthDateLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={() => { setBirthDateEditing(false); setBirthDate(profile.birth_date ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-[15px] text-foreground">
+                  {birthDate ? new Date(birthDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : <span className="text-muted-foreground">Sin fecha</span>}
+                </span>
+                <button onClick={() => setBirthDateEditing(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"><Pencil size={14} /></button>
+              </div>
+            )}
+          </Row>
+          <Row label="Lugar de residencia">
+            {locationEditing ? (
+              <>
+                <Input type="text" placeholder="Ciudad, País" value={location} onChange={e => setLocation(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
+                <div className="flex gap-2 mt-2.5">
+                  <button onClick={saveLocation} disabled={locationLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{locationLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={() => { setLocationEditing(false); setLocation(profile.location ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-[15px] text-foreground">{location || <span className="text-muted-foreground">Sin ubicación</span>}</span>
+                <button onClick={() => setLocationEditing(true)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"><Pencil size={14} /></button>
+              </div>
+            )}
           </Row>
           <div className="px-6 py-5 border-b border-border">
             <div className="font-sans text-sm text-muted-foreground mb-3">
@@ -247,13 +387,10 @@ export default function CuentaPage() {
         {!isGoogleUser && (
           <Section title="Acceso">
             <Row label="Email">
-              <Input
-                type="email"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-                className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
-              />
-              <SaveButton loading={emailLoading} onClick={saveEmail} />
+              <span className="font-sans text-[15px] text-foreground">{newEmail}</span>
+              <p className="font-sans text-[12px] text-muted-foreground/60 mt-1">
+                Para cambiar tu email escríbenos a hola@aliis.app
+              </p>
             </Row>
             <Row label="Contraseña">
               <div className="flex flex-col gap-2.5">
@@ -319,7 +456,7 @@ export default function CuentaPage() {
               )}
             </div>
             <div className="flex flex-col gap-2 shrink-0">
-              {profile.plan === 'free' ? (
+              {profile.plan === 'free' || !profile.stripe_customer_id ? (
                 <button
                   onClick={handleUpgrade}
                   disabled={billingLoading}

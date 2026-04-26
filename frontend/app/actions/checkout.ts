@@ -7,12 +7,12 @@ import { redirect } from 'next/navigation'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 const PRICE_MAP: Record<string, string | undefined> = {
-  eur_monthly: process.env.STRIPE_PRO_PRICE_EUR_MONTHLY,
-  eur_yearly: process.env.STRIPE_PRO_PRICE_EUR_YEARLY,
-  usd_monthly: process.env.STRIPE_PRO_PRICE_USD_MONTHLY,
-  usd_yearly: process.env.STRIPE_PRO_PRICE_USD_YEARLY,
-  mxn_monthly: process.env.STRIPE_PRO_PRICE_MXN_MONTHLY,
-  mxn_yearly: process.env.STRIPE_PRO_PRICE_MXN_YEARLY,
+  eur_monthly: process.env.STRIPE_PRICE_EUR_MONTHLY,
+  eur_yearly: process.env.STRIPE_PRICE_EUR_YEARLY,
+  usd_monthly: process.env.STRIPE_PRICE_USD_MONTHLY,
+  usd_yearly: process.env.STRIPE_PRICE_USD_YEARLY,
+  mxn_monthly: process.env.STRIPE_PRICE_MXN_MONTHLY,
+  mxn_yearly: process.env.STRIPE_PRICE_MXN_YEARLY,
 }
 
 export async function createCheckoutSession(currency: string, cadence: 'monthly' | 'yearly') {
