@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { PageHeader } from '@/components/PageHeader'
 
 export default async function BibliotecaPage() {
   const supabase = await createServerSupabaseClient()
@@ -10,16 +11,12 @@ export default async function BibliotecaPage() {
     .order('name')
 
   return (
-    <div className="max-w-4xl mx-auto px-8 py-10">
-      <div className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-2">
-        Neurología · Aliis
-      </div>
-      <h1 className="font-serif text-[clamp(28px,4vw,42px)] tracking-[-0.022em] leading-[1.1] mb-2">
-        Biblioteca de condiciones
-      </h1>
-      <p className="font-sans text-[15px] text-muted-foreground mb-10 leading-[1.6]">
-        Explicaciones enciclopédicas escritas por residentes de neurología.
-      </p>
+    <div className="max-w-[900px] mx-auto px-8 pt-10 pb-20">
+      <PageHeader
+        eyebrow="Neurología · Aliis"
+        title="Biblioteca de condiciones"
+        subtitle="Explicaciones enciclopédicas escritas por residentes de neurología."
+      />
 
       {(!conditions || conditions.length === 0) ? (
         <div className="text-center py-20 text-muted-foreground font-sans text-[14px]">

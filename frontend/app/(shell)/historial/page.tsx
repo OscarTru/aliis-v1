@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PackList } from '@/components/PackList'
+import { PageHeader } from '@/components/PageHeader'
 import { UpgradeToast } from '@/components/UpgradeToast'
 import { cn } from '@/lib/utils'
 
@@ -67,15 +68,10 @@ export default async function HistorialPage({
       </Suspense>
       <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
 
-        {/* Header */}
-        <div className="mb-9">
-          <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-2">
-            {totalPacks} {totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}
-          </p>
-          <h1 className="font-serif text-[clamp(24px,3.5vw,36px)] tracking-tight leading-tight mb-0 whitespace-nowrap">
-            Mi <em>expediente</em>
-          </h1>
-        </div>
+        <PageHeader
+          eyebrow={`${totalPacks} ${totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}`}
+          title={<>Mi <em>expediente</em></>}
+        />
 
         {/* Filters */}
         <div className="flex gap-1.5 mb-7 flex-wrap">

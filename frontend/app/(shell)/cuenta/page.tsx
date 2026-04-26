@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -165,22 +166,12 @@ export default function CuentaPage() {
 
   return (
     <>
-      <div className="max-w-[640px] mx-auto px-6 pt-12 pb-20">
+      <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
 
-        {/* Header */}
-        <div className="mb-10">
-          <div className="font-serif text-[28px] tracking-[-0.02em] mb-1.5">
-            Mi cuenta
-          </div>
-          <div className="font-sans text-sm text-muted-foreground">
-            {profile.email}
-            {profile.plan === 'pro' && (
-              <span className="ml-2.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] tracking-[.1em] uppercase">
-                Pro
-              </span>
-            )}
-          </div>
-        </div>
+        <PageHeader
+          eyebrow={profile.email ?? undefined}
+          title={<>Mi <em>cuenta</em></>}
+        />
 
         {/* Perfil */}
         <Section title="Perfil">

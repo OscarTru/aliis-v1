@@ -1,6 +1,7 @@
 import { Sidebar } from '@/components/Sidebar'
 import { PackProvider } from '@/lib/pack-context'
 import { ConditionProvider } from '@/lib/condition-context'
+import { PageWrapper } from '@/components/PageWrapper'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -9,7 +10,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
           <main className="flex-1 overflow-y-auto">
-            {children}
+            <PageWrapper>
+              {children}
+            </PageWrapper>
           </main>
         </div>
       </ConditionProvider>
