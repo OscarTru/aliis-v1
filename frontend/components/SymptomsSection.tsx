@@ -283,11 +283,13 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
         </div>
       )}
 
-      {chartData.length < 2 && logs.length > 0 ? (
+      {logs.length > 0 && chartData.length < 2 && (
         <p className="font-sans text-[13px] text-muted-foreground italic py-6 text-center">
           Necesitas al menos 2 registros para ver tendencias.
         </p>
-      ) : chartData.length >= 2 ? (
+      )}
+
+      {chartData.length >= 2 && (
         <div className="mb-8 h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
