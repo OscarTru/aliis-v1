@@ -107,3 +107,11 @@ export interface ChatMessage {
   text: string
   created_at?: string
 }
+
+export interface PackNote {
+  id: string
+  pack_id: string
+  user_id: string
+  content: string
+  created_at: string
+}
