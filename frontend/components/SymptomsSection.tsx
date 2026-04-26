@@ -264,28 +264,30 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {METRICS.map(m => (
-          <button
-            key={m.key}
-            onClick={() => toggleMetric(m.key)}
-            className={cn(
-              'px-3 py-1 rounded-full font-sans text-[12px] border transition-colors cursor-pointer',
-              activeMetrics.has(m.key)
-                ? 'bg-foreground text-background border-transparent'
-                : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
-            )}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {logs.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {METRICS.map(m => (
+            <button
+              key={m.key}
+              onClick={() => toggleMetric(m.key)}
+              className={cn(
+                'px-3 py-1 rounded-full font-sans text-[12px] border transition-colors cursor-pointer',
+                activeMetrics.has(m.key)
+                  ? 'bg-foreground text-background border-transparent'
+                  : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {chartData.length < 2 ? (
+      {chartData.length < 2 && logs.length > 0 ? (
         <p className="font-sans text-[13px] text-muted-foreground italic py-6 text-center">
           Necesitas al menos 2 registros para ver tendencias.
         </p>
-      ) : (
+      ) : chartData.length >= 2 ? (
         <div className="mb-8 h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -319,9 +321,18 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
       )}
 
       {logs.length === 0 ? (
-        <p className="font-sans text-[13px] text-muted-foreground italic text-center py-4">
-          No hay registros aún.
-        </p>
+        <div className="text-center py-10">
+          <p className="font-serif italic text-[15px] text-muted-foreground mb-4 leading-relaxed">
+            Aún no tienes registros de síntomas.<br />Empieza a llevar tu control hoy.
+          </p>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
+          >
+            <Plus size={13} />
+            Registrar primer síntoma
+          </button>
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {logs.map(log => (
