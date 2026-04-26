@@ -51,12 +51,13 @@ export default function IngresoPage() {
   const [pendingPackId, setPendingPackId] = useState<string | null>(null)
   const [stageIdx, setStageIdx] = useState(0)
   const [stageVisible, setStageVisible] = useState(true)
-  const [progress, setProgress] = useState(0)
+  const [progressPct, setProgressPct] = useState(0)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const dxInputRef = useRef<HTMLTextAreaElement>(null)
-  const progressRef = useRef(0)
   const rafRef = useRef<number | null>(null)
   const startTimeRef = useRef(0)
+  const circleRef = useRef<SVGCircleElement>(null)
+  const CIRCUMFERENCE = 2 * Math.PI * 18
 
   // Reset to dx step on every mount so "Nuevo diagnóstico" always starts fresh
   useEffect(() => {
@@ -70,34 +71,40 @@ export default function IngresoPage() {
     setPendingPackId(null)
     setStageIdx(0)
     setStageVisible(true)
-    setProgress(0)
-    progressRef.current = 0
+    setProgressPct(0)
   }, [])
 
   useEffect(() => {
     if (step === 'dx') dxInputRef.current?.focus()
   }, [step])
 
-  // Continuous progress bar — eases toward 88% over ~50s, never completes on its own
+  // Drive the SVG circle directly via ref — bypasses React render cycle for smooth animation
   const startProgress = useCallback(() => {
-    progressRef.current = 0
-    setProgress(0)
+    setProgressPct(0)
     startTimeRef.current = performance.now()
 
     function tick(now: number) {
-      const elapsed = (now - startTimeRef.current) / 1000 // seconds
-      // Asymptotic curve: approaches 88% over ~50s, slows dramatically after 70%
-      const target = 88 * (1 - Math.exp(-elapsed / 18))
-      progressRef.current = target
-      setProgress(target)
+      const elapsed = (now - startTimeRef.current) / 1000
+      const pct = 88 * (1 - Math.exp(-elapsed / 18))
+      // Update SVG directly — no React state, no batching, true 60fps
+      if (circleRef.current) {
+        circleRef.current.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - pct / 100))
+      }
+      // Update the text counter at ~4fps to avoid thrashing
+      if (Math.round(elapsed * 4) % 1 === 0) {
+        setProgressPct(Math.round(pct))
+      }
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
-  }, [])
+  }, [CIRCUMFERENCE])
 
   const completeProgress = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    setProgress(100)
+    if (circleRef.current) {
+      circleRef.current.style.strokeDashoffset = '0'
+    }
+    setProgressPct(100)
   }, [])
 
   // Stage text cycles in loop — never gets stuck on last item
@@ -108,7 +115,7 @@ export default function IngresoPage() {
     }
     setStageIdx(0)
     setStageVisible(true)
-    setProgress(0)
+    setProgressPct(0)
     startProgress()
     const interval = setInterval(() => {
       // Fade out → swap text → fade in
@@ -466,21 +473,21 @@ export default function IngresoPage() {
                 </h2>
               </div>
 
-              {/* Circle progress + percentage */}
+              {/* Circle progress + percentage — circle driven by ref for true 60fps */}
               <div className="flex items-center gap-3">
                 <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0 -rotate-90">
                   <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
                   <circle
+                    ref={circleRef}
                     cx="22" cy="22" r="18" fill="none"
                     stroke="hsl(var(--primary))" strokeWidth="3"
                     strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 18}`}
-                    strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
-                    style={{ transition: 'stroke-dashoffset 0.8s linear' }}
+                    strokeDasharray={CIRCUMFERENCE}
+                    strokeDashoffset={CIRCUMFERENCE}
                   />
                 </svg>
-                <span className="font-mono text-[15px] text-foreground/70 tabular-nums">
-                  {Math.round(progress)}%
+                <span className="font-mono text-[15px] text-foreground/70 tabular-nums w-12">
+                  {progressPct}%
                 </span>
               </div>
 
