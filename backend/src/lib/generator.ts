@@ -1,10 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { GeneratedPack } from '../types'
+import type { GeneratedPack, Tool } from '../types'
 import type { EnrichedContext } from './enricher'
+import type { MatchedCondition } from './library-resolver'
+import { formatSectionContent } from './library-resolver'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const GENERATOR_SYSTEM = `Eres el agente educativo de Aliis — plataforma creada por médicos residentes de neurología (Cerebros Esponjosos).
+const GENERATOR_SYSTEM_BASE = `Eres el agente educativo de Aliis — plataforma creada por médicos residentes de neurología (Cerebros Esponjosos).
 
 Tu función: recibir un diagnóstico médico y generar un pack educativo con 5 capítulos + referencias científicas.
 
@@ -88,7 +90,8 @@ ESTRUCTURA DE RESPUESTA — JSON estricto, sin texto antes ni después:
       "doi": "10.xxxx/xxxxxx",
       "quote": "Hallazgo clave de este paper en una frase"
     }
-  ]
+  ],
+  "tools": []
 }
 
 REGLAS:
@@ -100,6 +103,42 @@ REGLAS:
 6. Nada de lenguaje genérico de IA ("es importante", "cabe destacar", "en conclusión")
 7. NUNCA uses el guión largo (—) en ningún texto. Para frases parentéticas usa paréntesis: (así). Para continuar una cláusula usa coma. El guión largo está prohibido sin excepción.`
 
+const TOOLS_SECTION = `
+== HERRAMIENTAS PARA EL DÍA A DÍA ==
+Además de los 5 capítulos, incluye el campo "tools" en el JSON con un array de herramientas y prácticas concretas que el paciente puede hacer en su día a día para vivir mejor con su diagnóstico.
+
+REGLAS ESTRICTAS para tools:
+- SOLO herramientas, prácticas, técnicas no farmacológicas, hábitos concretos
+- NUNCA medicamentos, dosis, esquemas de tratamiento, suplementos
+- NUNCA pruebas diagnósticas o indicaciones de consultar especialistas
+- Cada herramienta = { "title": "título de 3-6 palabras", "description": "descripción concreta de 1-2 frases" }
+- Si no hay nada genuino y útil que sugerir para este diagnóstico específico, devuelve "tools": []
+- Máximo 4 herramientas. Calidad sobre cantidad.
+- Ejemplos VÁLIDOS: "Diario de síntomas", "Técnica de respiración 4-7-8", "Rutina de sueño consistente", "Ejercicio aeróbico moderado"
+- Ejemplos INVÁLIDOS: "Tomar ibuprofeno", "Hacerse resonancia magnética", "Consultar neurologo"`
+
+function buildLibrarySection(libraryMatch: MatchedCondition): string {
+  const formatted = libraryMatch.sections
+    .map((s) => `## ${s.title}\n${formatSectionContent(s.content)}`)
+    .join('\n\n')
+
+  return `
+== FUENTE DE VERDAD (BIBLIOTECA ALIIS) ==
+Este diagnóstico tiene una guía curada por médicos residentes. Úsala como tu fuente de verdad médica: todos los hechos clínicos, mecanismos, evolución típica y señales de alarma deben venir de aquí o ser consistentes con esto. Personaliza el tono y enfoque según el contexto del paciente, pero NO contradigas estos hechos.
+
+CONDICIÓN: ${libraryMatch.name}
+
+CONTENIDO CURADO:
+${formatted}`
+}
+
+function buildSystemPrompt(libraryMatch?: MatchedCondition | null): string {
+  let prompt = GENERATOR_SYSTEM_BASE
+  if (libraryMatch) prompt += '\n' + buildLibrarySection(libraryMatch)
+  prompt += '\n' + TOOLS_SECTION
+  return prompt
+}
+
 function isValidGeneratedPack(v: unknown): v is GeneratedPack {
   if (!v || typeof v !== 'object') return false
   const p = v as Record<string, unknown>
@@ -107,13 +146,28 @@ function isValidGeneratedPack(v: unknown): v is GeneratedPack {
     typeof p.summary === 'string' &&
     Array.isArray(p.chapters) &&
     p.chapters.length === 5 &&
-    Array.isArray(p.references)
+    Array.isArray(p.references) &&
+    (p.tools === undefined || Array.isArray(p.tools))
   )
+}
+
+function isValidTool(t: unknown): t is Tool {
+  if (!t || typeof t !== 'object') return false
+  const obj = t as Record<string, unknown>
+  return typeof obj.title === 'string' && typeof obj.description === 'string'
+}
+
+function normalizePack(raw: GeneratedPack): GeneratedPack {
+  return {
+    ...raw,
+    tools: Array.isArray(raw.tools) ? raw.tools.filter(isValidTool) : [],
+  }
 }
 
 export async function generatePack(
   diagnostico: string,
-  context: EnrichedContext
+  context: EnrichedContext,
+  libraryMatch?: MatchedCondition | null
 ): Promise<GeneratedPack> {
   const userPrompt = [
     `Diagnóstico: ${diagnostico}`,
@@ -129,11 +183,13 @@ export async function generatePack(
     .filter(Boolean)
     .join('\n')
 
+  const systemPrompt = buildSystemPrompt(libraryMatch)
+
   async function attempt(): Promise<GeneratedPack> {
     const response = await client.messages.create({
       model: 'claude-opus-4-7',
       max_tokens: 4096,
-      system: [{ type: 'text', text: GENERATOR_SYSTEM, cache_control: { type: 'ephemeral' } }],
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userPrompt }],
     })
 
@@ -146,7 +202,7 @@ export async function generatePack(
     const parsed: unknown = JSON.parse(match[0])
     if (!isValidGeneratedPack(parsed)) throw new Error('Invalid pack structure')
 
-    return parsed
+    return normalizePack(parsed as GeneratedPack)
   }
 
   try {
