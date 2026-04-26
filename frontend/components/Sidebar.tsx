@@ -63,7 +63,7 @@ function NavLink({ item, collapsed, pathname }: { item: NavItem; collapsed: bool
         isActive
           ? 'bg-primary/10 text-primary'
           : item.upgrade
-          ? 'text-primary hover:bg-primary/8'
+          ? 'text-primary hover:bg-primary/[0.08]'
           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       )}
     >

@@ -21,15 +21,6 @@ export default async function PackPage({
 
   if (!row) notFound()
 
-  // Fuzzy match condition by diagnosis name
-  const { data: conditionMatch } = await supabase
-    .from('conditions')
-    .select('slug, name')
-    .eq('published', true)
-    .ilike('name', `%${row.dx}%`)
-    .limit(1)
-    .maybeSingle()
-
   const pack: Pack = {
     id: row.id,
     dx: row.dx,
@@ -38,7 +29,9 @@ export default async function PackPage({
     summary: row.summary ?? '',
     chapters: row.chapters ?? [],
     references: row.refs ?? [],
+    conditionSlug: row.condition_slug ?? null,
+    tools: row.tools ?? [],
   }
 
-  return <PackView pack={pack} userId={user?.id} conditionSlug={conditionMatch?.slug ?? null} />
+  return <PackView pack={pack} userId={user?.id} />
 }
