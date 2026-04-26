@@ -1,19 +1,19 @@
 import { supabase } from '../index'
 
 export interface EnrichedContext {
-  para: 'yo' | 'familiar'
+  para: 'yo' | 'familiar' | 'acompanando'
+  emocion?: string
+  dudas?: string
   nombre: string | null
   previousDx: string[]
-  frecuencia?: string
-  dudas?: string
 }
 
 export async function enrichContext(
   userId: string,
   contexto?: {
-    frecuencia?: string
+    para?: 'yo' | 'familiar' | 'acompanando'
+    emocion?: string
     dudas?: string
-    para?: 'yo' | 'familiar'
     nombre?: string
   }
 ): Promise<EnrichedContext> {
@@ -31,10 +31,10 @@ export async function enrichContext(
   const previousDx = (packsResult.data ?? []).map((p: { dx: string }) => p.dx)
 
   return {
-    para: contexto?.para ?? (profile?.who as 'yo' | 'familiar' | null) ?? 'yo',
+    para: contexto?.para ?? (profile?.who as 'yo' | 'familiar' | 'acompanando' | null) ?? 'yo',
     nombre: contexto?.nombre ?? profile?.name ?? null,
     previousDx,
-    frecuencia: contexto?.frecuencia,
+    emocion: contexto?.emocion,
     dudas: contexto?.dudas,
   }
 }

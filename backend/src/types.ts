@@ -25,20 +25,27 @@ export interface Chapter {
   practices?: { t: string; d: string }[]
 }
 
+export interface Tool {
+  title: string
+  description: string
+}
+
 export interface GeneratedPack {
   summary: string
   chapters: Chapter[]
   references: Reference[]
+  tools: Tool[]
 }
 
 export interface GeneratePackRequest {
+  conditionSlug?: string | null
   diagnostico: string
   medicamentos?: string[]
   contexto?: {
-    frecuencia?: string
     dudas?: string
-    para?: 'yo' | 'familiar'
+    para?: 'yo' | 'familiar' | 'acompanando'
     nombre?: string
+    emocion?: string
   }
   userId: string
   userPlan: 'free' | 'pro'
