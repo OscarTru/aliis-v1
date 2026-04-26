@@ -5,7 +5,7 @@ function InlineText({ text }: { text: string }) {
       {parts.map((part, i) =>
         part.startsWith('**') && part.endsWith('**') && part.length > 4
           ? <strong key={i} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>
-          : <span key={i}>{part.replace(/\*\*/g, '')}</span>
+          : <span key={i}>{part}</span>
       )}
     </>
   )
@@ -18,7 +18,7 @@ export function FormattedText({ text }: { text: string }) {
       {paragraphs.map((block, i) => {
         const lines = block.split('\n')
         const isList = lines.every(l => /^[\-\*•]\s/.test(l.trim()) || l.trim() === '')
-        if (isList) {
+        if (isList && lines.some(l => l.trim())) {
           return (
             <ul key={i} className="flex flex-col gap-1 pl-0 m-0 list-none">
               {lines.filter(l => l.trim()).map((l, j) => (
