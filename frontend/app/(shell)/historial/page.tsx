@@ -111,7 +111,7 @@ export default async function HistorialPage({
         )}
 
         {/* Pack list — client component handles delete + empty filter state */}
-        {packs.length > 0 && <PackList initialPacks={filtered} />}
+        {packs.length > 0 && <PackList key={filter} initialPacks={filtered} />}
 
       </div>
     </>
