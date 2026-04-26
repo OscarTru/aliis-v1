@@ -27,7 +27,16 @@ PREGUNTAS PARA MI MÉDICO
 (máximo 3 preguntas)`
 
 export async function POST(req: Request) {
-  const { packId, dx } = await req.json()
+  let body: { packId?: unknown; dx?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return new Response(JSON.stringify({ error: 'Cuerpo de solicitud inválido' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const { packId, dx } = body
 
   if (!packId || typeof packId !== 'string') {
     return new Response(JSON.stringify({ error: 'Faltan datos' }), {
@@ -36,11 +45,27 @@ export async function POST(req: Request) {
     })
   }
 
+  const safeDx = typeof dx === 'string' ? dx.slice(0, 500) : undefined
+
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const { data: packOwner } = await supabase
+    .from('packs')
+    .select('id')
+    .eq('id', packId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!packOwner) {
+    return new Response(JSON.stringify({ error: 'Pack no encontrado' }), {
+      status: 404,
       headers: { 'Content-Type': 'application/json' },
     })
   }
@@ -66,6 +91,7 @@ export async function POST(req: Request) {
     .eq('pack_id', packId)
     .eq('user_id', user.id)
     .order('created_at', { ascending: true })
+    .limit(50)
 
   if (messagesError) {
     return new Response(JSON.stringify({ error: 'Error al obtener conversación' }), {
@@ -86,7 +112,7 @@ export async function POST(req: Request) {
     .map((m) => `${m.role === 'user' ? 'Paciente' : 'Aliis'}: ${m.text}`)
     .join('\n\n')
 
-  const userPrompt = `Diagnóstico del paciente: ${dx ?? 'no especificado'}
+  const userPrompt = `Diagnóstico del paciente: ${safeDx ?? 'no especificado'}
 
 Conversación:
 ${conversationText}`
@@ -102,7 +128,8 @@ ${conversationText}`
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')
     noteContent = textBlock.text.trim()
-  } catch {
+  } catch (err) {
+    console.error('[notes/generate] Claude API error:', err)
     return new Response(JSON.stringify({ error: 'Error al generar apuntes' }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
