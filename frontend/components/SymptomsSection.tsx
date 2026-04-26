@@ -33,6 +33,11 @@ const METRICS = [
 
 type MetricKey = typeof METRICS[number]['key']
 
+type ModalStep = 'select' | 'vitals' | 'symptom'
+
+const INPUT_CLS = 'w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+const LABEL_CLS = 'font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground'
+
 function LogModal({
   open,
   onClose,
@@ -42,7 +47,9 @@ function LogModal({
   onClose: () => void
   onSaved: (log: SymptomLog) => void
 }) {
+  const [step, setStep] = useState<ModalStep>('select')
   const [fields, setFields] = useState({
+    symptom: '',
     glucose: '',
     bp_systolic: '',
     bp_diastolic: '',
@@ -54,8 +61,16 @@ function LogModal({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  function handleClose() {
+    setStep('select')
+    setFields({ symptom: '', glucose: '', bp_systolic: '', bp_diastolic: '', heart_rate: '', weight: '', temperature: '', note: '' })
+    setError(null)
+    onClose()
+  }
+
   const numericKeys = ['glucose', 'bp_systolic', 'bp_diastolic', 'heart_rate', 'weight', 'temperature'] as const
   const hasNumeric = numericKeys.some(k => fields[k].trim() !== '')
+  const canSubmit = step === 'symptom' ? (fields.symptom.trim() !== '' || hasNumeric) : hasNumeric
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -67,7 +82,10 @@ function LogModal({
       const v = fields[k].trim()
       if (v !== '') body[k] = parseFloat(v)
     })
-    if (fields.note.trim()) body.note = fields.note.trim()
+    const noteParts = []
+    if (step === 'symptom' && fields.symptom.trim()) noteParts.push(`Síntoma: ${fields.symptom.trim()}`)
+    if (fields.note.trim()) noteParts.push(fields.note.trim())
+    if (noteParts.length) body.note = noteParts.join('\n')
 
     const res = await fetch('/api/symptoms', {
       method: 'POST',
@@ -83,109 +101,158 @@ function LogModal({
     }
 
     onSaved(data)
-    setFields({ glucose: '', bp_systolic: '', bp_diastolic: '', heart_rate: '', weight: '', temperature: '', note: '' })
+    handleClose()
     setSaving(false)
-    onClose()
   }
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-serif text-[20px]">Nuevo registro</DialogTitle>
+          <DialogTitle className="font-serif text-[20px]">
+            {step === 'select' ? 'Nuevo registro' : step === 'vitals' ? 'Signos vitales' : 'Síntoma + signos vitales'}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Glucosa</label>
-            <input
-              type="number"
-              value={fields.glucose}
-              onChange={e => setFields(f => ({ ...f, glucose: e.target.value }))}
-              placeholder="mg/dL"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
+
+        {/* Step 1 — selector */}
+        {step === 'select' && (
+          <div className="flex flex-col gap-3 pt-2">
+            <p className="font-sans text-[13px] text-muted-foreground">¿Qué quieres registrar?</p>
+            <button
+              onClick={() => setStep('vitals')}
+              className="flex flex-col items-start gap-0.5 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left cursor-pointer"
+            >
+              <span className="font-sans text-[14px] font-medium text-foreground">Solo signos vitales</span>
+              <span className="font-sans text-[12px] text-muted-foreground">Glucosa, tensión, frecuencia, peso, temperatura</span>
+            </button>
+            <button
+              onClick={() => setStep('symptom')}
+              className="flex flex-col items-start gap-0.5 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left cursor-pointer"
+            >
+              <span className="font-sans text-[14px] font-medium text-foreground">Síntoma + signos vitales</span>
+              <span className="font-sans text-[12px] text-muted-foreground">Describe lo que sientes y agrega tus mediciones</span>
+            </button>
           </div>
+        )}
 
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Tensión arterial</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={fields.bp_systolic}
-                onChange={e => setFields(f => ({ ...f, bp_systolic: e.target.value }))}
-                placeholder="Sistólica mmHg"
-                className="flex-1 min-w-0 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <input
-                type="number"
-                value={fields.bp_diastolic}
-                onChange={e => setFields(f => ({ ...f, bp_diastolic: e.target.value }))}
-                placeholder="Diastólica mmHg"
-                className="flex-1 min-w-0 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Frecuencia cardíaca</label>
-            <input
-              type="number"
-              value={fields.heart_rate}
-              onChange={e => setFields(f => ({ ...f, heart_rate: e.target.value }))}
-              placeholder="lpm"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Peso</label>
-              <input
-                type="number"
-                value={fields.weight}
-                onChange={e => setFields(f => ({ ...f, weight: e.target.value }))}
-                placeholder="kg"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Temperatura</label>
-              <input
-                type="number"
-                value={fields.temperature}
-                onChange={e => setFields(f => ({ ...f, temperature: e.target.value }))}
-                placeholder="°C"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground">Nota</label>
-            <textarea
-              value={fields.note}
-              onChange={e => setFields(f => ({ ...f, note: e.target.value }))}
-              placeholder="¿Cómo te sentías?"
-              rows={3}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 resize-none"
-            />
-          </div>
-
-          {error && <p className="font-sans text-[12px] text-destructive">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={!hasNumeric || saving}
-            className={cn(
-              'w-full py-2.5 rounded-full font-sans text-[14px] font-medium transition-colors border-none',
-              hasNumeric && !saving
-                ? 'bg-foreground text-background cursor-pointer'
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
+        {/* Steps 2a + 2b — form */}
+        {step !== 'select' && (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
+            {step === 'symptom' && (
+              <div className="flex flex-col gap-1">
+                <label className={LABEL_CLS}>¿Qué síntoma?</label>
+                <input
+                  type="text"
+                  value={fields.symptom}
+                  onChange={e => setFields(f => ({ ...f, symptom: e.target.value }))}
+                  placeholder="Ej. dolor de cabeza, mareo, náusea..."
+                  autoFocus
+                  className={INPUT_CLS}
+                />
+              </div>
             )}
-          >
-            {saving ? 'Guardando...' : 'Guardar registro'}
-          </button>
-        </form>
+
+            <div className="flex flex-col gap-1">
+              <label className={LABEL_CLS}>Glucosa</label>
+              <input
+                type="number"
+                value={fields.glucose}
+                onChange={e => setFields(f => ({ ...f, glucose: e.target.value }))}
+                placeholder="mg/dL"
+                className={INPUT_CLS}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className={LABEL_CLS}>Tensión arterial</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={fields.bp_systolic}
+                  onChange={e => setFields(f => ({ ...f, bp_systolic: e.target.value }))}
+                  placeholder="Sistólica mmHg"
+                  className={INPUT_CLS.replace('w-full', 'flex-1 min-w-0')}
+                />
+                <input
+                  type="number"
+                  value={fields.bp_diastolic}
+                  onChange={e => setFields(f => ({ ...f, bp_diastolic: e.target.value }))}
+                  placeholder="Diastólica mmHg"
+                  className={INPUT_CLS.replace('w-full', 'flex-1 min-w-0')}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className={LABEL_CLS}>Frecuencia cardíaca</label>
+              <input
+                type="number"
+                value={fields.heart_rate}
+                onChange={e => setFields(f => ({ ...f, heart_rate: e.target.value }))}
+                placeholder="lpm"
+                className={INPUT_CLS}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className={LABEL_CLS}>Peso</label>
+                <input
+                  type="number"
+                  value={fields.weight}
+                  onChange={e => setFields(f => ({ ...f, weight: e.target.value }))}
+                  placeholder="kg"
+                  className={INPUT_CLS.replace('w-full', 'w-full')}
+                />
+              </div>
+              <div className="flex flex-col gap-1 flex-1">
+                <label className={LABEL_CLS}>Temperatura</label>
+                <input
+                  type="number"
+                  value={fields.temperature}
+                  onChange={e => setFields(f => ({ ...f, temperature: e.target.value }))}
+                  placeholder="°C"
+                  className={INPUT_CLS}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className={LABEL_CLS}>Nota adicional</label>
+              <textarea
+                value={fields.note}
+                onChange={e => setFields(f => ({ ...f, note: e.target.value }))}
+                placeholder="¿Cómo te sentías?"
+                rows={2}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 resize-none"
+              />
+            </div>
+
+            {error && <p className="font-sans text-[12px] text-destructive">{error}</p>}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setStep('select')}
+                className="px-4 py-2.5 rounded-full border border-border bg-transparent font-sans text-[13px] text-foreground cursor-pointer hover:bg-muted transition-colors"
+              >
+                ← Volver
+              </button>
+              <button
+                type="submit"
+                disabled={!canSubmit || saving}
+                className={cn(
+                  'flex-1 py-2.5 rounded-full font-sans text-[14px] font-medium transition-colors border-none',
+                  canSubmit && !saving
+                    ? 'bg-foreground text-background cursor-pointer'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                )}
+              >
+                {saving ? 'Guardando...' : 'Guardar registro'}
+              </button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )
