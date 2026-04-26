@@ -98,7 +98,7 @@ function NavLink({ item, collapsed, pathname }: { item: NavItem; collapsed: bool
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { pack, activeIdx, readChapters, setActiveIdx } = usePackContext()
+  const { pack, activeIdx, readChapters, setActiveIdx, chatOpen } = usePackContext()
   const { condition, activeIdx: conditionActiveIdx, setActiveIdx: setConditionActiveIdx } = useConditionContext()
   const verifiedRefs = pack?.references.filter((r) => r.verified !== false) ?? []
   const [email, setEmail] = useState<string | null>(null)
@@ -117,6 +117,10 @@ export function Sidebar() {
     if (!mounted) return
     localStorage.setItem('aliis-sidebar-collapsed', String(collapsed))
   }, [collapsed, mounted])
+
+  useEffect(() => {
+    if (chatOpen) setCollapsed(true)
+  }, [chatOpen])
 
   useEffect(() => {
     const supabase = createClient()
@@ -160,7 +164,7 @@ export function Sidebar() {
             <button
               onClick={() => setCollapsed(c => !c)}
               aria-label={collapsed ? 'Expandir' : 'Colapsar'}
-              className="absolute -right-3 top-[52px] z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
+              className="absolute -right-3 top-14 z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
             >
               <motion.div initial={false} animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronLeft size={12} />
@@ -181,8 +185,6 @@ export function Sidebar() {
             }
           </Link>
         </div>
-
-        <Separator />
 
         {/* Main nav */}
         <nav className={cn('flex flex-col gap-1 py-3', collapsed ? 'px-2 items-center' : 'px-2')}>
@@ -326,8 +328,6 @@ export function Sidebar() {
             <NavLink key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
           ))}
         </div>
-
-        <Separator />
 
         {/* User */}
         <Link

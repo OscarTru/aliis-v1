@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { HelpCircle, MessageCircle } from 'lucide-react'
+import { HelpCircle, MessageCircle, BookOpen } from 'lucide-react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
 import { ChatDrawer } from '@/components/ChatDrawer'
@@ -49,22 +49,35 @@ function ChapterCard({
 
   return (
     <div className="h-full overflow-y-auto px-12 py-10 pb-20">
-      <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-2.5">
-        {chapter.n} · {chapter.readTime}
+      <div className="flex items-start justify-between gap-4 mb-2.5">
+        <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60">
+          {chapter.n} · {chapter.readTime}
+        </div>
+        <button
+          onClick={onOpenChat}
+          className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
+        >
+          <MessageCircle size={12} />
+          Pregúntale a Aliis
+        </button>
       </div>
-      <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5 text-[clamp(26px,3.5vw,38px)]">
+
+      <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-3 text-[clamp(26px,3.5vw,38px)]">
         {chapter.kicker} <em className="text-muted-foreground">{chapter.kickerItalic}</em>
       </h2>
-      <p className="font-serif italic text-muted-foreground text-[16px] mb-4 leading-[1.55]">{chapter.tldr}</p>
 
-      {conditionSlug && chapter.id !== 'herramientas' && (
-        <Link
-          href={`/condiciones/${conditionSlug}`}
-          className="inline-flex items-center gap-1.5 mb-6 px-3 py-1 rounded-full border border-primary/20 bg-primary/[0.06] font-mono text-[10px] tracking-[.12em] uppercase text-primary/70 no-underline hover:bg-primary/[0.12] transition-colors"
-        >
-          ✦ Biblioteca · Leer más →
-        </Link>
-      )}
+      <div className="flex items-baseline gap-6 mb-8 flex-wrap">
+        <p className="font-serif italic text-muted-foreground text-[16px] leading-[1.55] m-0">{chapter.tldr}</p>
+        {conditionSlug && chapter.id !== 'herramientas' && (
+          <Link
+            href={`/condiciones/${conditionSlug}`}
+            className="shrink-0 inline-flex items-center gap-1.5 font-sans text-[12px] text-primary/50 no-underline hover:text-primary transition-colors whitespace-nowrap"
+          >
+            <BookOpen size={12} />
+            Leer a profundidad →
+          </Link>
+        )}
+      </div>
 
       {chapter.paragraphs?.map((p, i) => (
         <p key={i} className="font-sans text-[16px] leading-[1.8] text-foreground mb-5">{p}</p>
@@ -112,18 +125,6 @@ function ChapterCard({
         Esta información es educativa y no reemplaza la consulta con tu médico.
       </div>
 
-      <div className="mt-8 flex items-center justify-between gap-4 px-5 py-4 bg-muted rounded-[14px]">
-        <p className="font-sans text-[13px] text-muted-foreground leading-[1.4] m-0">
-          ¿Cómo entendiste? ¿Tienes dudas?
-        </p>
-        <button
-          onClick={onOpenChat}
-          className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background border-none font-sans text-[13px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
-        >
-          <MessageCircle size={13} />
-          Pregúntale a Aliis
-        </button>
-      </div>
     </div>
   )
 }
@@ -175,7 +176,7 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
 
       {activeIdx < pack.chapters.length ? (
         <>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             <ChapterCard
               key={chapter.id}
               chapter={chapter}

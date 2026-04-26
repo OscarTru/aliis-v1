@@ -188,13 +188,14 @@ export async function generatePack(
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: systemBlocks,
       messages: [{ role: 'user', content: userPrompt }],
     })
 
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')
+    if (response.stop_reason === 'max_tokens') throw new Error('No JSON in response')
 
     const match = textBlock.text.match(/\{[\s\S]*\}/)
     if (!match) throw new Error('No JSON in response')

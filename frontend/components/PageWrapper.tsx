@@ -13,7 +13,7 @@ export function PageWrapper({ children, className }: { children: React.ReactNode
 
   return (
     <div className={cn(
-      'transition-all duration-300 ease-out',
+      'h-full transition-all duration-300 ease-out',
       visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
       className
     )}>
