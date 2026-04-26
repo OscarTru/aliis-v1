@@ -2,15 +2,22 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, Pill, ClipboardList, HelpCircle, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { Eyebrow } from '@/components/ui/Eyebrow'
+import { ComboboxDiagnostico } from '@/components/ComboboxDiagnostico'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
+type Step = 'dx' | 'para' | 'emocion' | 'dudas' | 'generating'
+
+type ConditionSuggestion = {
+  id: string
+  slug: string
+  name: string
+}
 
 const STAGES = [
   'Leyendo tu diagnóstico con cuidado…',
@@ -25,35 +32,91 @@ const STAGES = [
   'Revisando que todo esté claro antes de mostrártelo…',
 ]
 
-const FRECUENCIA_OPTIONS = [
-  { value: 'Recién diagnosticado', label: 'Recién me lo dijeron', sub: 'Menos de un mes' },
-  { value: 'Hace meses', label: 'Llevo unos meses', sub: 'Entre 1 y 12 meses' },
-  { value: 'Llevo años con esto', label: 'Ya tiene tiempo', sub: 'Más de un año' },
+const PARA_OPTIONS = [
+  { value: 'yo', label: 'Para mí', sub: 'El diagnóstico es mío' },
+  { value: 'familiar', label: 'Para un familiar', sub: 'Me lo diagnosticaron a un ser querido' },
+  { value: 'acompanando', label: 'Acompañando a alguien', sub: 'Quiero entenderlo para apoyar' },
+]
+
+const EMOCION_OPTIONS = [
+  { value: 'tranquilo', label: 'Tranquilo, con dudas', sub: 'Estoy bien, solo quiero entender' },
+  { value: 'asustado', label: 'Asustado', sub: 'Me preocupa lo que esto significa' },
+  { value: 'abrumado', label: 'Abrumado', sub: 'Es mucha información de golpe' },
+  { value: 'enojado', label: 'Enojado', sub: 'No entiendo por qué me pasó esto' },
 ]
 
 const DUDAS_OPTIONS = [
   { value: 'Qué esperar', label: 'Qué esperar', sub: 'Evolución y pronóstico' },
   { value: 'Medicamentos', label: 'Mis medicamentos', sub: 'Cómo funcionan y para qué' },
   { value: 'Estilo de vida', label: 'Estilo de vida', sub: 'Alimentación, ejercicio, rutinas' },
-  { value: 'Compartir con familia', label: 'Explicárselo a alguien', sub: 'Cómo contárselo a mi familia' },
+  { value: 'Compartir con familia', label: 'Explicárselo a alguien', sub: 'Cómo contárselo' },
+  { value: 'Por qué me pasó', label: 'Por qué me pasó esto', sub: 'Causas y factores' },
+  { value: 'Día a día', label: 'Cómo afecta mi día a día', sub: 'Trabajo, sueño, energía' },
+  { value: 'Cuándo preocuparme', label: 'Cuándo preocuparme', sub: 'Señales de alarma, qué es normal' },
+  { value: 'Hablar con médico', label: 'Cómo hablar con mi médico', sub: 'Preguntas que llevar' },
 ]
+
+// Inline chip component — avoids prop drilling
+function Chip({
+  label,
+  sub,
+  selected,
+  onClick,
+}: {
+  label: string
+  sub: string
+  selected: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
+        selected ? 'border-primary bg-primary/5' : 'border-border bg-muted'
+      )}
+    >
+      <div>
+        <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{label}</div>
+        <div className="font-sans text-[13px] text-muted-foreground">{sub}</div>
+      </div>
+      {selected && (
+        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+          <Check size={10} color="#fff" strokeWidth={3} />
+        </div>
+      )}
+    </button>
+  )
+}
 
 export default function IngresoPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('dx')
-  const [dx, setDx] = useState('')
-  const [dxInput, setDxInput] = useState('')
-  const [frecuencia, setFrecuencia] = useState('')
-  const [frecuenciaCustom, setFrecuenciaCustom] = useState('')
+
+  // Step 1 — dx
+  const [dxText, setDxText] = useState('')
+  const [conditionSlug, setConditionSlug] = useState<string | null>(null)
+  const [conditions, setConditions] = useState<ConditionSuggestion[]>([])
+
+  // Step 2 — para
+  const [para, setPara] = useState('')
+
+  // Step 3 — emocion
+  const [emocion, setEmocion] = useState('')
+  const [emocionCustom, setEmocionCustom] = useState('')
+
+  // Step 4 — dudas
   const [dudas, setDudas] = useState('')
   const [dudasCustom, setDudasCustom] = useState('')
+
+  // Generating
   const [loading, setLoading] = useState(false)
   const [pendingPackId, setPendingPackId] = useState<string | null>(null)
   const [stageIdx, setStageIdx] = useState(0)
   const [stageVisible, setStageVisible] = useState(true)
   const [progressPct, setProgressPct] = useState(0)
   const [showUpgrade, setShowUpgrade] = useState(false)
-  const dxInputRef = useRef<HTMLTextAreaElement>(null)
+
   const rafRef = useRef<number | null>(null)
   const startTimeRef = useRef(0)
   const circleRef = useRef<SVGCircleElement>(null)
@@ -62,10 +125,11 @@ export default function IngresoPage() {
   // Reset to dx step on every mount so "Nuevo diagnóstico" always starts fresh
   useEffect(() => {
     setStep('dx')
-    setDx('')
-    setDxInput('')
-    setFrecuencia('')
-    setFrecuenciaCustom('')
+    setDxText('')
+    setConditionSlug(null)
+    setPara('')
+    setEmocion('')
+    setEmocionCustom('')
     setDudas('')
     setDudasCustom('')
     setPendingPackId(null)
@@ -74,9 +138,16 @@ export default function IngresoPage() {
     setProgressPct(0)
   }, [])
 
+  // Load conditions for combobox
   useEffect(() => {
-    if (step === 'dx') dxInputRef.current?.focus()
-  }, [step])
+    const supabase = createClient()
+    supabase
+      .from('conditions')
+      .select('id, slug, name')
+      .eq('published', true)
+      .order('name')
+      .then(({ data }) => setConditions(data ?? []))
+  }, [])
 
   // Drive the SVG circle directly via ref — bypasses React render cycle for smooth animation
   const startProgress = useCallback(() => {
@@ -150,26 +221,8 @@ export default function IngresoPage() {
     return () => clearInterval(poll)
   }, [pendingPackId, router, completeProgress])
 
-  function handleDxSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = dxInput.trim()
-    if (!trimmed) return
-    setDx(trimmed)
-    setStep('frecuencia')
-  }
-
-  function handleFrecuenciaSelect(value: string) {
-    setFrecuencia(value)
-    setFrecuenciaCustom('')
-  }
-
-  function handleDudasSelect(value: string) {
-    setDudas(value)
-    setDudasCustom('')
-  }
-
-  function frecuenciaFinal() {
-    return frecuencia === '__custom' ? frecuenciaCustom.trim() : frecuencia
+  function emocionFinal() {
+    return emocion === '__custom' ? emocionCustom.trim() : emocion
   }
 
   function dudasFinal() {
@@ -177,9 +230,8 @@ export default function IngresoPage() {
   }
 
   async function handleGenerate() {
-    const f = frecuenciaFinal()
     const d = dudasFinal()
-    if (!f || !d) return
+    if (!d) return
     setLoading(true)
     setStep('generating')
     try {
@@ -199,8 +251,13 @@ export default function IngresoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          diagnostico: dx,
-          contexto: { frecuencia: f, dudas: d },
+          diagnostico: dxText,
+          conditionSlug: conditionSlug ?? undefined,
+          contexto: {
+            para,
+            emocion: emocionFinal() || undefined,
+            dudas: dudasFinal(),
+          },
           userId: user.id,
           userPlan,
         }),
@@ -232,11 +289,11 @@ export default function IngresoPage() {
       <>
         <div className={cn(step === 'generating' ? 'flex items-center justify-center min-h-screen' : 'max-w-[560px] mx-auto px-6 pt-12 pb-20')}>
 
-          {/* ── Step 1: diagnóstico ── */}
+          {/* ── Step 1: diagnóstico (combobox) ── */}
           {step === 'dx' && (
             <div className="ce-fade">
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
-                Paso 1 de 3
+                Paso 1 de 4
               </p>
               <h1 className="font-serif leading-[1.15] tracking-[-0.025em] mb-2 text-[clamp(26px,5vw,38px)]">
                 ¿Qué te dijo tu médico?
@@ -245,130 +302,152 @@ export default function IngresoPage() {
                 Escribe el diagnóstico, copia lo que dice tu receta, o cuéntalo con tus palabras.
               </p>
 
-              <div className="flex flex-col gap-[10px] mb-6">
-                {[
-                  { icon: <Stethoscope size={15} />, text: 'Migraña con aura' },
-                  { icon: <Pill size={15} />, text: 'Epilepsia focal' },
-                  { icon: <ClipboardList size={15} />, text: 'Esclerosis múltiple remitente-recurrente' },
-                  { icon: <HelpCircle size={15} />, text: 'Neuralgia del trigémino' },
-                ].map(({ icon, text }) => (
-                  <button
-                    key={text}
-                    onClick={() => { setDxInput(text); dxInputRef.current?.focus() }}
-                    className="px-4 py-[10px] rounded-[10px] border border-border bg-muted font-sans text-[14px] text-muted-foreground cursor-pointer text-left flex items-center gap-[10px] hover:border-primary/40 transition-colors"
-                  >
-                    <span className="text-primary shrink-0">{icon}</span>
-                    {text}
-                  </button>
-                ))}
-              </div>
-
-              <form onSubmit={handleDxSubmit} className="flex flex-col gap-3">
-                <textarea
-                  ref={dxInputRef}
-                  aria-label="Escribe tu diagnóstico"
-                  value={dxInput}
-                  onChange={(e) => setDxInput(e.target.value)}
-                  placeholder="O escribe aquí lo que te dijeron…"
-                  rows={3}
-                  className="w-full px-4 py-[14px] rounded-[14px] border border-border bg-muted font-sans text-[15px] text-foreground outline-none resize-none leading-[1.5] box-border focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-colors"
+              <div className="flex flex-col gap-3">
+                <ComboboxDiagnostico
+                  value={dxText}
+                  onChange={(text, slug) => {
+                    setDxText(text)
+                    setConditionSlug(slug)
+                  }}
+                  conditions={conditions}
                 />
                 <Button
-                  type="submit"
-                  disabled={!dxInput.trim()}
+                  onClick={() => { if (dxText.trim()) setStep('para') }}
+                  disabled={!dxText.trim()}
                   className={cn(
                     'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
-                    dxInput.trim()
+                    dxText.trim()
                       ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                       : 'bg-border text-muted-foreground cursor-not-allowed'
                   )}
                 >
                   Continuar →
                 </Button>
-              </form>
+              </div>
             </div>
           )}
 
-          {/* ── Step 2: frecuencia ── */}
-          {step === 'frecuencia' && (
+          {/* ── Step 2: para quién ── */}
+          {step === 'para' && (
             <div className="ce-fade">
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
-                Paso 2 de 3
+                Paso 2 de 4
               </p>
               <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
-                ¿Cuándo te lo diagnosticaron?
+                ¿Para quién es este pack?
               </h2>
               <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
-                Nos ayuda a adaptar el tono de la explicación.
+                Adaptamos la explicación según quién va a leerla.
               </p>
 
               <div className="flex flex-col gap-[10px] mb-5">
-                {FRECUENCIA_OPTIONS.map((opt) => (
-                  <button
+                {PARA_OPTIONS.map((opt) => (
+                  <Chip
                     key={opt.value}
-                    onClick={() => handleFrecuenciaSelect(opt.value)}
-                    className={cn(
-                      'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
-                      frecuencia === opt.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-muted'
-                    )}
-                  >
-                    <div>
-                      <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{opt.label}</div>
-                      <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
-                    </div>
-                    {frecuencia === opt.value && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
-
-                {/* Opción libre */}
-                <button
-                  onClick={() => handleFrecuenciaSelect('__custom')}
-                  className={cn(
-                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
-                    frecuencia === '__custom'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border bg-muted'
-                  )}
-                >
-                  Otra situación…
-                </button>
-                {frecuencia === '__custom' && (
-                  <Input
-                    autoFocus
-                    value={frecuenciaCustom}
-                    onChange={(e) => setFrecuenciaCustom(e.target.value)}
-                    placeholder="Cuéntame un poco más…"
-                    className="h-12 rounded-[12px] border-primary bg-muted font-sans text-[15px] focus-visible:ring-primary/20"
+                    label={opt.label}
+                    sub={opt.sub}
+                    selected={para === opt.value}
+                    onClick={() => setPara(opt.value)}
                   />
-                )}
+                ))}
               </div>
 
               <Button
-                onClick={() => { if (frecuenciaFinal()) setStep('dudas') }}
-                disabled={!frecuenciaFinal()}
+                onClick={() => { if (para) setStep('emocion') }}
+                disabled={!para}
                 className={cn(
                   'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
-                  frecuenciaFinal()
+                  para
                     ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
                 Continuar →
               </Button>
+
+              <button
+                onClick={() => setStep('dx')}
+                className="mt-3 w-full bg-transparent border-none font-sans text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                ← Volver
+              </button>
             </div>
           )}
 
-          {/* ── Step 3: dudas ── */}
+          {/* ── Step 3: emoción ── */}
+          {step === 'emocion' && (
+            <div className="ce-fade">
+              <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
+                Paso 3 de 4
+              </p>
+              <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
+                ¿Cómo te sientes con este diagnóstico?
+              </h2>
+              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+                Nos ayuda a adaptar el tono de la explicación.
+              </p>
+
+              <div className="flex flex-col gap-[10px] mb-5">
+                {EMOCION_OPTIONS.map((opt) => (
+                  <Chip
+                    key={opt.value}
+                    label={opt.label}
+                    sub={opt.sub}
+                    selected={emocion === opt.value}
+                    onClick={() => { setEmocion(opt.value); setEmocionCustom('') }}
+                  />
+                ))}
+
+                {/* Opción libre */}
+                <button
+                  onClick={() => setEmocion('__custom')}
+                  className={cn(
+                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
+                    emocion === '__custom'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-muted'
+                  )}
+                >
+                  Otro…
+                </button>
+                {emocion === '__custom' && (
+                  <Input
+                    autoFocus
+                    value={emocionCustom}
+                    onChange={(e) => setEmocionCustom(e.target.value)}
+                    placeholder="Cuéntame cómo te sientes…"
+                    className="h-12 rounded-[12px] border-primary bg-muted font-sans text-[15px] focus-visible:ring-primary/20"
+                  />
+                )}
+              </div>
+
+              <Button
+                onClick={() => { if (emocionFinal()) setStep('dudas') }}
+                disabled={!emocionFinal()}
+                className={cn(
+                  'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
+                  emocionFinal()
+                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
+                    : 'bg-border text-muted-foreground cursor-not-allowed'
+                )}
+              >
+                Continuar →
+              </Button>
+
+              <button
+                onClick={() => setStep('para')}
+                className="mt-3 w-full bg-transparent border-none font-sans text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              >
+                ← Volver
+              </button>
+            </div>
+          )}
+
+          {/* ── Step 4: dudas ── */}
           {step === 'dudas' && (
             <div className="ce-fade">
               <p className="font-serif italic text-[13px] text-muted-foreground mb-3 tracking-[.04em] uppercase">
-                Paso 3 de 3
+                Paso 4 de 4
               </p>
               <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Qué te gustaría entender mejor?
@@ -379,31 +458,18 @@ export default function IngresoPage() {
 
               <div className="flex flex-col gap-[10px] mb-5">
                 {DUDAS_OPTIONS.map((opt) => (
-                  <button
+                  <Chip
                     key={opt.value}
-                    onClick={() => handleDudasSelect(opt.value)}
-                    className={cn(
-                      'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
-                      dudas === opt.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-muted'
-                    )}
-                  >
-                    <div>
-                      <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{opt.label}</div>
-                      <div className="font-sans text-[13px] text-muted-foreground">{opt.sub}</div>
-                    </div>
-                    {dudas === opt.value && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
-                      </div>
-                    )}
-                  </button>
+                    label={opt.label}
+                    sub={opt.sub}
+                    selected={dudas === opt.value}
+                    onClick={() => { setDudas(opt.value); setDudasCustom('') }}
+                  />
                 ))}
 
                 {/* Opción libre */}
                 <button
-                  onClick={() => handleDudasSelect('__custom')}
+                  onClick={() => setDudas('__custom')}
                   className={cn(
                     'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
                     dudas === '__custom'
@@ -438,7 +504,7 @@ export default function IngresoPage() {
               </Button>
 
               <button
-                onClick={() => setStep('frecuencia')}
+                onClick={() => setStep('emocion')}
                 className="mt-3 w-full bg-transparent border-none font-sans text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
               >
                 ← Volver
