@@ -11,13 +11,38 @@ export async function POST(req: Request) {
     chapterContent,
     packContext,
     packId,
-    userId,
     chapterId,
   } = await req.json()
 
   if (!question?.trim() || !dx) {
-    return new Response(JSON.stringify({ error: 'Faltan datos' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'Faltan datos' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
+
+  // Fix 1 (Critical): Extract authenticated user from session — never trust userId from body.
+  // The service-role Supabase client bypasses RLS, so we must verify identity server-side.
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const authenticatedUserId = user.id
+
+  // Fix 2 (Critical): Validate and cap field lengths to prevent prompt injection / token abuse.
+  // OWASP A03:2021 — Injection; A05:2021 — Security Misconfiguration (resource limits).
+  if (typeof dx !== 'string' || dx.length > 500) {
+    return new Response(JSON.stringify({ error: 'dx inválido' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const safeChapterContent = (typeof chapterContent === 'string' ? chapterContent : '').slice(0, 8000)
+  const safePackContext = typeof packContext === 'string' ? packContext.slice(0, 16000) : undefined
 
   const system = `Eres el consejero de salud de Aliis — una plataforma creada por médicos residentes de neurología para ayudar a pacientes a entender sus diagnósticos.
 
@@ -36,22 +61,31 @@ Tu rol:
 - Al final de cada respuesta, si es natural, ofrece un tip práctico o una pregunta de seguimiento.
 - NUNCA uses el guión largo (—). Para frases parentéticas usa paréntesis. Para continuar una cláusula usa coma.
 
-Explicación completa del diagnóstico (todos los capítulos):
-${packContext ?? chapterContent}
-
-Capítulo activo (más relevante para esta pregunta):
-${chapterContent}
+${safePackContext
+  ? `Explicación completa del diagnóstico (todos los capítulos):\n${safePackContext}\n\nCapítulo activo (más relevante para esta pregunta):\n${safeChapterContent}`
+  : `Contenido del capítulo:\n${safeChapterContent}`
+}
 
 Responde en español. Máximo 4 párrafos cortos.`
 
   let fullResponse = ''
 
-  const stream = await client.messages.stream({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 600,
-    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: question.trim() }],
-  })
+  // Fix 3 (Important): Wrap stream initialization in try/catch to return a clean 502
+  // instead of an unhandled rejection if the Anthropic API is unreachable or returns an error.
+  let stream
+  try {
+    stream = await client.messages.stream({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: question.trim() }],
+    })
+  } catch {
+    return new Response(JSON.stringify({ error: 'Error al contactar la IA' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
@@ -65,12 +99,13 @@ Responde en español. Máximo 4 párrafos cortos.`
       }
       controller.close()
 
-      if (packId && userId && chapterId) {
+      // Fix 1 cont.: Persist using authenticatedUserId from session, not body-supplied userId.
+      // Reuses the supabase instance created above — no redundant client instantiation.
+      if (packId && chapterId) {
         try {
-          const supabase = await createServerSupabaseClient()
           await supabase.from('pack_chats').insert([
-            { pack_id: packId, user_id: userId, chapter_id: chapterId, role: 'user', text: question.trim() },
-            { pack_id: packId, user_id: userId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
+            { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'user', text: question.trim() },
+            { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
           ])
         } catch {
           // Non-fatal — stream succeeded, persistence failed silently
