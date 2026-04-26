@@ -97,7 +97,8 @@ REGLAS:
 3. Entre 3 y 5 referencias reales con DOIs válidos (formato 10.xxxx/xxxxxx)
 4. Nunca diagnosticas ni cuestionas el diagnóstico dado
 5. JSON válido, sin comentarios, sin texto fuera del JSON
-6. Nada de lenguaje genérico de IA ("es importante", "cabe destacar", "en conclusión")`
+6. Nada de lenguaje genérico de IA ("es importante", "cabe destacar", "en conclusión")
+7. NUNCA uses el guión largo (—) en ningún texto. Para frases parentéticas usa paréntesis: (así). Para continuar una cláusula usa coma. El guión largo está prohibido sin excepción.`
 
 function isValidGeneratedPack(v: unknown): v is GeneratedPack {
   if (!v || typeof v !== 'object') return false
