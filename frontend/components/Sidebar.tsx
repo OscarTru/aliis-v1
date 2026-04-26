@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart, Library } from 'lucide-react'
+import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart, Library, Wrench } from 'lucide-react'
 import { motion } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -229,7 +229,7 @@ export function Sidebar() {
                   </button>
                 )
               })}
-              {verifiedRefs.length > 0 && (
+              {pack.tools.length > 0 && (
                 <button
                   onClick={() => setActiveIdx(pack.chapters.length)}
                   className={cn(
@@ -238,13 +238,32 @@ export function Sidebar() {
                   )}
                 >
                   <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground/50')}>
-                    <BookMarked size={14} />
+                    <Wrench size={14} />
                   </span>
                   <span className={cn('font-sans text-[12px]', activeIdx === pack.chapters.length ? 'text-primary font-medium' : 'text-muted-foreground')}>
-                    Referencias
+                    Herramientas
                   </span>
                 </button>
               )}
+              {verifiedRefs.length > 0 && (() => {
+                const refsIdx = pack.chapters.length + (pack.tools.length > 0 ? 1 : 0)
+                return (
+                  <button
+                    onClick={() => setActiveIdx(refsIdx)}
+                    className={cn(
+                      'w-full text-left px-2.5 py-[7px] rounded-[9px] border-none cursor-pointer flex items-center gap-2',
+                      activeIdx === refsIdx ? 'bg-primary/10' : 'bg-transparent hover:bg-muted'
+                    )}
+                  >
+                    <span className={cn('inline-flex', activeIdx === refsIdx ? 'text-primary' : 'text-muted-foreground/50')}>
+                      <BookMarked size={14} />
+                    </span>
+                    <span className={cn('font-sans text-[12px]', activeIdx === refsIdx ? 'text-primary font-medium' : 'text-muted-foreground')}>
+                      Referencias
+                    </span>
+                  </button>
+                )
+              })()}
               <Link
                 href={`/compartir/${pack.id}`}
                 className="flex items-center gap-2 px-2.5 py-[7px] rounded-[9px] no-underline font-sans text-[12px] text-muted-foreground hover:bg-muted transition-colors"

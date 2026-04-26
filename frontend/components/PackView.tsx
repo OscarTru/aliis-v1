@@ -55,7 +55,16 @@ function ChapterCard({
       <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-2.5 text-[clamp(26px,3.5vw,38px)]">
         {chapter.kicker} <em className="text-muted-foreground">{chapter.kickerItalic}</em>
       </h2>
-      <p className="font-serif italic text-muted-foreground text-[16px] mb-8 leading-[1.55]">{chapter.tldr}</p>
+      <p className="font-serif italic text-muted-foreground text-[16px] mb-4 leading-[1.55]">{chapter.tldr}</p>
+
+      {conditionSlug && chapter.id !== 'herramientas' && (
+        <Link
+          href={`/condiciones/${conditionSlug}`}
+          className="inline-flex items-center gap-1.5 mb-6 px-3 py-1 rounded-full border border-primary/20 bg-primary/[0.06] font-mono text-[10px] tracking-[.12em] uppercase text-primary/70 no-underline hover:bg-primary/[0.12] transition-colors"
+        >
+          ✦ Biblioteca · Leer más →
+        </Link>
+      )}
 
       {chapter.paragraphs?.map((p, i) => (
         <p key={i} className="font-sans text-[16px] leading-[1.8] text-foreground mb-5">{p}</p>
@@ -103,22 +112,6 @@ function ChapterCard({
         Esta información es educativa y no reemplaza la consulta con tu médico.
       </div>
 
-      {conditionSlug && (
-        <Link
-          href={`/condiciones/${conditionSlug}`}
-          className="mt-6 flex items-center gap-3 px-5 py-4 rounded-[14px] border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors no-underline group"
-        >
-          <div className="flex-1 min-w-0">
-            <div className="font-mono text-[9px] tracking-[.18em] uppercase text-primary/70 mb-1">
-              Diagnósticos · Aliis
-            </div>
-            <div className="font-sans text-[14px] font-medium text-foreground group-hover:text-primary transition-colors">
-              Leer más sobre este diagnóstico →
-            </div>
-          </div>
-        </Link>
-      )}
-
       <div className="mt-8 flex items-center justify-between gap-4 px-5 py-4 bg-muted rounded-[14px]">
         <p className="font-sans text-[13px] text-muted-foreground leading-[1.4] m-0">
           ¿Cómo entendiste? ¿Tienes dudas?
@@ -135,12 +128,15 @@ function ChapterCard({
   )
 }
 
-export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?: string; conditionSlug?: string | null }) {
+export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
   const { activeIdx, readChapters, setPack, setActiveIdx, markRead, setChatOpen } = usePackContext()
   const verifiedRefs = pack.references.filter((r) => r.verified !== false)
   const chapter = pack.chapters[activeIdx]
   const isLast = activeIdx === pack.chapters.length - 1
   const total = pack.chapters.length
+  const hasTools = pack.tools.length > 0
+  // refsIdx: where the references panel lives
+  const refsIdx = pack.chapters.length + (hasTools ? 1 : 0)
   // Progress based on chapters the user has actually visited via Next (activeIdx + 1 as high-water mark)
   // readChapters (from timer) drives the DB, but we show nav-based progress for immediate feedback
   const visitedCount = Math.max(readChapters.size, activeIdx + 1)
@@ -155,6 +151,18 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
     setPack(pack)
     return () => setPack(null)
   }, [pack, setPack])
+
+  // Determine what the "Siguiente" button says when on the last real chapter
+  function nextLabel(): string {
+    if (!isLast) return 'Siguiente'
+    if (hasTools) return 'Herramientas'
+    return 'Ver referencias'
+  }
+
+  // Determine what the "Siguiente" button says when on the tools panel
+  function toolsNextLabel(): string {
+    return verifiedRefs.length > 0 ? 'Ver referencias' : ''
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -175,7 +183,7 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
               userId={userId}
               dx={pack.dx}
               onRead={markRead}
-              conditionSlug={conditionSlug}
+              conditionSlug={pack.conditionSlug}
               packContext={packContext}
               onOpenChat={() => setChatOpen(true)}
             />
@@ -207,7 +215,7 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
               </span>
 
               <button
-                onClick={() => setActiveIdx(Math.min(pack.chapters.length, activeIdx + 1))}
+                onClick={() => setActiveIdx(Math.min(refsIdx, activeIdx + 1))}
                 className={cn(
                   'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
                   isLast
@@ -215,12 +223,44 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
                     : 'border-none bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
                 )}
               >
-                {isLast ? 'Ver referencias' : 'Siguiente'} →
+                {nextLabel()} →
               </button>
             </div>
           </div>
         </>
+      ) : hasTools && activeIdx === pack.chapters.length ? (
+        /* Herramientas panel */
+        <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
+          <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
+            Herramientas para tu cuidado
+          </div>
+          <div className="flex flex-col gap-3">
+            {pack.tools.map((tool, i) => (
+              <div key={i} className="p-[18px_20px] bg-muted rounded-xl">
+                <div className="font-sans text-[14px] font-medium text-foreground mb-1">{tool.title}</div>
+                <div className="font-sans text-[13px] text-muted-foreground leading-[1.55]">{tool.description}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 flex items-center gap-3">
+            <button
+              onClick={() => setActiveIdx(pack.chapters.length - 1)}
+              className="px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] text-foreground cursor-pointer"
+            >
+              ← Volver al último capítulo
+            </button>
+            {verifiedRefs.length > 0 && (
+              <button
+                onClick={() => setActiveIdx(refsIdx)}
+                className="px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] text-foreground cursor-pointer"
+              >
+                {toolsNextLabel()} →
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
+        /* References panel */
         <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
           <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
             Referencias verificadas

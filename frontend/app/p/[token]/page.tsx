@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { PackView } from '@/components/PackView'
+import { PackViewPublic } from '@/components/PackViewPublic'
 import type { Pack } from '@/lib/types'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -30,13 +30,15 @@ export default async function SharedPackPage({
     summary: row.summary ?? '',
     chapters: row.chapters ?? [],
     references: row.refs ?? [],
+    conditionSlug: row.condition_slug ?? null,
+    tools: row.tools ?? [],
   }
 
   const sharedByName = (row as { profiles?: { name?: string | null } }).profiles?.name
 
   return (
-    <>
-      <header className="sticky top-0 z-40 backdrop-blur-[16px] bg-background/80 border-b border-border px-6 py-[14px] flex items-center justify-between">
+    <div className="flex flex-col h-screen overflow-hidden">
+      <header className="shrink-0 z-40 backdrop-blur-[16px] bg-background/80 border-b border-border px-6 py-[14px] flex items-center justify-between">
         <Link href="/" className="flex items-center gap-[10px] no-underline">
           <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain" />
         </Link>
@@ -44,7 +46,9 @@ export default async function SharedPackPage({
           {sharedByName ? `Compartido por ${sharedByName}` : 'Explicación compartida'} · aliis.app
         </div>
       </header>
-      <PackView pack={pack} isPublic />
-    </>
+      <div className="flex-1 overflow-hidden">
+        <PackViewPublic pack={pack} />
+      </div>
+    </div>
   )
 }
