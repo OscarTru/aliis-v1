@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
         if (userId) {
           const subscriptionId = session.subscription as string | null
           let trialEnd: string | null = null
+          let subscriptionStatus: string | null = null
           if (subscriptionId) {
             const sub = await stripe.subscriptions.retrieve(subscriptionId)
+            subscriptionStatus = sub.status
             if (sub.trial_end) {
               trialEnd = new Date(sub.trial_end * 1000).toISOString()
             }
@@ -62,6 +64,8 @@ export async function POST(request: NextRequest) {
             .update({
               plan: 'pro',
               stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscriptionId,
+              subscription_status: subscriptionStatus,
               trial_end: trialEnd,
             })
             .eq('id', userId)
@@ -90,10 +94,14 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
-
         await admin
           .from('profiles')
-          .update({ plan: 'free', trial_end: null })
+          .update({
+            plan: 'free',
+            trial_end: null,
+            stripe_subscription_id: null,
+            subscription_status: 'canceled',
+          })
           .eq('stripe_customer_id', sub.customer as string)
         break
       }
@@ -108,7 +116,11 @@ export async function POST(request: NextRequest) {
 
         await admin
           .from('profiles')
-          .update({ plan, trial_end: trialEnd })
+          .update({
+            plan,
+            trial_end: trialEnd,
+            subscription_status: status,
+          })
           .eq('stripe_customer_id', sub.customer as string)
         break
       }

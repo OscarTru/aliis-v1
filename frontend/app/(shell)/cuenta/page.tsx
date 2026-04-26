@@ -14,6 +14,9 @@ type Profile = {
   who: 'yo' | 'familiar' | null
   plan: 'free' | 'pro'
   email: string | null
+  trial_end: string | null
+  subscription_status: string | null
+  stripe_customer_id: string | null
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -76,6 +79,9 @@ export default function CuentaPage() {
   const [confirmPw, setConfirmPw] = useState('')
   const [pwLoading, setPwLoading] = useState(false)
 
+  // Billing
+  const [billingLoading, setBillingLoading] = useState(false)
+
   // Dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -99,8 +105,16 @@ export default function CuentaPage() {
       const providers = user.identities?.map(i => i.provider) ?? []
       setIsGoogleUser(providers.includes('google') && !providers.includes('email'))
 
-      const { data: p } = await supabase.from('profiles').select('name,who,plan').eq('id', user.id).single()
-      setProfile({ name: p?.name ?? null, who: p?.who ?? null, plan: p?.plan ?? 'free', email: user.email ?? null })
+      const { data: p } = await supabase.from('profiles').select('name,who,plan,trial_end,subscription_status,stripe_customer_id').eq('id', user.id).single()
+      setProfile({
+        name: p?.name ?? null,
+        who: p?.who ?? null,
+        plan: p?.plan ?? 'free',
+        email: user.email ?? null,
+        trial_end: p?.trial_end ?? null,
+        subscription_status: p?.subscription_status ?? null,
+        stripe_customer_id: p?.stripe_customer_id ?? null,
+      })
       setName(p?.name ?? '')
       setWho(p?.who ?? null)
     }
@@ -144,6 +158,26 @@ export default function CuentaPage() {
     setPwLoading(false)
     if (!error) { setPassword(''); setConfirmPw('') }
     showToast(error ? error.message : 'Contraseña actualizada.', !error)
+  }
+
+  async function handleUpgrade() {
+    setBillingLoading(true)
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceKey: 'mxn-monthly' }),
+    })
+    const data = await res.json()
+    if (data.url) window.location.href = data.url
+    else { showToast('Error al iniciar el pago.', false); setBillingLoading(false) }
+  }
+
+  async function handleManageBilling() {
+    setBillingLoading(true)
+    const res = await fetch('/api/stripe/portal', { method: 'POST' })
+    const data = await res.json()
+    if (data.url) window.location.href = data.url
+    else { showToast('Error al abrir el portal de facturación.', false); setBillingLoading(false) }
   }
 
   async function handleDeleteAccount() {
@@ -263,23 +297,46 @@ export default function CuentaPage() {
 
         {/* Plan */}
         <Section title="Plan">
-          <div className="px-6 py-5 flex items-center justify-between">
-            <div>
-              <div className="font-sans text-[15px] text-foreground mb-1">
+          <div className="px-6 py-5 flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="font-sans text-[15px] text-foreground font-medium">
                 {profile.plan === 'pro' ? 'Plan Pro' : 'Plan Gratuito'}
               </div>
               <div className="font-sans text-[13px] text-muted-foreground">
-                {profile.plan === 'pro' ? 'Explicaciones ilimitadas, acceso completo.' : 'Explicaciones limitadas.'}
+                {profile.plan === 'pro'
+                  ? 'Explicaciones ilimitadas, acceso completo a la biblioteca.'
+                  : 'Explicaciones limitadas. Actualiza para acceso completo.'}
               </div>
+              {profile.plan === 'pro' && profile.trial_end && new Date(profile.trial_end) > new Date() && (
+                <div className="font-sans text-[12px] text-amber-500 mt-0.5">
+                  Prueba activa — termina el {new Date(profile.trial_end).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              )}
+              {profile.plan === 'pro' && profile.subscription_status === 'canceled' && (
+                <div className="font-sans text-[12px] text-muted-foreground/60 mt-0.5">
+                  Suscripción cancelada — acceso activo hasta fin del período.
+                </div>
+              )}
             </div>
-            {profile.plan === 'free' && (
-              <a
-                href="/precios"
-                className="px-4 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium no-underline shadow-[var(--c-btn-primary-shadow)] whitespace-nowrap"
-              >
-                Actualizar
-              </a>
-            )}
+            <div className="flex flex-col gap-2 shrink-0">
+              {profile.plan === 'free' ? (
+                <button
+                  onClick={handleUpgrade}
+                  disabled={billingLoading}
+                  className="px-4 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] whitespace-nowrap"
+                >
+                  {billingLoading ? 'Cargando…' : 'Actualizar a Pro'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleManageBilling}
+                  disabled={billingLoading}
+                  className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-foreground cursor-pointer disabled:opacity-70 whitespace-nowrap hover:bg-muted transition-colors"
+                >
+                  {billingLoading ? 'Cargando…' : 'Gestionar suscripción'}
+                </button>
+              )}
+            </div>
           </div>
         </Section>
 
