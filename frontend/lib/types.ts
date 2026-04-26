@@ -123,3 +123,25 @@ export interface PackNote {
   content: string
   created_at: string
 }
+
+export interface SymptomLog {
+  id: string
+  user_id: string
+  logged_at: string
+  glucose: number | null
+  bp_systolic: number | null
+  bp_diastolic: number | null
+  heart_rate: number | null
+  weight: number | null
+  temperature: number | null
+  note: string | null
+}
+
+export interface NoteWithPack {
+  id: string
+  pack_id: string
+  content: string
+  created_at: string
+  dx: string
+  pack_created_at: string
+}

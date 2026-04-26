@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Sparkles, Loader2, BookText } from 'lucide-react'
+import Image from 'next/image'
+import { X, ArrowUp, Sparkles, Loader2, BookText } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
 import type { PackNote } from '@/lib/types'
+import { FormattedText } from '@/components/FormattedText'
 
 type Message = { role: 'user' | 'assistant'; text: string }
 type Tab = 'chat' | 'apuntes'
@@ -33,6 +35,8 @@ export function ChatDrawer({
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const rafRef = useRef<number | null>(null)
+  const accRef = useRef('')
 
   // Notes state
   const [generating, setGenerating] = useState(false)
@@ -121,6 +125,7 @@ export function ChatDrawer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: q,
+          history: messages.map((m) => ({ role: m.role, content: m.text })),
           dx,
           chapterTitle: 'Tu explicación completa',
           chapterContent: packContext,
@@ -138,21 +143,25 @@ export function ChatDrawer({
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      let full = ''
+      accRef.current = ''
+
+      const flush = (final = false) => {
+        const text = accRef.current
+        setMessages([...next, { role: 'assistant', text: text || (final ? 'Sin respuesta. Intenta de nuevo.' : '') }])
+        if (final) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        full += decoder.decode(value, { stream: true })
-        setMessages([...next, { role: 'assistant', text: full }])
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+        accRef.current += decoder.decode(value, { stream: true })
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+        rafRef.current = requestAnimationFrame(() => flush())
       }
-      full += decoder.decode()
-      setMessages([...next, {
-        role: 'assistant',
-        text: full || 'Sin respuesta. Intenta de nuevo.',
-      }])
-      if (full) setUserMessageCount((c) => c + 1)
+      accRef.current += decoder.decode()
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      flush(true)
+      if (accRef.current) setUserMessageCount((c) => c + 1)
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         setMessages([...next, { role: 'assistant', text: 'Hubo un error de conexión. Intenta de nuevo.' }])
@@ -178,10 +187,10 @@ export function ChatDrawer({
         setNotesError(data.error ?? 'Error al generar apuntes')
         return
       }
-      if (data?.id && data?.content) {
-        setNotes(data as PackNote)
+      if (data?.content) {
+        setNotes({ id: packId, pack_id: packId, user_id: '', content: data.content } as PackNote)
       } else {
-        setNotesError('Respuesta inválida del servidor.')
+        setNotesError(data?.error ?? 'Respuesta inválida del servidor.')
       }
     } catch {
       setNotesError('Error de conexión. Intenta de nuevo.')
@@ -198,7 +207,8 @@ export function ChatDrawer({
   }
 
   const isActive = Boolean(input.trim()) && !streaming
-  const canGenerateNotes = userMessageCount >= 3 && !notes
+  const totalUserMessages = userMessageCount + messages.filter((m) => m.role === 'user').length
+  const canGenerateNotes = totalUserMessages >= 3 && !notes
 
   return (
     <>
@@ -288,8 +298,8 @@ export function ChatDrawer({
                 {messages.map((m, i) => (
                   <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
                     {m.role === 'assistant' && (
-                      <div className="w-6 h-6 rounded-full bg-primary shrink-0 mr-2 mt-0.5 flex items-center justify-center font-serif text-[11px] text-white font-semibold">
-                        A
+                      <div className="w-6 h-6 rounded-full bg-background border border-border shrink-0 mr-2 mt-0.5 flex items-center justify-center overflow-hidden">
+                        <Image src="/assets/aliis-logo.png" alt="Aliis" width={16} height={16} className="object-contain" />
                       </div>
                     )}
                     <div className={cn(
@@ -304,13 +314,12 @@ export function ChatDrawer({
                             <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary" style={{ animationDelay: `${j * 0.2}s` }} />
                           ))}
                         </div>
-                      ) : (
-                        <p className={cn(
-                          'font-sans text-[13px] leading-[1.65] m-0 whitespace-pre-wrap',
-                          m.role === 'user' ? 'text-white' : 'text-foreground'
-                        )}>
+                      ) : m.role === 'user' ? (
+                        <p className="font-sans text-[13px] leading-[1.65] m-0 text-white whitespace-pre-wrap">
                           {m.text}
                         </p>
+                      ) : (
+                        <FormattedText text={m.text} />
                       )}
                     </div>
                   </div>
@@ -320,8 +329,8 @@ export function ChatDrawer({
             </div>
 
             {/* Input */}
-            <div className="px-4 py-3 border-t border-border shrink-0">
-              <div className="flex gap-2 items-end bg-muted border border-border rounded-[12px] px-3 py-2">
+            <div className="px-4 pb-4 pt-3 border-t border-border shrink-0">
+              <div className="flex gap-2 items-center bg-background border border-border rounded-2xl px-4 py-2.5 focus-within:border-foreground/30 transition-colors">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -330,7 +339,7 @@ export function ChatDrawer({
                   placeholder={`Pregunta sobre ${dx}…`}
                   rows={1}
                   disabled={streaming}
-                  className="flex-1 border-none bg-transparent outline-none font-sans text-[13px] text-foreground resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
+                  className="flex-1 border-none bg-transparent outline-none font-sans text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
                   onInput={(e) => {
                     const t = e.currentTarget
                     t.style.height = 'auto'
@@ -341,16 +350,16 @@ export function ChatDrawer({
                   onClick={send}
                   disabled={!isActive}
                   className={cn(
-                    'w-[30px] h-[30px] rounded-[8px] border-none shrink-0 flex items-center justify-center transition-colors duration-150',
+                    'w-7 h-7 rounded-full border-none shrink-0 flex items-center justify-center transition-all duration-150',
                     isActive
-                      ? 'bg-foreground cursor-pointer text-background'
-                      : 'bg-border cursor-not-allowed text-muted-foreground/60'
+                      ? 'bg-foreground cursor-pointer text-background hover:opacity-80'
+                      : 'bg-muted cursor-not-allowed text-muted-foreground/40'
                   )}
                 >
-                  <Send size={13} />
+                  <ArrowUp size={14} />
                 </button>
               </div>
-              <p className="font-sans text-[10px] text-muted-foreground/50 mt-1.5 leading-[1.4] text-center">
+              <p className="font-sans text-[10px] text-muted-foreground/40 mt-2 leading-[1.4] text-center">
                 Esta conversación no reemplaza la consulta con tu médico.
               </p>
             </div>
@@ -385,8 +394,8 @@ export function ChatDrawer({
                     Genera tus apuntes
                   </p>
                   <p className="font-sans text-[13px] text-muted-foreground leading-[1.55] max-w-[260px]">
-                    {userMessageCount < 3
-                      ? `Necesitas al menos 3 preguntas para generar apuntes. Llevas ${userMessageCount}.`
+                    {totalUserMessages < 3
+                      ? `Necesitas al menos 3 preguntas para generar apuntes. Llevas ${totalUserMessages}.`
                       : 'Aliis resume lo que aprendiste en esta conversación en puntos clave y preguntas para tu médico.'}
                   </p>
                 </div>
