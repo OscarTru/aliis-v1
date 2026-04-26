@@ -65,3 +65,35 @@ export interface Profile {
   onboarding_done: boolean
   created_at: string
 }
+
+export interface ConditionSection {
+  id: string
+  condition_id: string
+  order: number
+  slug: string
+  title: string
+  icon: string
+  read_time: string
+  content: {
+    paragraphs?: string[]
+    callout?: { label: string; body: string }
+    timeline?: { w: string; t: string }[]
+    questions?: string[]
+    alarms?: { tone: 'red' | 'amber'; t: string; d: string }[]
+    references?: { authors: string; year: string; journal: string; doi: string }[]
+  }
+}
+
+export interface Condition {
+  id: string
+  slug: string
+  name: string
+  subtitle: string
+  summary: string
+  specialty: string
+  icd10: string
+  reviewed: boolean
+  published: boolean
+  created_at: string
+  sections: ConditionSection[]
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, BookMarked } from 'lucide-react'
 import type { Condition, ConditionSection } from '@/lib/types'
 import { useConditionContext } from '@/lib/condition-context'
 import { cn } from '@/lib/utils'
@@ -71,6 +71,31 @@ function SectionCard({ section }: { section: ConditionSection }) {
       {section.content.alarms && (
         <div className="mt-2 flex flex-col gap-0.5">
           {section.content.alarms.map((a, i) => <AlarmBadge key={i} {...a} />)}
+        </div>
+      )}
+
+      {section.content.references && (
+        <div className="mt-6 flex flex-col gap-3">
+          {section.content.references.map((ref, i) => (
+            <div key={i} className="flex gap-3 items-start p-[14px_18px] bg-muted rounded-xl">
+              <span className="text-primary shrink-0 flex pt-0.5"><BookMarked size={14} /></span>
+              <div>
+                <div className="font-sans text-[13px] text-foreground leading-[1.5]">
+                  {ref.authors} ({ref.year}). <em>{ref.journal}</em>
+                </div>
+                {ref.doi && (
+                  <a
+                    href={ref.doi.startsWith('http') ? ref.doi : `https://doi.org/${ref.doi}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[11px] text-primary hover:underline break-all"
+                  >
+                    {ref.doi}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

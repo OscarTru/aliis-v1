@@ -22,6 +22,7 @@ const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
   'vivir-con': <Heart size={14} />,
   'preguntas': <MessageCircle size={14} />,
   'senales': <AlertTriangle size={14} />,
+  'referencias': <BookMarked size={14} />,
 }
 
 const CHAPTER_ICON_MAP: Record<string, React.ReactNode> = {
