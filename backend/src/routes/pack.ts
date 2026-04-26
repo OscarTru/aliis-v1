@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { classifyIntent } from '../lib/classifier'
 import { enrichContext } from '../lib/enricher'
 import { generatePack } from '../lib/generator'
-import { resolveLibraryMatch } from '../lib/library-resolver'
+import { resolveLibraryMatch, type MatchedCondition } from '../lib/library-resolver'
 import { verifyReferences } from '../lib/verifier'
 import { EMERGENCY_RESPONSE, BLOCKED_MESSAGES } from '../lib/emergency'
 import { supabase } from '../index'
@@ -14,6 +14,9 @@ export const packRouter = Router()
 function isValidRequest(body: unknown): body is GeneratePackRequest {
   if (!body || typeof body !== 'object') return false
   const b = body as Record<string, unknown>
+  if (b.conditionSlug !== undefined && b.conditionSlug !== null && typeof b.conditionSlug !== 'string') {
+    return false
+  }
   return (
     typeof b.diagnostico === 'string' && (b.diagnostico as string).trim().length > 0 &&
     typeof b.userId === 'string' && (b.userId as string).trim().length > 0 &&
@@ -29,8 +32,11 @@ packRouter.post('/generate', async (req, res) => {
     return
   }
 
-  const { diagnostico, conditionSlug, contexto, userId, userPlan } = req.body
+  const { diagnostico, conditionSlug: rawConditionSlug, contexto, userId, userPlan } = req.body
   const dx = diagnostico.trim()
+  const conditionSlug = typeof rawConditionSlug === 'string' && rawConditionSlug.trim().length <= 100
+    ? rawConditionSlug.trim()
+    : null
 
   if (!dx) {
     res.status(400).json({ error: 'El diagnóstico no puede estar vacío' })
@@ -98,7 +104,7 @@ packRouter.post('/generate', async (req, res) => {
 
   // Layer 3: resolve library match
   console.log('[pack/generate] resolving library match')
-  let libraryMatch = null
+  let libraryMatch: MatchedCondition | null = null
   try {
     libraryMatch = await resolveLibraryMatch(dx, conditionSlug)
     console.log('[pack/generate] library match:', libraryMatch?.slug ?? 'none')
