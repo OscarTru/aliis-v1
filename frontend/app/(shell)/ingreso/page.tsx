@@ -13,11 +13,16 @@ import { Button } from '@/components/ui/button'
 type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
 
 const STAGES = [
-  'Analizando tu diagnóstico…',
-  'Destilando la información…',
-  'Verificando referencias científicas…',
-  'Preparando tus preguntas para el médico…',
-  'Casi listo…',
+  'Leyendo tu diagnóstico con cuidado…',
+  'Entendiendo qué significa esto para ti…',
+  'Buscando en fuentes médicas indexadas…',
+  'Revisando estudios recientes sobre este tema…',
+  'Verificando que las referencias sean reales…',
+  'Estructurando una explicación que tenga sentido…',
+  'Escribiendo en un lenguaje que puedas leer…',
+  'Preparando las preguntas que querrás hacerle a tu médico…',
+  'Dándole formato para que sea fácil de navegar…',
+  'Revisando que todo esté claro antes de mostrártelo…',
 ]
 
 const FRECUENCIA_OPTIONS = [
@@ -45,6 +50,7 @@ export default function IngresoPage() {
   const [loading, setLoading] = useState(false)
   const [pendingPackId, setPendingPackId] = useState<string | null>(null)
   const [stageIdx, setStageIdx] = useState(0)
+  const [stageVisible, setStageVisible] = useState(true)
   const [progress, setProgress] = useState(0)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const dxInputRef = useRef<HTMLTextAreaElement>(null)
@@ -63,6 +69,7 @@ export default function IngresoPage() {
     setDudasCustom('')
     setPendingPackId(null)
     setStageIdx(0)
+    setStageVisible(true)
     setProgress(0)
     progressRef.current = 0
   }, [])
@@ -100,11 +107,17 @@ export default function IngresoPage() {
       return
     }
     setStageIdx(0)
+    setStageVisible(true)
     setProgress(0)
     startProgress()
     const interval = setInterval(() => {
-      setStageIdx((i) => (i + 1) % STAGES.length)
-    }, 3500)
+      // Fade out → swap text → fade in
+      setStageVisible(false)
+      setTimeout(() => {
+        setStageIdx((i) => (i + 1) % STAGES.length)
+        setStageVisible(true)
+      }, 350)
+    }, 4000)
     return () => {
       clearInterval(interval)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
@@ -441,12 +454,13 @@ export default function IngresoPage() {
                 ))}
               </div>
 
-              {/* Stage text — cycles in loop */}
+              {/* Stage text — crossfade on each cycle */}
               <div className="text-center px-6">
-                <Eyebrow>· Destilando ·</Eyebrow>
+                <Eyebrow>· Trabajando en tu explicación ·</Eyebrow>
                 <h2
                   aria-live="polite"
-                  className="font-serif text-[22px] tracking-[-0.02em] mt-3 min-h-[32px] transition-opacity duration-500"
+                  className="font-serif text-[20px] tracking-[-0.02em] mt-3 min-h-[56px] flex items-center justify-center transition-opacity duration-300"
+                  style={{ opacity: stageVisible ? 1 : 0 }}
                 >
                   {STAGES[stageIdx]}
                 </h2>
