@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Stethoscope, Pill, ClipboardList, HelpCircle, Check } from 'lucide-react'
 import { UpgradeModal } from '@/components/UpgradeModal'
@@ -45,8 +45,12 @@ export default function IngresoPage() {
   const [loading, setLoading] = useState(false)
   const [pendingPackId, setPendingPackId] = useState<string | null>(null)
   const [stageIdx, setStageIdx] = useState(0)
+  const [progress, setProgress] = useState(0)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const dxInputRef = useRef<HTMLTextAreaElement>(null)
+  const progressRef = useRef(0)
+  const rafRef = useRef<number | null>(null)
+  const startTimeRef = useRef(0)
 
   // Reset to dx step on every mount so "Nuevo diagnóstico" always starts fresh
   useEffect(() => {
@@ -59,21 +63,53 @@ export default function IngresoPage() {
     setDudasCustom('')
     setPendingPackId(null)
     setStageIdx(0)
+    setProgress(0)
+    progressRef.current = 0
   }, [])
 
   useEffect(() => {
     if (step === 'dx') dxInputRef.current?.focus()
   }, [step])
 
-  // Cycle stage text while generating
+  // Continuous progress bar — eases toward 88% over ~50s, never completes on its own
+  const startProgress = useCallback(() => {
+    progressRef.current = 0
+    setProgress(0)
+    startTimeRef.current = performance.now()
+
+    function tick(now: number) {
+      const elapsed = (now - startTimeRef.current) / 1000 // seconds
+      // Asymptotic curve: approaches 88% over ~50s, slows dramatically after 70%
+      const target = 88 * (1 - Math.exp(-elapsed / 18))
+      progressRef.current = target
+      setProgress(target)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const completeProgress = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    setProgress(100)
+  }, [])
+
+  // Stage text cycles in loop — never gets stuck on last item
   useEffect(() => {
-    if (step !== 'generating') return
+    if (step !== 'generating') {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      return
+    }
     setStageIdx(0)
+    setProgress(0)
+    startProgress()
     const interval = setInterval(() => {
-      setStageIdx((i) => Math.min(i + 1, STAGES.length - 1))
-    }, 1400)
-    return () => clearInterval(interval)
-  }, [step])
+      setStageIdx((i) => (i + 1) % STAGES.length)
+    }, 3500)
+    return () => {
+      clearInterval(interval)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [step, startProgress])
 
   // Poll Supabase while generating — redirect when pack is ready
   useEffect(() => {
@@ -87,11 +123,12 @@ export default function IngresoPage() {
         .single()
       if (data) {
         clearInterval(poll)
-        router.push(`/pack/${pendingPackId}`)
+        completeProgress()
+        setTimeout(() => router.push(`/pack/${pendingPackId}`), 400)
       }
     }, 2000)
     return () => clearInterval(poll)
-  }, [pendingPackId, router])
+  }, [pendingPackId, router, completeProgress])
 
   function handleDxSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -391,72 +428,58 @@ export default function IngresoPage() {
 
           {/* ── Generating ── */}
           {step === 'generating' && (
-            <div className="ce-fade flex flex-col items-center justify-center gap-8 min-h-[60vh]">
+            <div className="ce-fade flex flex-col items-center justify-center gap-8 min-h-[60vh] w-full">
 
-              {/* Typing indicator — 3 bouncing squares */}
-              <div className="flex items-end gap-[6px]">
-                {[0, 1, 2].map((i) => (
+              {/* 2×2 grid of bouncing squares — wave pattern */}
+              <div className="grid grid-cols-2 gap-[5px]">
+                {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="block w-3 h-3 rounded-[3px] bg-primary"
-                    style={{ animation: `aliis-bounce 1.1s ease-in-out ${i * 0.18}s infinite` }}
+                    className="block w-[10px] h-[10px] rounded-[2px] bg-primary"
+                    style={{ animation: `aliis-bounce 1.2s ease-in-out ${[0, 0.15, 0.15, 0.3][i]}s infinite` }}
                   />
                 ))}
               </div>
 
-              {/* Stage text */}
+              {/* Stage text — cycles in loop */}
               <div className="text-center px-6">
                 <Eyebrow>· Destilando ·</Eyebrow>
-                <h2 aria-live="polite" className="font-serif text-[22px] tracking-[-0.02em] mt-3 min-h-[32px]">
+                <h2
+                  aria-live="polite"
+                  className="font-serif text-[22px] tracking-[-0.02em] mt-3 min-h-[32px] transition-opacity duration-500"
+                >
                   {STAGES[stageIdx]}
                 </h2>
               </div>
 
-              {/* Progress bar + circle side by side */}
-              <div className="flex items-center gap-5 w-full max-w-[300px]">
-                {/* Linear progress bar */}
+              {/* Progress bar + circle */}
+              <div className="flex items-center gap-4 w-full max-w-[300px]">
                 <div className="flex-1 h-[3px] bg-border rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${Math.round(((stageIdx + 1) / STAGES.length) * 100)}%` }}
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${progress}%`, transition: 'width 0.8s linear' }}
                   />
                 </div>
-                {/* Circular progress */}
-                <svg width="32" height="32" viewBox="0 0 32 32" className="shrink-0 -rotate-90">
-                  <circle cx="16" cy="16" r="13" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
+                <svg width="30" height="30" viewBox="0 0 30 30" className="shrink-0 -rotate-90">
+                  <circle cx="15" cy="15" r="12" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
                   <circle
-                    cx="16" cy="16" r="13" fill="none"
+                    cx="15" cy="15" r="12" fill="none"
                     stroke="hsl(var(--primary))" strokeWidth="2.5"
-                    strokeDasharray={`${2 * Math.PI * 13}`}
-                    strokeDashoffset={`${2 * Math.PI * 13 * (1 - (stageIdx + 1) / STAGES.length)}`}
                     strokeLinecap="round"
-                    style={{ transition: 'stroke-dashoffset 0.7s ease-out' }}
+                    strokeDasharray={`${2 * Math.PI * 12}`}
+                    strokeDashoffset={`${2 * Math.PI * 12 * (1 - progress / 100)}`}
+                    style={{ transition: 'stroke-dashoffset 0.8s linear' }}
                   />
                 </svg>
+                <span className="font-mono text-[11px] text-muted-foreground/60 w-9 text-right shrink-0">
+                  {Math.round(progress)}%
+                </span>
               </div>
 
-              {/* Stages list */}
-              <div className="flex flex-col gap-[10px] w-full max-w-[300px]">
-                {STAGES.map((stage, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      'flex items-center gap-3 font-sans text-[13px]',
-                      i < stageIdx ? 'text-primary' : i === stageIdx ? 'text-foreground' : 'text-muted-foreground/35'
-                    )}
-                  >
-                    <span className="w-4 shrink-0 inline-flex items-center justify-center">
-                      {i < stageIdx
-                        ? <Check size={13} />
-                        : i === stageIdx
-                        ? <span className="block w-[6px] h-[6px] rounded-full bg-primary" style={{ animation: 'aliis-pulse 1s ease-in-out infinite' }} />
-                        : <span className="block w-[5px] h-[5px] rounded-full bg-muted-foreground/25" />
-                      }
-                    </span>
-                    {stage}
-                  </div>
-                ))}
-              </div>
+              {/* Current stage label only — clean, no list clutter */}
+              <p className="font-sans text-[12px] text-muted-foreground/50 tracking-wide">
+                Esto toma entre 20 y 40 segundos
+              </p>
 
             </div>
           )}
