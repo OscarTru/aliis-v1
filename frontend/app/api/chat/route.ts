@@ -21,6 +21,13 @@ export async function POST(req: Request) {
     })
   }
 
+  if (question.trim().length > 1000) {
+    return new Response(JSON.stringify({ error: 'Pregunta demasiado larga' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   // Fix 1 (Critical): Extract authenticated user from session — never trust userId from body.
   // The service-role Supabase client bypasses RLS, so we must verify identity server-side.
   const supabase = await createServerSupabaseClient()
@@ -90,25 +97,30 @@ Responde en español. Máximo 4 párrafos cortos.`
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          const text = chunk.delta.text
-          fullResponse += text
-          controller.enqueue(encoder.encode(text))
+      try {
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            const text = chunk.delta.text
+            fullResponse += text
+            controller.enqueue(encoder.encode(text))
+          }
         }
-      }
-      controller.close()
+      } catch (e) {
+        controller.error(e)
+      } finally {
+        controller.close()
 
-      // Fix 1 cont.: Persist using authenticatedUserId from session, not body-supplied userId.
-      // Reuses the supabase instance created above — no redundant client instantiation.
-      if (packId && chapterId) {
-        try {
-          await supabase.from('pack_chats').insert([
-            { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'user', text: question.trim() },
-            { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
-          ])
-        } catch {
-          // Non-fatal — stream succeeded, persistence failed silently
+        // Fix 1 cont.: Persist using authenticatedUserId from session, not body-supplied userId.
+        // Reuses the supabase instance created above — no redundant client instantiation.
+        if (packId && chapterId && fullResponse) {
+          try {
+            await supabase.from('pack_chats').insert([
+              { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'user', text: question.trim() },
+              { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
+            ])
+          } catch {
+            // Non-fatal — stream succeeded, persistence failed silently
+          }
         }
       }
     },

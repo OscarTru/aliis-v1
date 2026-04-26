@@ -34,6 +34,7 @@ export function ChapterChat({
 
   useEffect(() => {
     if (!packId || !chapterId || !userId) return
+    let cancelled = false
     hadPersistedHistoryRef.current = false
     setMessages([])
     setLoadingHistory(true)
@@ -46,6 +47,7 @@ export function ChapterChat({
       .eq('user_id', userId)
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
+        if (cancelled) return
         if (error) {
           console.error('[ChapterChat] history load failed', error)
         } else if (data && data.length > 0) {
@@ -54,6 +56,7 @@ export function ChapterChat({
         }
         setLoadingHistory(false)
       })
+    return () => { cancelled = true }
   }, [packId, chapterId, userId])
 
   async function send() {
