@@ -1,9 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: Request) {
-  const { question, dx, chapterTitle, chapterContent } = await req.json()
+  const {
+    question,
+    dx,
+    chapterTitle,
+    chapterContent,
+    packContext,
+    packId,
+    userId,
+    chapterId,
+  } = await req.json()
 
   if (!question?.trim() || !dx) {
     return new Response(JSON.stringify({ error: 'Faltan datos' }), { status: 400 })
@@ -11,7 +21,8 @@ export async function POST(req: Request) {
 
   const system = `Eres el consejero de salud de Aliis — una plataforma creada por médicos residentes de neurología para ayudar a pacientes a entender sus diagnósticos.
 
-El paciente acaba de leer la sección "${chapterTitle}" de su explicación sobre: ${dx}.
+El paciente está leyendo su explicación completa sobre: ${dx}.
+Capítulo activo: "${chapterTitle}".
 
 Tu rol:
 - Eres un médico residente de neurología que también es su amigo de confianza.
@@ -21,13 +32,19 @@ Tu rol:
 - Nunca das dosis ni reemplazas la consulta médica — siempre refuerza consultar con su médico.
 - Empiezas desde la experiencia del paciente, no desde definiciones de libro.
 - Frases cortas. Una idea por párrafo. Sin lenguaje de IA ("es importante destacar", "en conclusión").
-- Si la pregunta ya fue respondida en el contenido del capítulo, amplías con más detalle y ejemplos concretos.
-- Al final de cada respuesta, si es natural, ofrece un tip práctico o una pregunta de seguimiento para profundizar.
+- Puedes referenciar cualquier parte de la explicación completa para dar contexto más rico.
+- Al final de cada respuesta, si es natural, ofrece un tip práctico o una pregunta de seguimiento.
+- NUNCA uses el guión largo (—). Para frases parentéticas usa paréntesis. Para continuar una cláusula usa coma.
 
-Contexto del capítulo que acaba de leer:
+Explicación completa del diagnóstico (todos los capítulos):
+${packContext ?? chapterContent}
+
+Capítulo activo (más relevante para esta pregunta):
 ${chapterContent}
 
 Responde en español. Máximo 4 párrafos cortos.`
+
+  let fullResponse = ''
 
   const stream = await client.messages.stream({
     model: 'claude-haiku-4-5-20251001',
@@ -41,10 +58,24 @@ Responde en español. Máximo 4 párrafos cortos.`
     async start(controller) {
       for await (const chunk of stream) {
         if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          controller.enqueue(encoder.encode(chunk.delta.text))
+          const text = chunk.delta.text
+          fullResponse += text
+          controller.enqueue(encoder.encode(text))
         }
       }
       controller.close()
+
+      if (packId && userId && chapterId) {
+        try {
+          const supabase = await createServerSupabaseClient()
+          await supabase.from('pack_chats').insert([
+            { pack_id: packId, user_id: userId, chapter_id: chapterId, role: 'user', text: question.trim() },
+            { pack_id: packId, user_id: userId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
+          ])
+        } catch {
+          // Non-fatal — stream succeeded, persistence failed silently
+        }
+      }
     },
   })
 
