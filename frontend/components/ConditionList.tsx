@@ -228,10 +228,17 @@ export function ConditionList({ conditions }: { conditions: Condition[] }) {
                 {c.subtitle}
               </div>
               {c.reviewed && (
-                <div className="mt-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[.15em] uppercase text-primary/70">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 inline-block" />
-                  Revisado por especialista
-                </div>
+                c.specialty === 'Neurología' ? (
+                  <div className="mt-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[.15em] uppercase text-primary/70">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 inline-block" />
+                    Revisado por especialista
+                  </div>
+                ) : (
+                  <div className="mt-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[.15em] uppercase text-blue-400/70">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60 inline-block" />
+                    Revisado por médico
+                  </div>
+                )
               )}
             </Link>
           ))}
