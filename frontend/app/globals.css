@@ -154,3 +154,13 @@ body {
 .ce-pulse {
   animation: ce-pulse 1.8s ease-in-out infinite;
 }
+
+@keyframes aliis-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-8px); opacity: 1; }
+}
+
+@keyframes aliis-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+}

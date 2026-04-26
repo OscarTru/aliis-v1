@@ -2,9 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, Pill, ClipboardList, HelpCircle, Check, Loader } from 'lucide-react'
+import { Stethoscope, Pill, ClipboardList, HelpCircle, Check } from 'lucide-react'
 import { UpgradeModal } from '@/components/UpgradeModal'
-import { ScribbleBrain } from '@/components/ui/ScribbleBrain'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -393,33 +392,72 @@ export default function IngresoPage() {
           {/* ── Generating ── */}
           {step === 'generating' && (
             <div className="ce-fade flex flex-col items-center justify-center gap-8 min-h-[60vh]">
-              <div className="ce-pulse">
-                <ScribbleBrain size={80} />
+
+              {/* Typing indicator — 3 bouncing squares */}
+              <div className="flex items-end gap-[6px]">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="block w-3 h-3 rounded-[3px] bg-primary"
+                    style={{ animation: `aliis-bounce 1.1s ease-in-out ${i * 0.18}s infinite` }}
+                  />
+                ))}
               </div>
 
-              <div className="text-center">
+              {/* Stage text */}
+              <div className="text-center px-6">
                 <Eyebrow>· Destilando ·</Eyebrow>
-                <h2 aria-live="polite" className="font-serif text-[24px] tracking-[-0.02em] mt-3 min-h-[36px] transition-opacity duration-300">
+                <h2 aria-live="polite" className="font-serif text-[22px] tracking-[-0.02em] mt-3 min-h-[32px]">
                   {STAGES[stageIdx]}
                 </h2>
               </div>
 
+              {/* Progress bar + circle side by side */}
+              <div className="flex items-center gap-5 w-full max-w-[300px]">
+                {/* Linear progress bar */}
+                <div className="flex-1 h-[3px] bg-border rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${Math.round(((stageIdx + 1) / STAGES.length) * 100)}%` }}
+                  />
+                </div>
+                {/* Circular progress */}
+                <svg width="32" height="32" viewBox="0 0 32 32" className="shrink-0 -rotate-90">
+                  <circle cx="16" cy="16" r="13" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
+                  <circle
+                    cx="16" cy="16" r="13" fill="none"
+                    stroke="hsl(var(--primary))" strokeWidth="2.5"
+                    strokeDasharray={`${2 * Math.PI * 13}`}
+                    strokeDashoffset={`${2 * Math.PI * 13 * (1 - (stageIdx + 1) / STAGES.length)}`}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 0.7s ease-out' }}
+                  />
+                </svg>
+              </div>
+
+              {/* Stages list */}
               <div className="flex flex-col gap-[10px] w-full max-w-[300px]">
                 {STAGES.map((stage, i) => (
                   <div
                     key={i}
                     className={cn(
-                      'flex items-center gap-3 font-sans text-[14px]',
-                      i < stageIdx ? 'text-primary' : i === stageIdx ? 'text-foreground' : 'text-muted-foreground/40'
+                      'flex items-center gap-3 font-sans text-[13px]',
+                      i < stageIdx ? 'text-primary' : i === stageIdx ? 'text-foreground' : 'text-muted-foreground/35'
                     )}
                   >
-                    <span className="w-5 shrink-0 inline-flex items-center justify-center">
-                      {i < stageIdx ? <Check size={14} /> : i === stageIdx ? <Loader size={14} className="animate-spin" /> : '○'}
+                    <span className="w-4 shrink-0 inline-flex items-center justify-center">
+                      {i < stageIdx
+                        ? <Check size={13} />
+                        : i === stageIdx
+                        ? <span className="block w-[6px] h-[6px] rounded-full bg-primary" style={{ animation: 'aliis-pulse 1s ease-in-out infinite' }} />
+                        : <span className="block w-[5px] h-[5px] rounded-full bg-muted-foreground/25" />
+                      }
                     </span>
                     {stage}
                   </div>
                 ))}
               </div>
+
             </div>
           )}
 
