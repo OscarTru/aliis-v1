@@ -6,6 +6,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 export async function POST(req: Request) {
   const {
     question,
+    history,
     dx,
     chapterTitle,
     chapterContent,
@@ -115,11 +116,23 @@ Responde en español.`
   // instead of an unhandled rejection if the Anthropic API is unreachable or returns an error.
   let stream
   try {
+    // Build conversation history — cap at last 20 turns to stay within token limits
+    const safeHistory = Array.isArray(history) ? history.slice(-20) : []
+    const historyMessages = safeHistory
+      .filter((m: { role: string; content: string }) =>
+        (m.role === 'user' || m.role === 'assistant') &&
+        typeof m.content === 'string' && m.content.trim()
+      )
+      .map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content.trim().slice(0, 2000),
+      }))
+
     stream = await client.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
       system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: question.trim() }],
+      messages: [...historyMessages, { role: 'user', content: question.trim() }],
     })
   } catch {
     return new Response(JSON.stringify({ error: 'Error al contactar la IA' }), {
