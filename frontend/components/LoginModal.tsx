@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
@@ -21,17 +21,29 @@ const SLIDE = {
   transition: { duration: 0.18, ease: [0.25, 0, 0, 1] as const },
 }
 
-export function LoginModal({ onClose }: { onClose: () => void }) {
+export function LoginModal({ onClose, initialView }: { onClose: () => void; initialView?: View }) {
   const router = useRouter()
-  const [view, setView] = useState<View>('login')
+  const searchParams = useSearchParams()
+  const [view, setView] = useState<View>(initialView ?? 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [inviteValidated, setInviteValidated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+
+  // Pre-fill invite code from URL ?invite=
+  useEffect(() => {
+    const code = searchParams?.get('invite')
+    if (code) {
+      setInviteCode(code.toUpperCase())
+      setView('signup')
+    }
+  }, [searchParams])
 
   const title: Record<View, string> = {
     login: 'Bienvenido de vuelta',
@@ -58,14 +70,35 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
     setConfirmPassword('')
     setFirstName('')
     setLastName('')
+    setInviteValidated(false)
   }
 
-  async function handleGoogleSignIn() {
-    setGoogleLoading(true)
+  async function handleGoogleSignIn(requireInvite = false) {
+    const codeToUse = inviteCode.trim().toUpperCase()
+    if (requireInvite) {
+      if (!codeToUse) { setError('El código de invitación es obligatorio.'); return }
+      setGoogleLoading(true)
+      const validateRes = await fetch('/api/invite/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: codeToUse }),
+      })
+      const validateData = await validateRes.json()
+      if (!validateData.valid) {
+        setError(validateData.error ?? 'Código de invitación no válido.')
+        setGoogleLoading(false)
+        return
+      }
+    } else {
+      setGoogleLoading(true)
+    }
     const supabase = createClient()
+    const callbackUrl = requireInvite
+      ? `${window.location.origin}/auth/callback?invite=${encodeURIComponent(codeToUse)}`
+      : `${window.location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     })
   }
 
@@ -88,6 +121,23 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
     if (view === 'signup') {
       if (!firstName.trim()) { setError('El nombre es obligatorio.'); setLoading(false); return }
       if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); setLoading(false); return }
+
+      // Validate invite code server-side
+      const codeToUse = inviteCode.trim().toUpperCase()
+      if (!codeToUse) { setError('El código de invitación es obligatorio.'); setLoading(false); return }
+
+      const validateRes = await fetch('/api/invite/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: codeToUse }),
+      })
+      const validateData = await validateRes.json()
+      if (!validateData.valid) {
+        setError(validateData.error ?? 'Código de invitación no válido.')
+        setLoading(false)
+        return
+      }
+
       const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
       const { error: signUpErr } = await supabase.auth.signUp({
         email,
@@ -96,6 +146,15 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
       })
       setLoading(false)
       if (signUpErr) { setError(err(signUpErr.message)); return }
+
+      // Mark code as used (best-effort, non-blocking — user is now created)
+      fetch('/api/invite/consume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: codeToUse }),
+      }).catch(() => {})
+
+      setInviteValidated(true)
       setView('verify-email')
       return
     }
@@ -163,7 +222,8 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
                 {title.login}
               </p>
               <button
-                onClick={handleGoogleSignIn}
+                type="button"
+                onClick={() => handleGoogleSignIn(false)}
                 disabled={googleLoading}
                 className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-foreground font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
               >
@@ -195,13 +255,36 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
               <p className="font-serif italic text-[17px] text-muted-foreground text-center mb-6">
                 {title.signup}
               </p>
+
+              {/* Invite code field */}
+              <div className="mb-5">
+                <label className="block font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/60 mb-1.5">
+                  Código de invitación
+                </label>
+                <Input
+                  type="text"
+                  placeholder="ALIIS-BETA-XXXX"
+                  value={inviteCode}
+                  onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setError(null) }}
+                  className={inputCls + ' font-mono tracking-widest'}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                {inviteCode && (
+                  <p className="font-sans text-[11px] text-muted-foreground/50 mt-1">
+                    Si recibiste un link de invitación ya está pre-llenado.
+                  </p>
+                )}
+              </div>
+
               <button
-                onClick={handleGoogleSignIn}
+                type="button"
+                onClick={() => handleGoogleSignIn(true)}
                 disabled={googleLoading}
                 className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-foreground font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
               >
                 <GoogleIcon />
-                {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
+                {googleLoading ? 'Verificando…' : 'Continuar con Google'}
               </button>
               <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -214,7 +297,7 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button type="submit" disabled={loading} className={submitCls}>
-                  {loading ? 'Cargando…' : 'Crear cuenta'}
+                  {loading ? 'Verificando…' : 'Crear cuenta'}
                 </Button>
               </form>
               <Footer>
