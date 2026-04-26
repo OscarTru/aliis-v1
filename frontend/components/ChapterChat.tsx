@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { FormattedText } from '@/components/FormattedText'
 
 type Message = { role: 'user' | 'assistant'; text: string }
 
@@ -156,14 +158,14 @@ export function ChapterChat({
           {messages.map((m, i) => (
             <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
               {m.role === 'assistant' && (
-                <div className="w-7 h-7 rounded-full bg-primary shrink-0 mr-2.5 mt-0.5 flex items-center justify-center font-serif text-[12px] text-white font-semibold">
-                  A
+                <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 mr-2.5 mt-0.5 border border-border bg-background">
+                  <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} className="w-full h-full object-contain" />
                 </div>
               )}
               <div className={cn(
                 'max-w-[82%]',
                 m.role === 'user'
-                  ? 'bg-foreground shadow-[var(--c-btn-primary-shadow)] rounded-[14px_14px_4px_14px] px-[14px] py-[10px]'
+                  ? 'bg-foreground rounded-[14px_14px_4px_14px] px-[14px] py-[10px]'
                   : 'bg-muted border border-border rounded-[4px_14px_14px_14px] px-[18px] py-[14px]'
               )}>
                 {m.role === 'assistant' && m.text === '' ? (
@@ -172,13 +174,12 @@ export function ChapterChat({
                       <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary" style={{ animationDelay: `${j * 0.2}s` }} />
                     ))}
                   </div>
-                ) : (
-                  <p className={cn(
-                    'font-sans text-[14px] leading-[1.65] m-0 whitespace-pre-wrap',
-                    m.role === 'user' ? 'text-white' : 'text-foreground'
-                  )}>
+                ) : m.role === 'user' ? (
+                  <p className="font-sans text-[14px] leading-[1.65] m-0 whitespace-pre-wrap !text-black">
                     {m.text}
                   </p>
+                ) : (
+                  <FormattedText text={m.text} />
                 )}
               </div>
             </div>
