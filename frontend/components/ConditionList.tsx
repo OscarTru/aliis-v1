@@ -17,18 +17,47 @@ type Condition = {
 
 const PAGE_SIZE = 6
 
+function normalize(s: string) {
+  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)])
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+  return dp[m][n]
+}
+
+function fuzzyMatch(q: string, target: string): boolean {
+  const nq = normalize(q)
+  const nt = normalize(target)
+  if (nt.includes(nq)) return true
+  // Check each word in target against query for short-distance typos
+  const words = nt.split(/\s+/)
+  const threshold = Math.floor(nq.length / 4) + 1  // 1 error per ~4 chars
+  return words.some((w) => {
+    if (Math.abs(w.length - nq.length) > threshold) return false
+    return levenshtein(nq, w.slice(0, nq.length + threshold)) <= threshold
+  })
+}
+
 export function ConditionList({ conditions }: { conditions: Condition[] }) {
   const [query, setQuery] = useState('')
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim()
     if (!q) return conditions
     return conditions.filter(
       (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.subtitle.toLowerCase().includes(q) ||
-        c.specialty.toLowerCase().includes(q)
+        fuzzyMatch(q, c.name) ||
+        fuzzyMatch(q, c.subtitle) ||
+        fuzzyMatch(q, c.specialty)
     )
   }, [query, conditions])
 
