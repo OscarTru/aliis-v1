@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { classifyIntent } from '../lib/classifier'
 import { enrichContext } from '../lib/enricher'
 import { generatePack } from '../lib/generator'
+import { resolveLibraryMatch } from '../lib/library-resolver'
 import { verifyReferences } from '../lib/verifier'
 import { EMERGENCY_RESPONSE, BLOCKED_MESSAGES } from '../lib/emergency'
 import { supabase } from '../index'
@@ -28,7 +29,7 @@ packRouter.post('/generate', async (req, res) => {
     return
   }
 
-  const { diagnostico, contexto, userId, userPlan } = req.body
+  const { diagnostico, conditionSlug, contexto, userId, userPlan } = req.body
   const dx = diagnostico.trim()
 
   if (!dx) {
@@ -95,19 +96,30 @@ packRouter.post('/generate', async (req, res) => {
     return
   }
 
-  // Layer 3: generate pack
+  // Layer 3: resolve library match
+  console.log('[pack/generate] resolving library match')
+  let libraryMatch = null
+  try {
+    libraryMatch = await resolveLibraryMatch(dx, conditionSlug)
+    console.log('[pack/generate] library match:', libraryMatch?.slug ?? 'none')
+  } catch (err) {
+    console.error('[pack/generate] library resolver error (non-fatal):', err)
+    // Non-fatal: proceed without library augmentation
+  }
+
+  // Layer 4: generate pack
   console.log('[pack/generate] generating pack')
   let generated
   try {
-    generated = await generatePack(dx, context)
-    console.log('[pack/generate] pack generated OK')
+    generated = await generatePack(dx, context, libraryMatch)
+    console.log('[pack/generate] pack generated OK, tools:', generated.tools?.length ?? 0)
   } catch (err) {
     console.error('[pack/generate] generator error:', err)
     res.status(500).json({ error: 'Error generando el pack. Intenta de nuevo.' })
     return
   }
 
-  // Layer 4: verify DOIs
+  // Layer 5: verify DOIs
   const verifiedRefs = await verifyReferences(generated.references)
 
   // Persist to Supabase — note: column is "refs", not "references"
@@ -119,6 +131,8 @@ packRouter.post('/generate', async (req, res) => {
     summary: generated.summary,
     chapters: generated.chapters,
     refs: verifiedRefs,
+    condition_slug: libraryMatch?.slug ?? null,
+    tools: generated.tools ?? [],
   })
 
   if (insertError) {
@@ -127,7 +141,7 @@ packRouter.post('/generate', async (req, res) => {
     return
   }
 
-  // Layer 5: disclaimer is added programmatically on the frontend, not here
+  // Layer 6: disclaimer is added programmatically on the frontend, not here
   res.json({
     pack: {
       id: packId,
@@ -137,6 +151,8 @@ packRouter.post('/generate', async (req, res) => {
       summary: generated.summary,
       chapters: generated.chapters,
       references: verifiedRefs,
+      conditionSlug: libraryMatch?.slug ?? null,
+      tools: generated.tools ?? [],
     },
     references: verifiedRefs,
   })
