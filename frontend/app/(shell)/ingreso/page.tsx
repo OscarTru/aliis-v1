@@ -443,13 +443,13 @@ export default function IngresoPage() {
           {step === 'generating' && (
             <div className="ce-fade flex flex-col items-center justify-center gap-8 min-h-[60vh] w-full">
 
-              {/* 2×2 grid of bouncing squares — wave pattern */}
-              <div className="grid grid-cols-2 gap-[5px]">
-                {[0, 1, 2, 3].map((i) => (
+              {/* 3 squares — wave bounce */}
+              <div className="flex items-end gap-[6px]">
+                {[0, 1, 2].map((i) => (
                   <span
                     key={i}
-                    className="block w-[10px] h-[10px] rounded-[2px] bg-primary"
-                    style={{ animation: `aliis-bounce 1.2s ease-in-out ${[0, 0.15, 0.15, 0.3][i]}s infinite` }}
+                    className="block w-[11px] h-[11px] rounded-[3px] bg-primary"
+                    style={{ animation: `aliis-bounce 1.2s ease-in-out ${i * 0.18}s infinite` }}
                   />
                 ))}
               </div>
@@ -466,26 +466,20 @@ export default function IngresoPage() {
                 </h2>
               </div>
 
-              {/* Progress bar + circle */}
-              <div className="flex items-center gap-4 w-full max-w-[300px]">
-                <div className="flex-1 h-[3px] bg-border rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full"
-                    style={{ width: `${progress}%`, transition: 'width 0.8s linear' }}
-                  />
-                </div>
-                <svg width="30" height="30" viewBox="0 0 30 30" className="shrink-0 -rotate-90">
-                  <circle cx="15" cy="15" r="12" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
+              {/* Circle progress + percentage */}
+              <div className="flex items-center gap-3">
+                <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0 -rotate-90">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
                   <circle
-                    cx="15" cy="15" r="12" fill="none"
-                    stroke="hsl(var(--primary))" strokeWidth="2.5"
+                    cx="22" cy="22" r="18" fill="none"
+                    stroke="hsl(var(--primary))" strokeWidth="3"
                     strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 12}`}
-                    strokeDashoffset={`${2 * Math.PI * 12 * (1 - progress / 100)}`}
+                    strokeDasharray={`${2 * Math.PI * 18}`}
+                    strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
                     style={{ transition: 'stroke-dashoffset 0.8s linear' }}
                   />
                 </svg>
-                <span className="font-mono text-[11px] text-muted-foreground/60 w-9 text-right shrink-0">
+                <span className="font-mono text-[15px] text-foreground/70 tabular-nums">
                   {Math.round(progress)}%
                 </span>
               </div>
