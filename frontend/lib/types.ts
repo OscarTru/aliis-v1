@@ -8,6 +8,11 @@ export interface Reference {
   verified?: boolean
 }
 
+export interface Tool {
+  title: string
+  description: string
+}
+
 export interface Chapter {
   id: string
   n: string
@@ -21,6 +26,7 @@ export interface Chapter {
   questions?: string[]
   alarms?: { tone: 'red' | 'amber'; t: string; d: string }[]
   practices?: { t: string; d: string }[]
+  tools?: Tool[]
 }
 
 export interface Pack {
@@ -31,6 +37,8 @@ export interface Pack {
   summary: string
   chapters: Chapter[]
   references: Reference[]
+  conditionSlug: string | null
+  tools: Tool[]
 }
 
 export type IntentClass = 'SAFE' | 'DOSE' | 'DIAGN' | 'EMERG' | 'OOD'
