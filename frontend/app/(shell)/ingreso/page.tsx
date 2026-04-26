@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Stethoscope, Pill, ClipboardList, HelpCircle } from 'lucide-react'
+import { Stethoscope, Pill, ClipboardList, HelpCircle, Check, Loader } from 'lucide-react'
 import { UpgradeModal } from '@/components/UpgradeModal'
+import { ScribbleBrain } from '@/components/ui/ScribbleBrain'
+import { Eyebrow } from '@/components/ui/Eyebrow'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -11,12 +13,12 @@ import { Button } from '@/components/ui/button'
 
 type Step = 'dx' | 'frecuencia' | 'dudas' | 'generating'
 
-const CHAPTERS = [
-  { n: '01', label: '¿Qué es exactamente?', w: '55%', delay: 0 },
-  { n: '02', label: '¿Qué pasa en mi cuerpo?', w: '62%', delay: 0.6 },
-  { n: '03', label: '¿Qué esperar?', w: '48%', delay: 1.2 },
-  { n: '04', label: '¿Qué preguntar en mi consulta?', w: '58%', delay: 1.8 },
-  { n: '05', label: '¿Cuándo actuar?', w: '40%', delay: 2.4 },
+const STAGES = [
+  'Analizando tu diagnóstico…',
+  'Destilando la información…',
+  'Verificando referencias científicas…',
+  'Preparando tus preguntas para el médico…',
+  'Casi listo…',
 ]
 
 const FRECUENCIA_OPTIONS = [
@@ -43,6 +45,7 @@ export default function IngresoPage() {
   const [dudasCustom, setDudasCustom] = useState('')
   const [loading, setLoading] = useState(false)
   const [pendingPackId, setPendingPackId] = useState<string | null>(null)
+  const [stageIdx, setStageIdx] = useState(0)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const dxInputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -56,10 +59,21 @@ export default function IngresoPage() {
     setDudas('')
     setDudasCustom('')
     setPendingPackId(null)
+    setStageIdx(0)
   }, [])
 
   useEffect(() => {
     if (step === 'dx') dxInputRef.current?.focus()
+  }, [step])
+
+  // Cycle stage text while generating
+  useEffect(() => {
+    if (step !== 'generating') return
+    setStageIdx(0)
+    const interval = setInterval(() => {
+      setStageIdx((i) => Math.min(i + 1, STAGES.length - 1))
+    }, 1400)
+    return () => clearInterval(interval)
   }, [step])
 
   // Poll Supabase while generating — redirect when pack is ready
@@ -160,7 +174,7 @@ export default function IngresoPage() {
   return (
     <>
       <>
-        <div className="max-w-[560px] mx-auto px-6 pt-12 pb-20">
+        <div className={cn(step === 'generating' ? 'flex items-center justify-center min-h-screen' : 'max-w-[560px] mx-auto px-6 pt-12 pb-20')}>
 
           {/* ── Step 1: diagnóstico ── */}
           {step === 'dx' && (
@@ -378,32 +392,34 @@ export default function IngresoPage() {
 
           {/* ── Generating ── */}
           {step === 'generating' && (
-            <div className="ce-fade">
-              <div className="mb-8">
-                <div className="font-mono text-[10px] tracking-[.18em] uppercase text-primary mb-[10px]">
-                  · Construyendo tu explicación ·
-                </div>
-                <div className="shimmer h-8 w-[70%] rounded-lg mb-2" />
-                <div className="shimmer h-4 w-[45%] rounded-md" />
+            <div className="ce-fade flex flex-col items-center justify-center gap-8 min-h-[60vh]">
+              <div className="ce-pulse">
+                <ScribbleBrain size={80} />
               </div>
 
-              {CHAPTERS.map((ch, i) => (
-                <div
-                  key={i}
-                  className="px-[22px] py-[18px] bg-muted rounded-[14px] border border-border mb-[10px] opacity-0"
-                  style={{ animation: `ce-fade-in 0.5s ease forwards`, animationDelay: `${ch.delay}s` }}
-                >
-                  <div className="font-mono text-[9px] tracking-[.15em] uppercase text-primary mb-2">{ch.n}</div>
-                  <div className="font-serif text-[16px] tracking-[-0.01em] text-foreground mb-3">{ch.label}</div>
-                  <div className="shimmer h-[11px] rounded-[5px] mb-[6px]" style={{ width: ch.w }} />
-                  <div className="shimmer h-[11px] rounded-[5px] mb-[6px] w-[80%]" />
-                  <div className="shimmer h-[11px] rounded-[5px] w-[35%]" />
-                </div>
-              ))}
+              <div className="text-center">
+                <Eyebrow>· Destilando ·</Eyebrow>
+                <h2 aria-live="polite" className="font-serif text-[24px] tracking-[-0.02em] mt-3 min-h-[36px] transition-opacity duration-300">
+                  {STAGES[stageIdx]}
+                </h2>
+              </div>
 
-              <p className="font-sans text-[13px] text-muted-foreground/60 text-center mt-5">
-                Esto toma unos segundos…
-              </p>
+              <div className="flex flex-col gap-[10px] w-full max-w-[300px]">
+                {STAGES.map((stage, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'flex items-center gap-3 font-sans text-[14px]',
+                      i < stageIdx ? 'text-primary' : i === stageIdx ? 'text-foreground' : 'text-muted-foreground/40'
+                    )}
+                  >
+                    <span className="w-5 shrink-0 inline-flex items-center justify-center">
+                      {i < stageIdx ? <Check size={14} /> : i === stageIdx ? <Loader size={14} className="animate-spin" /> : '○'}
+                    </span>
+                    {stage}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
