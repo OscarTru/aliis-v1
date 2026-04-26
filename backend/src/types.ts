@@ -34,7 +34,7 @@ export interface GeneratedPack {
   summary: string
   chapters: Chapter[]
   references: Reference[]
-  tools: Tool[]
+  tools?: Tool[]
 }
 
 export interface GeneratePackRequest {

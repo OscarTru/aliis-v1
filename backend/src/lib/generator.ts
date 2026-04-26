@@ -119,7 +119,8 @@ export async function generatePack(
     `Diagnóstico: ${diagnostico}`,
     context.nombre ? `Paciente: ${context.nombre}` : null,
     context.para === 'familiar' ? 'Este pack es para un familiar del paciente.' : null,
-    context.frecuencia ? `Frecuencia: ${context.frecuencia}` : null,
+    context.para === 'acompanando' ? 'El lector está acompañando a alguien con este diagnóstico.' : null,
+    context.emocion ? `Estado emocional del paciente: ${context.emocion}` : null,
     context.dudas ? `Dudas principales: ${context.dudas}` : null,
     context.previousDx.length > 0
       ? `Diagnósticos previos del paciente: ${context.previousDx.join(', ')}`

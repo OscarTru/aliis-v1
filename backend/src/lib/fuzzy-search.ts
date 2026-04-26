@@ -19,6 +19,7 @@ export function levenshtein(a: string, b: string): number {
 export function fuzzyScore(q: string, target: string): number {
   const nq = normalize(q)
   const nt = normalize(target)
+  if (nq.length === 0) return 0
   if (nt === nq) return 1
   if (nt.includes(nq)) return 0.95
   const words = nt.split(/\s+/)

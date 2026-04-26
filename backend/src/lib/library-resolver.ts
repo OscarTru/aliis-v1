@@ -41,11 +41,12 @@ function formatSectionContent(content: Record<string, unknown>): string {
 }
 
 async function loadSections(conditionId: string): Promise<MatchedCondition['sections']> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('condition_sections')
     .select('slug, title, content')
     .eq('condition_id', conditionId)
     .order('order')
+  if (error) console.error('[library-resolver] loadSections error:', error.message)
   return (data ?? []).map((s: { slug: string; title: string; content: Record<string, unknown> }) => ({
     slug: s.slug,
     title: s.title,
@@ -59,22 +60,27 @@ export async function resolveLibraryMatch(
 ): Promise<MatchedCondition | null> {
   // Path 1: slug provided by frontend combobox selection — direct lookup
   if (conditionSlug) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('conditions')
       .select('id, slug, name')
       .eq('slug', conditionSlug)
       .eq('published', true)
       .single()
+    if (error && error.code !== 'PGRST116') console.error('[library-resolver] slug lookup error:', error.message)
     if (!data) return null
     const sections = await loadSections(data.id)
     return { slug: data.slug, name: data.name, sections }
   }
 
   // Path 2: free-text dx — fuzzy match with high threshold
-  const { data: all } = await supabase
+  const { data: all, error: allError } = await supabase
     .from('conditions')
     .select('id, slug, name')
     .eq('published', true)
+  if (allError) {
+    console.error('[library-resolver] conditions fetch error:', allError.message)
+    return null
+  }
   if (!all || all.length === 0) return null
 
   let bestScore = 0
