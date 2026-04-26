@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, MessageCircle } from 'lucide-react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
-import { ChapterChat } from '@/components/ChapterChat'
+import { ChatDrawer } from '@/components/ChatDrawer'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
 
@@ -26,9 +26,9 @@ function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: strin
 }
 
 function ChapterCard({
-  chapter, packId, userId, dx, onRead, conditionSlug, packContext,
+  chapter, packId, userId, dx, onRead, conditionSlug, packContext, onOpenChat,
 }: {
-  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string
+  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void
 }) {
   const markedRef = useRef(false)
 
@@ -119,31 +119,31 @@ function ChapterCard({
         </Link>
       )}
 
-      <ChapterChat
-        dx={dx}
-        packId={packId}
-        userId={userId}
-        chapterId={chapter.id}
-        chapterTitle={`${chapter.kicker} ${chapter.kickerItalic}`}
-        chapterContent={[
-          chapter.tldr,
-          ...(chapter.paragraphs ?? []),
-          chapter.callout?.body ?? '',
-          ...(chapter.timeline?.map((t) => `${t.w}: ${t.t}`) ?? []),
-          ...(chapter.questions ?? []),
-          ...(chapter.alarms?.map((a) => `${a.t}: ${a.d}`) ?? []),
-        ].filter(Boolean).join('\n\n')}
-        packContext={packContext}
-      />
+      <div className="mt-8 flex items-center justify-between gap-4 px-5 py-4 bg-muted rounded-[14px]">
+        <p className="font-sans text-[13px] text-muted-foreground leading-[1.4] m-0">
+          ¿Cómo entendiste? ¿Tienes dudas?
+        </p>
+        <button
+          onClick={onOpenChat}
+          className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-foreground text-background border-none font-sans text-[13px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
+        >
+          <MessageCircle size={13} />
+          Pregúntale a Aliis
+        </button>
+      </div>
     </div>
   )
 }
 
 export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?: string; conditionSlug?: string | null }) {
-  const { activeIdx, readChapters, setPack, setActiveIdx, markRead } = usePackContext()
+  const { activeIdx, readChapters, setPack, setActiveIdx, markRead, setChatOpen } = usePackContext()
   const verifiedRefs = pack.references.filter((r) => r.verified !== false)
   const chapter = pack.chapters[activeIdx]
   const isLast = activeIdx === pack.chapters.length - 1
+
+  const packContext = pack.chapters.map((ch) =>
+    [`## ${ch.kicker} ${ch.kickerItalic}`, ch.tldr, ...(ch.paragraphs ?? [])].join('\n')
+  ).join('\n\n')
 
   // Register pack data into context so Sidebar can render chapter nav
   useEffect(() => {
@@ -153,6 +153,13 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
 
   return (
     <div className="flex flex-col h-full">
+      <ChatDrawer
+        dx={pack.dx}
+        packId={pack.id}
+        userId={userId}
+        packContext={packContext}
+      />
+
       {activeIdx < pack.chapters.length ? (
         <>
           <div className="flex-1 overflow-hidden">
@@ -164,9 +171,8 @@ export function PackView({ pack, userId, conditionSlug }: { pack: Pack; userId?:
               dx={pack.dx}
               onRead={markRead}
               conditionSlug={conditionSlug}
-              packContext={pack.chapters.map((ch) =>
-                [`## ${ch.kicker} ${ch.kickerItalic}`, ch.tldr, ...(ch.paragraphs ?? [])].join('\n')
-              ).join('\n\n')}
+              packContext={packContext}
+              onOpenChat={() => setChatOpen(true)}
             />
           </div>
 
