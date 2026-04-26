@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { PageHeader } from '@/components/PageHeader'
 import { DiarioNotesSection } from '@/components/DiarioNotesSection'
 import { SymptomsSection } from '@/components/SymptomsSection'
 import type { NoteWithPack, SymptomLog } from '@/lib/types'
@@ -47,13 +46,29 @@ export default async function DiarioPage() {
   const logs: SymptomLog[] = (symptomsResult.data ?? []) as SymptomLog[]
 
   return (
-    <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
-      <PageHeader
-        eyebrow="Mi diario"
-        title={<>Tu <em>diario</em> de salud</>}
-      />
-      <DiarioNotesSection notes={notes} />
-      <SymptomsSection initialLogs={logs} />
+    <div className="px-8 pt-10 pb-20 max-w-[1200px] mx-auto">
+      {/* Page header */}
+      <div className="mb-8">
+        <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-1">
+          Mi diario
+        </p>
+        <h1 className="font-serif text-[28px] leading-[1.2] text-foreground m-0">
+          Tu <em>diario</em> de salud
+        </h1>
+      </div>
+
+      {/* Two-column dashboard grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Left column — Notes */}
+        <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
+          <DiarioNotesSection notes={notes} />
+        </div>
+
+        {/* Right column — Symptoms */}
+        <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
+          <SymptomsSection initialLogs={logs} />
+        </div>
+      </div>
     </div>
   )
 }

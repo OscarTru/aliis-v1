@@ -317,18 +317,20 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
     }))
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-5">
+    <div className="flex flex-col h-full">
+      <div className={cn('flex items-center mb-5', logs.length > 0 ? 'justify-between' : '')}>
         <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50">
           Síntomas y signos vitales
         </p>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
-        >
-          <Plus size={13} />
-          Registrar
-        </button>
+        {logs.length > 0 && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
+          >
+            <Plus size={13} />
+            Registrar
+          </button>
+        )}
       </div>
 
       {logs.length > 0 && (
@@ -390,7 +392,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
       )}
 
       {logs.length === 0 ? (
-        <div className="text-center py-10">
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
           <p className="font-serif italic text-[15px] text-muted-foreground mb-4 leading-relaxed">
             Aún no tienes registros de síntomas.<br />Empieza a llevar tu control hoy.
           </p>
@@ -403,7 +405,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-y-auto">
           {logs.map(log => (
             <div key={log.id} className="flex items-start gap-3 p-4 bg-muted rounded-xl">
               <div className="flex-1 flex flex-col gap-1.5">

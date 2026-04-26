@@ -13,7 +13,7 @@ export default async function BibliotecaPage() {
   return (
     <div className="max-w-[900px] mx-auto px-8 pt-10 pb-20">
       <PageHeader
-        eyebrow="Neurología · Aliis"
+        eyebrow="Base de datos · Aliis"
         title="Biblioteca de diagnósticos"
         subtitle="Explicaciones enciclopédicas escritas por residentes de neurología."
       />

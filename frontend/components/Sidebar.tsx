@@ -178,12 +178,19 @@ export function Sidebar() {
         </Tooltip>
 
         {/* Logo */}
-        <div className={cn('flex items-center h-14 shrink-0 overflow-hidden', collapsed ? 'justify-center px-0' : 'px-4')}>
-          <Link href="/historial" className="flex items-center no-underline">
-            {collapsed
-              ? <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} className="object-contain" />
-              : <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={30} className="object-contain" />
-            }
+        <div className="flex items-center justify-center shrink-0 w-full px-3 pt-5 pb-2">
+          <Link href="/historial" className="flex items-center justify-center no-underline w-full">
+            {collapsed ? (
+              <>
+                <Image src="/assets/aliis-logo.png" alt="Aliis" width={30} height={30} className="object-contain dark:hidden" />
+                <Image src="/assets/aliis-black-single.png" alt="Aliis" width={30} height={30} className="object-contain hidden dark:block" />
+              </>
+            ) : (
+              <>
+                <Image src="/assets/aliis-original.png" alt="Aliis" width={88} height={32} className="object-contain dark:hidden" />
+                <Image src="/assets/aliis-black.png" alt="Aliis" width={88} height={32} className="object-contain hidden dark:block" />
+              </>
+            )}
           </Link>
         </div>
 
