@@ -90,7 +90,7 @@ function LogModal({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-serif text-[20px]">Nuevo registro</DialogTitle>
         </DialogHeader>
@@ -102,7 +102,7 @@ function LogModal({
               value={fields.glucose}
               onChange={e => setFields(f => ({ ...f, glucose: e.target.value }))}
               placeholder="mg/dL"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
@@ -114,14 +114,14 @@ function LogModal({
                 value={fields.bp_systolic}
                 onChange={e => setFields(f => ({ ...f, bp_systolic: e.target.value }))}
                 placeholder="Sistólica mmHg"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+                className="flex-1 min-w-0 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <input
                 type="number"
                 value={fields.bp_diastolic}
                 onChange={e => setFields(f => ({ ...f, bp_diastolic: e.target.value }))}
                 placeholder="Diastólica mmHg"
-                className="flex-1 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+                className="flex-1 min-w-0 rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
@@ -133,7 +133,7 @@ function LogModal({
               value={fields.heart_rate}
               onChange={e => setFields(f => ({ ...f, heart_rate: e.target.value }))}
               placeholder="lpm"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
@@ -145,7 +145,7 @@ function LogModal({
                 value={fields.weight}
                 onChange={e => setFields(f => ({ ...f, weight: e.target.value }))}
                 placeholder="kg"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             <div className="flex flex-col gap-1 flex-1">
@@ -155,7 +155,7 @@ function LogModal({
                 value={fields.temperature}
                 onChange={e => setFields(f => ({ ...f, temperature: e.target.value }))}
                 placeholder="°C"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
