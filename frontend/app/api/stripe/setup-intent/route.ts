@@ -24,10 +24,11 @@ export async function POST() {
   if (!customerId) {
     const customer = await stripe.customers.create({ email: user.email })
     customerId = customer.id
-    await supabase
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({ stripe_customer_id: customerId })
       .eq('id', user.id)
+    if (updateError) console.error('Failed to persist stripe_customer_id:', updateError)
   }
 
   const setupIntent = await stripe.setupIntents.create({
@@ -35,5 +36,8 @@ export async function POST() {
     usage: 'off_session',
   })
 
+  if (!setupIntent.client_secret) {
+    return NextResponse.json({ error: 'No se pudo crear el SetupIntent' }, { status: 500 })
+  }
   return NextResponse.json({ clientSecret: setupIntent.client_secret })
 }
