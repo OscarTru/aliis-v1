@@ -203,7 +203,7 @@ function PaymentForm({
       <div className="flex items-center justify-center gap-2 text-muted-foreground/40">
         <ShieldCheck size={13} strokeWidth={1.5} />
         <span className="font-sans text-[11px]">Pago seguro · Powered by</span>
-        <span className="font-sans font-medium text-[11px] tracking-tight">Stripe</span>
+        <span className="font-sans font-bold text-[13px] tracking-tight">Stripe</span>
       </div>
     </form>
   )
