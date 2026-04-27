@@ -52,16 +52,19 @@ export async function POST(req: Request) {
     })
 
     // Create subscription with 14-day trial
-    await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }],
-      trial_period_days: 14,
-      default_payment_method: paymentMethodId,
-      metadata: { userId: user.id },
-    })
+    await stripe.subscriptions.create(
+      {
+        customer: customerId,
+        items: [{ price: priceId }],
+        trial_period_days: 14,
+        default_payment_method: paymentMethodId,
+        metadata: { userId: user.id },
+      },
+      { idempotencyKey: `sub_${user.id}_${priceKey}` }
+    )
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Error al crear la suscripción'
-    return NextResponse.json({ error: message }, { status: 502 })
+    console.error('[stripe/subscribe]', err)
+    return NextResponse.json({ error: 'Error al crear la suscripción' }, { status: 502 })
   }
 
   return NextResponse.json({ ok: true })
