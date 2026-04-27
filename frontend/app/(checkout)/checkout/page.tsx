@@ -33,11 +33,9 @@ export default async function CheckoutPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <CheckoutForm
-        initialPriceKey={priceKey}
-        publishableKey={publishableKey}
-      />
-    </div>
+    <CheckoutForm
+      initialPriceKey={priceKey}
+      publishableKey={publishableKey}
+    />
   )
 }
