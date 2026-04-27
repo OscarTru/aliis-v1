@@ -437,21 +437,16 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
           ) : (
             <div className="h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 32 }}>
+                <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis
-                    dataKey="ts"
-                    type="number"
-                    scale="time"
-                    domain={['dataMin', 'dataMax']}
-                    tickFormatter={(v: number) => format(new Date(v), 'dd/MM HH:mm')}
-                    tick={{ fontSize: 10, fontFamily: 'var(--font-mono)', angle: -35, textAnchor: 'end', dy: 4 }}
+                    dataKey="date"
+                    tick={{ fontSize: 10, fontFamily: 'var(--font-mono)' }}
                     tickLine={false}
-                    minTickGap={60}
+                    minTickGap={40}
                   />
                   <YAxis tick={{ fontSize: 10, fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} />
                   <Tooltip
-                    labelFormatter={(v) => format(new Date(v as number), "d MMM · HH:mm")}
                     contentStyle={{
                       fontFamily: 'var(--font-sans)',
                       fontSize: 12,
