@@ -22,6 +22,16 @@ export default async function CheckoutPage({
 
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 
+  if (!publishableKey) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="font-sans text-[14px] text-muted-foreground text-center">
+          Error de configuración. Por favor contacta soporte.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <CheckoutForm

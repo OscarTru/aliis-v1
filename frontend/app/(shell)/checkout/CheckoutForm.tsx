@@ -35,9 +35,9 @@ const ELEMENT_OPTIONS = {
   style: {
     base: {
       fontSize: '14px',
-      fontFamily: 'var(--font-sans, sans-serif)',
-      color: 'var(--foreground, #fff)',
-      '::placeholder': { color: '#666' },
+      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+      color: '#ffffff',
+      '::placeholder': { color: '#888' },
     },
     invalid: { color: '#ef4444' },
   },
@@ -71,7 +71,6 @@ function PaymentForm({
   }, [currency, cycle, onPriceKeyChange])
 
   const prices = PRICES[currency]
-  const displayPrice = cycle === 'yearly' ? prices.yearly : prices.monthly
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

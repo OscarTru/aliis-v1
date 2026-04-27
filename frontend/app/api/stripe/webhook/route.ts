@@ -106,6 +106,28 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'customer.subscription.created': {
+        const sub = event.data.object as Stripe.Subscription
+        const userId = sub.metadata?.userId
+        if (userId) {
+          const status = sub.status
+          const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
+          const trialEnd = sub.trial_end
+            ? new Date(sub.trial_end * 1000).toISOString()
+            : null
+          await admin
+            .from('profiles')
+            .update({
+              plan,
+              stripe_subscription_id: sub.id,
+              subscription_status: status,
+              trial_end: trialEnd,
+            })
+            .eq('id', userId)
+        }
+        break
+      }
+
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription
         const status = sub.status
@@ -118,6 +140,7 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .update({
             plan,
+            stripe_subscription_id: sub.id,
             trial_end: trialEnd,
             subscription_status: status,
           })

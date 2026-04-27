@@ -35,12 +35,17 @@ export async function POST(req: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, stripe_subscription_id')
     .eq('id', user.id)
     .single()
 
   const customerId = profile?.stripe_customer_id as string | undefined
   if (!customerId) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 400 })
+
+  const existingSubId = profile?.stripe_subscription_id as string | undefined
+  if (existingSubId) {
+    return NextResponse.json({ error: 'Ya tienes una suscripción activa.' }, { status: 409 })
+  }
 
   try {
     // Attach payment method to customer
@@ -52,7 +57,7 @@ export async function POST(req: Request) {
     })
 
     // Create subscription with 14-day trial
-    await stripe.subscriptions.create(
+    const subscription = await stripe.subscriptions.create(
       {
         customer: customerId,
         items: [{ price: priceId }],
@@ -62,6 +67,15 @@ export async function POST(req: Request) {
       },
       { idempotencyKey: `sub_${user.id}_${priceKey}` }
     )
+
+    await supabase.from('profiles').update({
+      plan: 'pro',
+      stripe_subscription_id: subscription.id,
+      subscription_status: subscription.status,
+      trial_end: subscription.trial_end
+        ? new Date(subscription.trial_end * 1000).toISOString()
+        : null,
+    }).eq('id', user.id)
   } catch (err) {
     console.error('[stripe/subscribe]', err)
     return NextResponse.json({ error: 'Error al crear la suscripción' }, { status: 502 })
