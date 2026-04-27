@@ -15,6 +15,22 @@ export const metadata: Metadata = {
   },
 }
 
+function RegisterSW() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+          }
+        `,
+      }}
+    />
+  )
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
@@ -22,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Toaster />
         <AnalyticsProvider />
+        <RegisterSW />
       </body>
     </html>
   )

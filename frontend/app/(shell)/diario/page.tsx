@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { DiarioNotesSection } from '@/components/DiarioNotesSection'
 import { SymptomsSection } from '@/components/SymptomsSection'
+import { AliisInsight } from '@/components/AliisInsight'
+import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import type { NoteWithPack, SymptomLog } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -56,6 +58,12 @@ export default async function DiarioPage() {
           Tu <em>diario</em> de salud
         </h1>
       </div>
+
+      {/* Aliis insight */}
+      <AliisInsight />
+
+      {/* Push permission prompt */}
+      <PushPermissionPrompt />
 
       {/* Two-column dashboard grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
