@@ -18,8 +18,14 @@ export function Footer() {
               <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
                 Aliis
               </div>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/precios">Precios</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#como-funciona">Cómo funciona</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#demo">Ver un ejemplo real</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/precios">Precios</a>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
+                Legal
+              </div>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/terminos">Términos y condiciones</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/privacidad">Política de privacidad</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/cookies">Cookies</a>
@@ -29,10 +35,11 @@ export function Footer() {
               <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
                 Cerebros Esponjosos
               </div>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Instagram</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">TikTok</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">YouTube</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#">Newsletter</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com/#nosotros" target="_blank" rel="noopener noreferrer">Quiénes somos</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com" target="_blank" rel="noopener noreferrer">Cerebros Esponjosos</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.instagram.com/cerebros.esponjosos" target="_blank" rel="noopener noreferrer">Instagram</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.tiktok.com/@cerebros.esponjosos" target="_blank" rel="noopener noreferrer">TikTok</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.youtube.com/@CerebrosEsponjosos" target="_blank" rel="noopener noreferrer">YouTube</a>
             </div>
           </div>
         </div>

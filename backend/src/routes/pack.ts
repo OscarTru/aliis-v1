@@ -7,6 +7,7 @@ import { resolveLibraryMatch, type MatchedCondition } from '../lib/library-resol
 import { verifyReferences } from '../lib/verifier'
 import { EMERGENCY_RESPONSE, BLOCKED_MESSAGES } from '../lib/emergency'
 import { supabase } from '../index'
+import { requireAuth } from '../middleware/auth'
 import type { GeneratePackRequest } from '../types'
 
 export const packRouter = Router()
@@ -19,20 +20,20 @@ function isValidRequest(body: unknown): body is GeneratePackRequest {
   }
   return (
     typeof b.diagnostico === 'string' && (b.diagnostico as string).trim().length > 0 &&
-    typeof b.userId === 'string' && (b.userId as string).trim().length > 0 &&
     typeof b.userPlan === 'string' && (b.userPlan as string).trim().length > 0
   )
 }
 
-packRouter.post('/generate', async (req, res) => {
+packRouter.post('/generate', requireAuth, async (req, res) => {
   console.log('[pack/generate] body:', JSON.stringify(req.body))
   if (!isValidRequest(req.body)) {
     console.log('[pack/generate] invalid request body')
-    res.status(400).json({ error: 'diagnostico, userId y userPlan son requeridos' })
+    res.status(400).json({ error: 'diagnostico y userPlan son requeridos' })
     return
   }
 
-  const { diagnostico, conditionSlug: rawConditionSlug, contexto, userId, userPlan } = req.body
+  const { diagnostico, conditionSlug: rawConditionSlug, contexto, userPlan } = req.body
+  const userId = res.locals.userId
   const dx = diagnostico.trim()
   const conditionSlug = typeof rawConditionSlug === 'string' && rawConditionSlug.trim().length <= 100
     ? rawConditionSlug.trim()

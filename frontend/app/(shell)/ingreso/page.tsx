@@ -245,6 +245,9 @@ export default function IngresoPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
 
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('plan')
@@ -255,7 +258,10 @@ export default function IngresoPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
       const res = await fetch(`${apiUrl}/pack/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           diagnostico: dxText,
           conditionSlug: conditionSlug ?? undefined,
@@ -264,7 +270,6 @@ export default function IngresoPage() {
             emocion: emocionFinal() || undefined,
             dudas: dudasFinal(),
           },
-          userId: user.id,
           userPlan,
         }),
       })

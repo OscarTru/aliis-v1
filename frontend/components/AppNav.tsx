@@ -73,7 +73,7 @@ export function AppNav() {
                 )}
                 {isLanding && (
                   <Link href="/historial" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">
-                    Mis explicaciones
+                    Mi expediente
                   </Link>
                 )}
                 <Link href="/historial" className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-serif text-sm font-semibold no-underline">

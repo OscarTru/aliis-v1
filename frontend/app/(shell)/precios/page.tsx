@@ -13,10 +13,10 @@ const COMPARISON_ROWS = [
   ['Explicaciones por semana', '1', 'Ilimitadas'],
   ['Referencias verificables', '✓', '✓ con DOI desplegable'],
   ['Historial', '30 días', 'Permanente'],
-  ['Audio narrado', '—', '✓'],
-  ['Compartir', '3 por explicación', 'Sin límite'],
+  ['Chat IA por capítulo', '—', '✓'],
+  ['Apuntes automáticos', '—', '✓'],
+  ['Compartir', '✓', '✓'],
   ['Diario de síntomas', '—', '✓'],
-  ['PDF sin marca de agua', '—', '✓'],
   ['Soporte prioritario', '—', '✓'],
 ]
 
@@ -31,7 +31,7 @@ const FAQ = [
   },
   {
     q: '¿Las explicaciones gratis son peores?',
-    a: 'No. Son las mismas explicaciones, con las mismas referencias. La diferencia es cuántas puedes crear, el audio y el historial largo.',
+    a: 'No. Son las mismas explicaciones, con las mismas referencias. La diferencia es cuántas puedes crear, el chat IA, los apuntes y el historial largo.',
   },
   {
     q: '¿Esto reemplaza a mi médico?',
