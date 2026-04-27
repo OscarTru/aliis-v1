@@ -78,6 +78,13 @@ export async function GET(req: Request) {
 
     if (result.ok) {
       sent++
+      await supabase.from('notifications').insert({
+        user_id: sub.user_id,
+        title: 'Aliis',
+        body: content.slice(0, 500),
+        type: 'reminder',
+        url: '/diario',
+      })
     } else {
       skipped++
       if (result.expired) {
