@@ -16,3 +16,4 @@ out/
 
 # worktrees
 .worktrees/
+.superpowers/
