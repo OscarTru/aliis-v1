@@ -145,3 +145,20 @@ export interface NoteWithPack {
   dx: string
   pack_created_at: string
 }
+
+export interface AliisInsight {
+  id: string
+  user_id: string
+  content: string
+  generated_at: string
+  data_window: unknown
+}
+
+export interface PushSubscriptionRecord {
+  id: string
+  user_id: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  created_at: string
+}
