@@ -72,18 +72,15 @@ export default async function DiarioPage() {
       {/* Push permission prompt */}
       <PushPermissionPrompt />
 
-      {/* Two-column dashboard grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Left column — Notes */}
-        <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
-          <DiarioNotesSection notes={notes} />
-        </div>
+      {/* Symptoms + vitals — full width */}
+      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+        <SymptomsSection initialLogs={logs} />
+        <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
+      </div>
 
-        {/* Right column — Symptoms */}
-        <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
-          <SymptomsSection initialLogs={logs} />
-          <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
-        </div>
+      {/* Notes — full width below */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <DiarioNotesSection notes={notes} />
       </div>
     </div>
   )
