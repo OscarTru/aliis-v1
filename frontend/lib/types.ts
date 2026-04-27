@@ -176,3 +176,15 @@ export interface TrackedSymptom {
   attention_reason: string | null
   created_at: string
 }
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  title: string
+  body: string
+  type: 'reminder' | 'insight' | 'red_flag' | string
+  read: boolean
+  read_at: string | null
+  url: string | null
+  created_at: string
+}
