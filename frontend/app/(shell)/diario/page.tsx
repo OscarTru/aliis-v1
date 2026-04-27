@@ -4,7 +4,6 @@ import { DiarioNotesSection } from '@/components/DiarioNotesSection'
 import { SymptomsSection } from '@/components/SymptomsSection'
 import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
-import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import type { NoteWithPack, SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -68,9 +67,6 @@ export default async function DiarioPage() {
 
       {/* Aliis insight */}
       <AliisInsight />
-
-      {/* Push permission prompt */}
-      <PushPermissionPrompt />
 
       {/* Symptoms + vitals — full width */}
       <div className="rounded-2xl border border-border bg-card p-6 mb-6">
