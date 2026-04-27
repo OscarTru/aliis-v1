@@ -216,6 +216,8 @@ export function CheckoutForm({
   publishableKey: string
 }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
   const [priceKey, setPriceKey] = useState(initialPriceKey)
   const [stripePromise] = useState(() => loadStripe(publishableKey))
 
@@ -229,9 +231,16 @@ export function CheckoutForm({
   useEffect(() => {
     fetch('/api/stripe/setup-intent', { method: 'POST' })
       .then(r => r.json())
-      .then(d => { if (d.clientSecret) setClientSecret(d.clientSecret) })
-      .catch(console.error)
-  }, [])
+      .then(d => {
+        if (d.clientSecret) {
+          setClientSecret(d.clientSecret)
+          setLoadError(null)
+        } else {
+          setLoadError('No se pudo iniciar el pago. Inténtalo de nuevo.')
+        }
+      })
+      .catch(() => setLoadError('Error de red. Inténtalo de nuevo.'))
+  }, [retryCount])
 
   return (
     <div className="w-full max-w-[860px]">
@@ -312,7 +321,18 @@ export function CheckoutForm({
 
         {/* Right — payment form */}
         <div className="flex flex-col justify-center p-8 lg:p-10 border-t lg:border-t-0 lg:border-l border-border bg-card">
-          {!clientSecret ? (
+          {loadError ? (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <p className="font-sans text-[13px] text-muted-foreground text-center">{loadError}</p>
+              <button
+                type="button"
+                onClick={() => { setLoadError(null); setRetryCount(c => c + 1); }}
+                className="font-mono text-[11px] text-primary hover:underline"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : !clientSecret ? (
             <div className="flex flex-col gap-3">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-10 rounded-xl bg-muted animate-pulse" />
