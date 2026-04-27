@@ -321,82 +321,12 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
       temperature: l.temperature,
     }))
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className={cn('flex items-center mb-5', logs.length > 0 ? 'justify-between' : '')}>
-        <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50">
+  if (logs.length === 0) {
+    return (
+      <div className="flex flex-col h-full">
+        <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mb-5">
           Síntomas y signos vitales
         </p>
-        {logs.length > 0 && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
-          >
-            <Plus size={13} />
-            Registrar
-          </button>
-        )}
-      </div>
-
-      {logs.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {METRICS.map(m => (
-            <button
-              key={m.key}
-              onClick={() => toggleMetric(m.key)}
-              className={cn(
-                'px-3 py-1 rounded-full font-sans text-[12px] border transition-colors cursor-pointer',
-                activeMetrics.has(m.key)
-                  ? 'bg-foreground text-background border-transparent'
-                  : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {logs.length > 0 && chartData.length < 2 && (
-        <p className="font-sans text-[13px] text-muted-foreground italic py-6 text-center">
-          Necesitas al menos 2 registros para ver tendencias.
-        </p>
-      )}
-
-      {chartData.length >= 2 && (
-        <div className="mb-8 h-[220px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fontFamily: 'var(--font-mono)' }} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 12,
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 8,
-                  background: 'hsl(var(--background))',
-                }}
-              />
-              {METRICS.filter(m => activeMetrics.has(m.key)).map(m => (
-                <Line
-                  key={m.key}
-                  type="monotone"
-                  dataKey={m.key}
-                  stroke={m.color}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  connectNulls
-                  name={m.label}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {logs.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
           <p className="font-serif italic text-[15px] text-muted-foreground mb-4 leading-relaxed">
             Aún no tienes registros de síntomas.<br />Empieza a llevar tu control hoy.
@@ -409,52 +339,134 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
             Registrar primer síntoma
           </button>
         </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {(expanded ? logs : logs.slice(0, PREVIEW_COUNT)).map(log => (
-            <div key={log.id} className="flex items-start gap-3 p-4 bg-muted rounded-xl">
-              <div className="flex-1 flex flex-col gap-1.5">
-                <span className="font-mono text-[10px] tracking-[.1em] uppercase text-muted-foreground/60">
-                  {format(new Date(log.logged_at), "d MMM yyyy · HH:mm", { locale: es })}
-                </span>
-                <MetricPills log={log} />
-                {log.note && (
-                  <p className="font-serif italic text-[13px] text-muted-foreground leading-[1.5] m-0">
-                    {log.note}
-                  </p>
-                )}
-              </div>
+        <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50">
+          Síntomas y signos vitales
+        </p>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[13px] font-medium border-none cursor-pointer"
+        >
+          <Plus size={13} />
+          Registrar
+        </button>
+      </div>
+
+      {/* Horizontal split: list left, chart right */}
+      <div className="flex gap-4 items-start">
+        {/* Left — metric filters + log list */}
+        <div className="flex flex-col gap-3 w-[44%] shrink-0">
+          <div className="flex flex-wrap gap-1.5">
+            {METRICS.map(m => (
               <button
-                onClick={() => handleDelete(log.id)}
-                className="shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors border-none bg-transparent cursor-pointer p-1"
-                aria-label="Eliminar registro"
+                key={m.key}
+                onClick={() => toggleMetric(m.key)}
+                className={cn(
+                  'px-2.5 py-0.5 rounded-full font-sans text-[11px] border transition-colors cursor-pointer',
+                  activeMetrics.has(m.key)
+                    ? 'bg-foreground text-background border-transparent'
+                    : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
+                )}
               >
-                <Trash2 size={14} />
+                {m.label}
               </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {(expanded ? logs : logs.slice(0, PREVIEW_COUNT)).map(log => (
+              <div key={log.id} className="flex items-start gap-2 p-3 bg-muted rounded-xl">
+                <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                  <span className="font-mono text-[10px] tracking-[.08em] uppercase text-muted-foreground/60">
+                    {format(new Date(log.logged_at), "d MMM · HH:mm", { locale: es })}
+                  </span>
+                  <MetricPills log={log} />
+                  {log.note && (
+                    <p className="font-serif italic text-[12px] text-muted-foreground leading-[1.5] m-0">
+                      {log.note}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDelete(log.id)}
+                  className="shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors border-none bg-transparent cursor-pointer p-1"
+                  aria-label="Eliminar registro"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+
+            {logs.length > PREVIEW_COUNT && !expanded && logs.length <= PAGE_THRESHOLD && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl border border-dashed border-border font-sans text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer bg-transparent"
+              >
+                <ChevronDown size={12} />
+                Ver {logs.length - PREVIEW_COUNT} más
+              </button>
+            )}
+
+            {logs.length > PAGE_THRESHOLD && !expanded && (
+              <Link
+                href="/diario/registros"
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl border border-dashed border-border font-sans text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors no-underline"
+              >
+                <ChevronDown size={12} />
+                Ver todos ({logs.length} registros)
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Right — chart */}
+        <div className="flex-1 min-w-0">
+          {chartData.length < 2 ? (
+            <p className="font-sans text-[12px] text-muted-foreground italic pt-4 text-center">
+              Necesitas al menos 2 registros para ver tendencias.
+            </p>
+          ) : (
+            <div className="h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fontFamily: 'var(--font-mono)' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 12,
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 8,
+                      background: 'hsl(var(--background))',
+                    }}
+                  />
+                  {METRICS.filter(m => activeMetrics.has(m.key)).map(m => (
+                    <Line
+                      key={m.key}
+                      type="monotone"
+                      dataKey={m.key}
+                      stroke={m.color}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      connectNulls
+                      name={m.label}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          ))}
-
-          {logs.length > PREVIEW_COUNT && !expanded && logs.length <= PAGE_THRESHOLD && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl border border-dashed border-border font-sans text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer bg-transparent"
-            >
-              <ChevronDown size={13} />
-              Ver {logs.length - PREVIEW_COUNT} más
-            </button>
-          )}
-
-          {logs.length > PAGE_THRESHOLD && !expanded && (
-            <Link
-              href="/diario/registros"
-              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl border border-dashed border-border font-sans text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors no-underline"
-            >
-              <ChevronDown size={13} />
-              Ver todos ({logs.length} registros)
-            </Link>
           )}
         </div>
-      )}
+      </div>
 
       <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
     </div>
