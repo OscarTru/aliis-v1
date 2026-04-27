@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { DiarioNotesSection } from '@/components/DiarioNotesSection'
 import { SymptomsSection } from '@/components/SymptomsSection'
+import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
-import type { NoteWithPack, SymptomLog } from '@/lib/types'
+import type { NoteWithPack, SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -13,7 +14,7 @@ export default async function DiarioPage() {
   if (!user) redirect('/login')
   const uid = user.id
 
-  const [notesResult, symptomsResult] = await Promise.all([
+  const [notesResult, symptomsResult, trackedResult] = await Promise.all([
     supabase
       .from('pack_notes')
       .select('id, pack_id, content, created_at, packs!inner(dx, created_at)')
@@ -25,6 +26,11 @@ export default async function DiarioPage() {
       .eq('user_id', uid)
       .order('logged_at', { ascending: false })
       .limit(90),
+    supabase
+      .from('tracked_symptoms')
+      .select('*')
+      .eq('user_id', uid)
+      .order('last_seen_at', { ascending: false }),
   ])
 
   const notes: NoteWithPack[] = (notesResult.data ?? []).map((row: {
@@ -46,6 +52,7 @@ export default async function DiarioPage() {
   })
 
   const logs: SymptomLog[] = (symptomsResult.data ?? []) as SymptomLog[]
+  const trackedSymptoms: TrackedSymptom[] = (trackedResult.data ?? []) as TrackedSymptom[]
 
   return (
     <div className="px-8 pt-10 pb-20 max-w-[1200px] mx-auto">
@@ -75,6 +82,7 @@ export default async function DiarioPage() {
         {/* Right column — Symptoms */}
         <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
           <SymptomsSection initialLogs={logs} />
+          <SymptomsTracker initialSymptoms={trackedSymptoms} />
         </div>
       </div>
     </div>

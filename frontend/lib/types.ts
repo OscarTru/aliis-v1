@@ -162,3 +162,17 @@ export interface PushSubscriptionRecord {
   auth: string
   created_at: string
 }
+
+export interface TrackedSymptom {
+  id: string
+  user_id: string
+  name: string
+  first_seen_at: string
+  last_seen_at: string
+  occurrences: number
+  resolved: boolean
+  resolved_at: string | null
+  needs_medical_attention: boolean
+  attention_reason: string | null
+  created_at: string
+}
