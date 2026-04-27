@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
 import {
   ResponsiveContainer,
   LineChart,
@@ -279,12 +280,16 @@ function MetricPills({ log }: { log: SymptomLog }) {
   )
 }
 
+const PREVIEW_COUNT = 2
+const PAGE_THRESHOLD = 7
+
 export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) {
   const [logs, setLogs] = useState<SymptomLog[]>(initialLogs)
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
     new Set(METRICS.map(m => m.key))
   )
   const [modalOpen, setModalOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   function toggleMetric(key: MetricKey) {
     setActiveMetrics(prev => {
@@ -405,8 +410,8 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2 overflow-y-auto">
-          {logs.map(log => (
+        <div className="flex flex-col gap-2">
+          {(expanded ? logs : logs.slice(0, PREVIEW_COUNT)).map(log => (
             <div key={log.id} className="flex items-start gap-3 p-4 bg-muted rounded-xl">
               <div className="flex-1 flex flex-col gap-1.5">
                 <span className="font-mono text-[10px] tracking-[.1em] uppercase text-muted-foreground/60">
@@ -428,6 +433,26 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
               </button>
             </div>
           ))}
+
+          {logs.length > PREVIEW_COUNT && !expanded && logs.length <= PAGE_THRESHOLD && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl border border-dashed border-border font-sans text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer bg-transparent"
+            >
+              <ChevronDown size={13} />
+              Ver {logs.length - PREVIEW_COUNT} más
+            </button>
+          )}
+
+          {logs.length > PAGE_THRESHOLD && !expanded && (
+            <Link
+              href="/diario/registros"
+              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl border border-dashed border-border font-sans text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors no-underline"
+            >
+              <ChevronDown size={13} />
+              Ver todos ({logs.length} registros)
+            </Link>
+          )}
         </div>
       )}
 

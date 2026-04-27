@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 export function AliisInsight() {
   const [content, setContent] = useState<string | null>(null)
@@ -32,10 +33,10 @@ export function AliisInsight() {
   return (
     <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-          <span className="text-white text-[10px] font-serif font-semibold">A</span>
+        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+          <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} className="object-contain" />
         </div>
-        <span className="font-mono text-[10px] tracking-[.15em] uppercase text-primary">Aliis</span>
+        <span className="font-mono text-[10px] tracking-[.12em] text-primary">Aliis</span>
       </div>
       <p className="font-serif text-[15px] leading-relaxed text-foreground italic">
         {content}
