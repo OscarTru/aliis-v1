@@ -82,7 +82,7 @@ export default async function DiarioPage() {
         {/* Right column — Symptoms */}
         <div className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
           <SymptomsSection initialLogs={logs} />
-          <SymptomsTracker initialSymptoms={trackedSymptoms} />
+          <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
         </div>
       </div>
     </div>

@@ -1,14 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AlertTriangle, CheckCircle2, RotateCcw } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
-import type { TrackedSymptom } from '@/lib/types'
+import type { TrackedSymptom, SymptomLog } from '@/lib/types'
 
-export function SymptomsTracker({ initialSymptoms }: { initialSymptoms: TrackedSymptom[] }) {
+export function SymptomsTracker({
+  initialSymptoms,
+  logs,
+}: {
+  initialSymptoms: TrackedSymptom[]
+  logs: SymptomLog[]
+}) {
   const [symptoms, setSymptoms] = useState<TrackedSymptom[]>(initialSymptoms)
+  const [backfilling, setBackfilling] = useState(false)
+
+  useEffect(() => {
+    // Only backfill if no tracked symptoms yet but there are logs with notes
+    const hasNotes = logs.some(l => l.note)
+    if (initialSymptoms.length > 0 || !hasNotes) return
+
+    setBackfilling(true)
+    fetch('/api/aliis/symptoms/backfill', { method: 'POST' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.symptoms && Array.isArray(d.symptoms)) {
+          setSymptoms(d.symptoms as TrackedSymptom[])
+        }
+      })
+      .catch(console.error)
+      .finally(() => setBackfilling(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function toggleResolved(id: string, resolved: boolean) {
     // optimistic update
@@ -34,9 +59,15 @@ export function SymptomsTracker({ initialSymptoms }: { initialSymptoms: TrackedS
         <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mb-4">
           Síntomas rastreados
         </p>
-        <p className="font-serif italic text-[14px] text-muted-foreground text-center py-6">
-          Aliis irá rastreando los síntomas que menciones en tus registros.
-        </p>
+        {backfilling ? (
+          <p className="font-serif italic text-[14px] text-muted-foreground/60 text-center py-6 animate-pulse">
+            Aliis está analizando tus registros...
+          </p>
+        ) : (
+          <p className="font-serif italic text-[14px] text-muted-foreground text-center py-6">
+            Aliis irá rastreando los síntomas que menciones en tus registros.
+          </p>
+        )}
       </div>
     )
   }
