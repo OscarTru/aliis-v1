@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
@@ -21,9 +21,8 @@ const SLIDE = {
   transition: { duration: 0.18, ease: [0.25, 0, 0, 1] as const },
 }
 
-export function LoginModal({ onClose, initialView }: { onClose: () => void; initialView?: View }) {
+export function LoginModal({ onClose, initialView, initialError, initialInviteCode }: { onClose: () => void; initialView?: View; initialError?: string; initialInviteCode?: string }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [view, setView] = useState<View>(initialView ?? 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,18 +31,39 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
   const [lastName, setLastName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidated, setInviteValidated] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [inviteChecking, setInviteChecking] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [error, setError] = useState<string | null>(initialError ?? null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  // Pre-fill invite code from URL ?invite=
+  // Pre-fill invite code from URL ?invite= (passed as prop from AppNav)
   useEffect(() => {
-    const code = searchParams?.get('invite')
-    if (code) {
-      setInviteCode(code.toUpperCase())
+    if (initialInviteCode) {
+      setInviteCode(initialInviteCode.toUpperCase())
       setView('signup')
     }
-  }, [searchParams])
+  }, [initialInviteCode])
+
+  // Validate invite code in real-time (debounced)
+  useEffect(() => {
+    if (view !== 'signup') return
+    const code = inviteCode.trim().toUpperCase()
+    if (code.length < 6) { setInviteValidated(false); return }
+    setInviteChecking(true)
+    setInviteValidated(false)
+    const timer = setTimeout(async () => {
+      const res = await fetch('/api/invite/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      }).catch(() => null)
+      const data = res ? await res.json().catch(() => ({})) : {}
+      setInviteValidated(!!data.valid)
+      setInviteChecking(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [inviteCode, view])
 
   const title: Record<View, string> = {
     login: 'Bienvenido de vuelta',
@@ -71,6 +91,7 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
     setFirstName('')
     setLastName('')
     setInviteValidated(false)
+    setAcceptedTerms(false)
   }
 
   async function handleGoogleSignIn(requireInvite = false) {
@@ -160,7 +181,15 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
     }
 
     const { data, error: loginErr } = await supabase.auth.signInWithPassword({ email, password })
-    if (loginErr) { setError(err(loginErr.message)); setLoading(false); return }
+    if (loginErr) {
+      if (loginErr.message === 'Invalid login credentials') {
+        setError('Email o contraseña incorrectos. Si aún no tienes cuenta, necesitas un código de invitación para registrarte.')
+      } else {
+        setError(err(loginErr.message))
+      }
+      setLoading(false)
+      return
+    }
     const redirect = await getPostAuthRedirect(supabase, data.user.id)
     router.push(redirect)
     onClose()
@@ -244,7 +273,16 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
                 <button type="button" onClick={() => goTo('forgot')} className={linkCls + ' self-end'}>
                   ¿Olvidaste tu contraseña?
                 </button>
-                {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
+                {error && (
+                  <div className="flex flex-col gap-1">
+                    <p className="text-destructive font-sans text-[13px] m-0">{error}</p>
+                    {error.includes('código de invitación') && (
+                      <button type="button" onClick={() => goTo('signup')} className={linkCls + ' self-start'}>
+                        Crear cuenta con código →
+                      </button>
+                    )}
+                  </div>
+                )}
                 <Button type="submit" disabled={loading} className={submitCls}>
                   {loading ? 'Cargando…' : 'Iniciar sesión'}
                 </Button>
@@ -262,48 +300,69 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
               <p className="font-serif italic text-[17px] text-muted-foreground text-center mb-6">
                 {title.signup}
               </p>
-
-              {/* Invite code field */}
-              <div className="mb-5">
-                <label className="block font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/60 mb-1.5">
-                  Código de invitación
-                </label>
-                <Input
-                  type="text"
-                  placeholder="ALIIS-BETA-XXXX"
-                  value={inviteCode}
-                  onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setError(null) }}
-                  className={inputCls + ' font-mono tracking-widest'}
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-                {inviteCode && (
-                  <p className="font-sans text-[11px] text-muted-foreground/50 mt-1">
-                    Si recibiste un link de invitación ya está pre-llenado.
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleGoogleSignIn(true)}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
-              >
-                <GoogleIcon />
-                {googleLoading ? 'Verificando…' : 'Continuar con Google'}
-              </button>
-              <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                {/* Invite code first — gates Google button */}
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Código de invitación (ALIIS-BETA-XXXX)"
+                    value={inviteCode}
+                    onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setError(null) }}
+                    required
+                    className={inputCls + ' font-mono tracking-widest pr-8'}
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                  {inviteCode.trim().length >= 6 && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px]">
+                      {inviteChecking ? '…' : inviteValidated ? '✓' : '✗'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Google — only active when invite is valid */}
+                <button
+                  type="button"
+                  onClick={() => handleGoogleSignIn(true)}
+                  disabled={!inviteValidated || googleLoading}
+                  className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                >
+                  <GoogleIcon />
+                  {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
+                </button>
+                <Divider />
+
                 <div className="flex gap-2.5">
                   <Input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputCls} />
-                  <Input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls} />
+                  <Input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputCls} />
                 </div>
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
+                <label className="flex items-start gap-2.5 cursor-pointer select-none mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                  />
+                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
+                    Acepto los{' '}
+                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                      términos y condiciones
+                    </a>
+                    {' '}y la{' '}
+                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                      política de privacidad
+                    </a>
+                  </span>
+                </label>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
-                <Button type="submit" disabled={loading} className={submitCls}>
+                <Button
+                  type="submit"
+                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword || !acceptedTerms}
+                  className={submitCls}
+                >
                   {loading ? 'Verificando…' : 'Crear cuenta'}
                 </Button>
               </form>
@@ -345,7 +404,7 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
 /* ─── helpers ─── */
 
 const inputCls = 'h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]'
-const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70'
+const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
 const linkCls   = 'font-sans text-[13px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors'
 
 function Divider() {

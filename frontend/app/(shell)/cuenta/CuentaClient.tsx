@@ -461,6 +461,7 @@ export function CuentaClient({
               onClick={async () => {
                 const supabase = createClient()
                 await supabase.auth.signOut()
+                router.refresh()
                 router.push('/')
               }}
               className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer whitespace-nowrap"

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { LoginModal } from './LoginModal'
 import { createClient } from '@/lib/supabase'
@@ -11,14 +11,36 @@ import { createClient } from '@/lib/supabase'
 export function AppNav() {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isLanding = pathname === '/'
   const [showLogin, setShowLogin] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginInviteCode, setLoginInviteCode] = useState<string | undefined>(undefined)
   const [initial, setInitial] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
+    if (searchParams.get('error') === 'no-invite') {
+      setLoginError('No encontramos una cuenta con ese email. Para registrarte necesitas un código de invitación.')
+      setShowLogin(true)
+      router.replace('/', { scroll: false })
+    }
+    const invite = searchParams.get('invite')
+    if (invite) {
+      setLoginInviteCode(invite)
+      setShowLogin(true)
+      router.replace('/', { scroll: false })
+    }
+  }, [searchParams, router])
+
+  useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        supabase.auth.signOut()
+        setInitial(null)
+        return
+      }
       if (user?.email) setInitial(user.email[0].toUpperCase())
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -127,7 +149,7 @@ export function AppNav() {
           </div>
         )}
       </header>
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {showLogin && <LoginModal onClose={() => { setShowLogin(false); setLoginError(null); setLoginInviteCode(undefined) }} initialError={loginError ?? undefined} initialInviteCode={loginInviteCode} />}
     </>
   )
 }

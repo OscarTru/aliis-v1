@@ -15,8 +15,20 @@ export const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+const ALLOWED_ORIGINS = [
+  'https://aliis.app',
+  'https://www.aliis.app',
+  'http://localhost:3000',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.replace(/\/$/, '')] : []),
+]
+
 const app = express()
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }))
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) cb(null, true)
+    else cb(new Error(`CORS: ${origin} not allowed`))
+  },
+}))
 
 // Raw body for Stripe webhooks — must come before express.json()
 app.use('/stripe/webhook', express.raw({ type: 'application/json' }))
