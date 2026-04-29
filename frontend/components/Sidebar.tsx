@@ -95,15 +95,25 @@ function NavLink({ item, collapsed, pathname }: { item: NavItem; collapsed: bool
   return inner
 }
 
-export function Sidebar() {
+export function Sidebar({
+  initialName = null,
+  initialEmail = null,
+  initialPlan = 'free',
+  initialInitial = null,
+}: {
+  initialName?: string | null
+  initialEmail?: string | null
+  initialPlan?: string
+  initialInitial?: string | null
+}) {
   const pathname = usePathname()
   const { pack, activeIdx, readChapters, setActiveIdx, chatOpen } = usePackContext()
   const { condition, activeIdx: conditionActiveIdx, setActiveIdx: setConditionActiveIdx } = useConditionContext()
   const verifiedRefs = pack?.references.filter((r) => r.verified !== false) ?? []
-  const [email, setEmail] = useState<string | null>(null)
-  const [name, setName] = useState<string | null>(null)
-  const [initial, setInitial] = useState<string | null>(null)
-  const [plan, setPlan] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(initialEmail)
+  const [name, setName] = useState<string | null>(initialName)
+  const [initial, setInitial] = useState<string | null>(initialInitial)
+  const [plan, setPlan] = useState<string | null>(initialPlan)
   const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -124,17 +134,6 @@ export function Sidebar() {
 
   useEffect(() => {
     const supabase = createClient()
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setEmail(user.email ?? null)
-      const { data: profile } = await supabase.from('profiles').select('plan,name').eq('id', user.id).single()
-      setPlan(profile?.plan ?? 'free')
-      const n = profile?.name ?? null
-      setName(n)
-      setInitial((n?.[0] ?? user.email?.[0] ?? '?').toUpperCase())
-    }
-    loadUser()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') { setEmail(null); setPlan(null); setName(null); setInitial(null); return }
       const u = session?.user
