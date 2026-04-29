@@ -162,7 +162,7 @@ export function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 64 : 224 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="relative flex flex-col shrink-0 border-r border-border bg-background overflow-visible h-screen sticky top-0 select-none"
+        className="relative hidden md:flex flex-col shrink-0 border-r border-border bg-background overflow-visible h-screen sticky top-0 select-none"
       >
         {/* Floating toggle button */}
         <Tooltip>
