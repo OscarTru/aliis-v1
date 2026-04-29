@@ -57,7 +57,7 @@ export const PRICING_TIERS: { gratis: PricingTier; pro: PricingTier } = {
     cadence: 'para siempre',
     pitch: 'Para entender un diagnóstico puntual.',
     features: [
-      { included: true, text: '3 explicaciones al mes', sub: 'para consultas ocasionales' },
+      { included: true, text: '1 explicación por semana', sub: 'para consultas ocasionales' },
       { included: true, text: 'Referencias verificables', sub: 'cada afirmación con su fuente' },
       { included: true, text: 'Biblioteca de diagnósticos', sub: 'acceso a todos los temas' },
       { included: true, text: 'Leer explicaciones compartidas', sub: 'sin límite' },
