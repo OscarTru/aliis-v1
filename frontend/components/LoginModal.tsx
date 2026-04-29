@@ -253,37 +253,24 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
               <p className="font-serif italic text-[17px] text-muted-foreground text-center mb-6">
                 {title.signup}
               </p>
-
-              {/* Invite code field */}
-              <div className="mb-5">
-                <label className="block font-mono text-[9px] tracking-[.15em] uppercase text-muted-foreground/60 mb-1.5">
-                  Código de invitación
-                </label>
-                <Input
-                  type="text"
-                  placeholder="ALIIS-BETA-XXXX"
-                  value={inviteCode}
-                  onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setError(null) }}
-                  className={inputCls + ' font-mono tracking-widest'}
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-                {inviteCode && (
-                  <p className="font-sans text-[11px] text-muted-foreground/50 mt-1">
-                    Si recibiste un link de invitación ya está pre-llenado.
-                  </p>
-                )}
-              </div>
-
-              <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <div className="flex gap-2.5">
                   <Input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputCls} />
-                  <Input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls} />
+                  <Input type="text" placeholder="Apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputCls} />
                 </div>
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
+                <Input
+                  type="text"
+                  placeholder="Código de invitación (ALIIS-BETA-XXXX)"
+                  value={inviteCode}
+                  onChange={(e) => { setInviteCode(e.target.value.toUpperCase()); setError(null) }}
+                  required
+                  className={inputCls + ' font-mono tracking-widest'}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button type="submit" disabled={loading} className={submitCls}>
                   {loading ? 'Verificando…' : 'Crear cuenta'}
