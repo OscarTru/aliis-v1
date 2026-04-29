@@ -35,15 +35,25 @@ export async function GET(request: NextRequest) {
 
       // Block new Google signups without invite code
       if (isNewUser && !inviteCode) {
-        // Delete the auto-created user using service role
         const admin = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
         await admin.auth.admin.deleteUser(user.id)
-        await supabase.auth.signOut()
-        response.headers.set('location', `${origin}/?error=no-invite`)
-        return response
+
+        // Build a clean redirect that clears all Supabase session cookies
+        const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
+        request.cookies.getAll().forEach(({ name }) => {
+          if (name.startsWith('sb-')) {
+            blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
+          }
+        })
+        response.cookies.getAll().forEach(({ name }) => {
+          if (name.startsWith('sb-')) {
+            blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
+          }
+        })
+        return blockResponse
       }
 
       // Consume invite code if present (Google OAuth signup path)
