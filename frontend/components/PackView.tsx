@@ -26,9 +26,9 @@ function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: strin
 }
 
 function ChapterCard({
-  chapter, packId, userId, dx, onRead, conditionSlug, packContext, onOpenChat,
+  chapter, packId, userId, dx, onRead, conditionSlug, packContext, onOpenChat, chatOpen,
 }: {
-  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void
+  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void; chatOpen: boolean
 }) {
   const markedRef = useRef(false)
 
@@ -53,13 +53,15 @@ function ChapterCard({
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60">
           {chapter.n} · {chapter.readTime}
         </div>
-        <button
-          onClick={onOpenChat}
-          className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
-        >
-          <MessageCircle size={12} />
-          Pregúntale a Aliis
-        </button>
+        {!chatOpen && (
+          <button
+            onClick={onOpenChat}
+            className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
+          >
+            <MessageCircle size={12} />
+            Pregúntale a Aliis
+          </button>
+        )}
       </div>
 
       <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-3 text-[clamp(26px,3.5vw,38px)]">
@@ -130,7 +132,7 @@ function ChapterCard({
 }
 
 export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
-  const { activeIdx, readChapters, setPack, setActiveIdx, markRead, setChatOpen } = usePackContext()
+  const { activeIdx, readChapters, setPack, setActiveIdx, markRead, setChatOpen, chatOpen } = usePackContext()
   const verifiedRefs = pack.references.filter((r) => r.verified !== false)
   const chapter = pack.chapters[activeIdx]
   const isLast = activeIdx === pack.chapters.length - 1
@@ -217,6 +219,11 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
         packContext={packContext}
       />
 
+      <div className={cn(
+        'flex-1 flex flex-col min-h-0 transition-all duration-300',
+        chatOpen ? 'md:mr-[380px]' : 'md:mr-0'
+      )}>
+
       {activeIdx < pack.chapters.length ? (
         <>
           <div className="flex-1 min-h-0">
@@ -230,6 +237,7 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
               conditionSlug={pack.conditionSlug}
               packContext={packContext}
               onOpenChat={() => setChatOpen(true)}
+              chatOpen={chatOpen}
             />
           </div>
 
@@ -330,6 +338,8 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
           </button>
         </div>
       )}
+
+      </div>
     </div>
   )
 }
