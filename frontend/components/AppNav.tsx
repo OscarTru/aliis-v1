@@ -27,12 +27,6 @@ export function AppNav() {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
   const NAV_LINKS = [
     { label: 'Qué es', id: 'que-hace' },
     { label: 'Cómo funciona', id: 'como-funciona' },
