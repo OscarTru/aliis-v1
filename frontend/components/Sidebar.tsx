@@ -165,22 +165,15 @@ export function Sidebar({
         className="relative hidden md:flex flex-col shrink-0 border-r border-border bg-background overflow-visible h-screen sticky top-0 select-none"
       >
         {/* Floating toggle button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setCollapsed(c => !c)}
-              aria-label={collapsed ? 'Expandir' : 'Colapsar'}
-              className="absolute -right-3 top-14 z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
-            >
-              <motion.div initial={false} animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronLeft size={12} />
-              </motion.div>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="font-sans text-xs">
-            {collapsed ? 'Expandir' : 'Colapsar'}
-          </TooltipContent>
-        </Tooltip>
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          aria-label="Toggle sidebar"
+          className="absolute -right-3 top-14 z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
+        >
+          <motion.div initial={false} animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronLeft size={12} />
+          </motion.div>
+        </button>
 
         {/* Logo */}
         <div className="flex items-center justify-center shrink-0 w-full px-3 pt-5 pb-2">
