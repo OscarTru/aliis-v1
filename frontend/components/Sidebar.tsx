@@ -135,10 +135,11 @@ export function Sidebar() {
       setInitial((n?.[0] ?? user.email?.[0] ?? '?').toUpperCase())
     }
     loadUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') { setEmail(null); setPlan(null); setName(null); setInitial(null); return }
       const u = session?.user
-      setEmail(u?.email ?? null)
-      if (!u) { setPlan(null); setName(null); setInitial(null); return }
+      if (!u) return
+      setEmail(u.email ?? null)
       supabase.from('profiles').select('plan,name').eq('id', u.id).single()
         .then(({ data }) => {
           setPlan(data?.plan ?? 'free')

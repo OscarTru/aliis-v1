@@ -21,8 +21,9 @@ export function AppNav() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setInitial(user.email[0].toUpperCase())
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setInitial(session?.user?.email?.[0]?.toUpperCase() ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') { setInitial(null); return }
+      if (session?.user?.email) setInitial(session.user.email[0].toUpperCase())
     })
     return () => subscription.unsubscribe()
   }, [])
