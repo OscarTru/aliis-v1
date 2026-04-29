@@ -73,7 +73,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
   return (
     <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
-      <div style={{ position: 'relative', maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: '1.1fr .9fr', gap: 56, alignItems: 'center' }}>
+      <div className="relative max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[1.1fr_.9fr] gap-8 md:gap-14 items-center">
         <div className="ce-fade">
           <Eyebrow style={{ marginBottom: 22 }}>· AI Assistant · Salud cerebral ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
@@ -124,7 +124,7 @@ function WhatAliisDoes() {
     { n: '05', t: 'Explora la biblioteca', i: 'de diagnósticos', d: 'Más de 60 condiciones revisadas por especialistas. Neurología, cardiología, digestivo y más — organizadas para que encuentres lo que necesitas.' },
   ]
   return (
-    <section id="que-hace" style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
+    <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
           <Eyebrow style={{ marginBottom: 18 }}>· Qué hace Aliis ·</Eyebrow>
@@ -158,7 +158,7 @@ function HowItWorks() {
     { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario, el Asistente IA por capítulo, la biblioteca. Todo en el mismo lugar, siempre disponible.' },
   ]
   return (
-    <section id="como-funciona" style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+    <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div style={{ maxWidth: '60rem', margin: '0 auto', textAlign: 'center' }}>
         <Eyebrow centered style={{ marginBottom: 22 }}>· Cómo funciona ·</Eyebrow>
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,4.4vw,3.25rem)', lineHeight: 1.08, letterSpacing: '-.02em', margin: '0 0 72px' }}>
@@ -190,7 +190,7 @@ function TrustSection() {
     { eyebrow: 'Origen', title: 'Por médicos que ya conoces', body: 'Oscar y Stephanie son residentes de neurología que llevan años traduciendo medicina difícil para 575k personas en Cerebros Esponjosos. Aliis es la misma voz — disponible cuando no tienes un médico al lado.', stat: '575k', statLabel: 'personas que ya confían en cómo explicamos medicina' },
   ]
   return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: '44rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <Eyebrow centered style={{ marginBottom: 18 }}>· Por qué confiar ·</Eyebrow>
@@ -368,7 +368,7 @@ function LiveExample() {
   }, [phase])
 
   return (
-    <section id="ejemplo" style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+    <section id="ejemplo" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
         <div style={{ marginBottom: 56, maxWidth: '42rem' }}>
           <Eyebrow style={{ marginBottom: 18 }}>· Así responde Aliis ·</Eyebrow>
@@ -794,8 +794,8 @@ function LiveExample() {
 
 function Founders() {
   return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px' }}>
-      <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: '.8fr 1.2fr', gap: 60, alignItems: 'center' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
+      <div className="max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[.8fr_1.2fr] gap-10 md:gap-[60px] items-center">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={{ aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', background: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
             <Image src="/assets/oscar.png" alt="Oscar" width={300} height={375} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -833,7 +833,7 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
   const t = PRICING_TIERS
 
   return (
-    <section style={{ borderTop: '1px solid var(--c-border)', padding: '120px 24px', background: 'var(--c-surface)' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <Eyebrow centered style={{ marginBottom: 22 }}>· Precios · transparentes ·</Eyebrow>
