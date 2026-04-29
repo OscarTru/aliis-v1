@@ -31,29 +31,33 @@ export async function GET(request: NextRequest) {
 
     if (!error && data.user) {
       const user = data.user
-      const isNewUser = (Date.now() - new Date(user.created_at).getTime()) < 30_000
 
-      // Block new Google signups without invite code
-      if (isNewUser && !inviteCode) {
+      // Google OAuth without invite: only allow if user already has a profile (returning user)
+      const isOAuth = user.app_metadata?.provider === 'google'
+      if (isOAuth && !inviteCode) {
         const admin = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        await admin.auth.admin.deleteUser(user.id)
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('onboarding_done')
+          .eq('id', user.id)
+          .maybeSingle()
 
-        // Build a clean redirect that clears all Supabase session cookies
-        const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
-        request.cookies.getAll().forEach(({ name }) => {
-          if (name.startsWith('sb-')) {
-            blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
-          }
-        })
-        response.cookies.getAll().forEach(({ name }) => {
-          if (name.startsWith('sb-')) {
-            blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
-          }
-        })
-        return blockResponse
+        const isReturningUser = profile?.onboarding_done === true
+
+        if (!isReturningUser) {
+          await admin.auth.admin.deleteUser(user.id)
+          const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
+          request.cookies.getAll().forEach(({ name }) => {
+            if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
+          })
+          response.cookies.getAll().forEach(({ name }) => {
+            if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
+          })
+          return blockResponse
+        }
       }
 
       // Consume invite code if present (Google OAuth signup path)
