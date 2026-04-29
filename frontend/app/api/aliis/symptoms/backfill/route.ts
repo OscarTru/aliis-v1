@@ -39,7 +39,7 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  // Check if user already has tracked symptoms — if so, skip backfill
+  // Check if user already has tracked symptoms — if so, skip initial backfill
   const { count } = await supabase
     .from('tracked_symptoms')
     .select('id', { count: 'exact', head: true })
@@ -49,12 +49,11 @@ export async function POST() {
     return Response.json({ skipped: true })
   }
 
-  // Fetch up to 20 most recent logs that have a note
+  // Fetch up to 20 most recent logs that have any data worth analyzing
   const { data: logsData } = await supabase
     .from('symptom_logs')
     .select('*')
     .eq('user_id', user.id)
-    .not('note', 'is', null)
     .order('logged_at', { ascending: false })
     .limit(20)
 

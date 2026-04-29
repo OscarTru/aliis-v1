@@ -18,9 +18,8 @@ export function SymptomsTracker({
   const [backfilling, setBackfilling] = useState(false)
 
   useEffect(() => {
-    // Only backfill if no tracked symptoms yet but there are logs with notes
-    const hasNotes = logs.some(l => l.note)
-    if (initialSymptoms.length > 0 || !hasNotes) return
+    const hasData = logs.some(l => l.note || l.glucose !== null || l.bp_systolic !== null || l.heart_rate !== null || l.weight !== null || l.temperature !== null)
+    if (initialSymptoms.length > 0 || !hasData) return
 
     setBackfilling(true)
     fetch('/api/aliis/symptoms/backfill', { method: 'POST' })
