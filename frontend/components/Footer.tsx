@@ -7,7 +7,8 @@ export function Footer() {
         <div className="flex items-start justify-between flex-wrap gap-8 mb-12">
           <div className="max-w-[28rem]">
             <div className="flex items-center gap-3 mb-4">
-              <Image src="/assets/aliis-original.png" alt="Aliis" width={90} height={36} className="object-contain" />
+              <Image src="/assets/aliis-original.png" alt="Aliis" width={90} height={36} className="object-contain logo-hide-dark" />
+              <Image src="/assets/aliis-black.png" alt="Aliis" width={90} height={36} className="object-contain logo-show-dark" />
             </div>
             <p className="font-serif italic text-sm text-muted-foreground m-0 leading-relaxed">
               Entiende tu diagnóstico. Acompaña tu enfermedad. Un producto de Cerebros Esponjosos.

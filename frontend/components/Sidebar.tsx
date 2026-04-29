@@ -188,7 +188,10 @@ export function Sidebar({
             {collapsed ? (
               <Image src="/assets/aliis-black-single.png" alt="Aliis" width={30} height={30} className="object-contain logo-auto-invert" />
             ) : (
-              <Image src="/assets/aliis-original.png" alt="Aliis" width={88} height={32} className="object-contain" />
+              <>
+                <Image src="/assets/aliis-original.png" alt="Aliis" width={88} height={32} className="object-contain logo-hide-dark" />
+                <Image src="/assets/aliis-black.png" alt="Aliis" width={88} height={32} className="object-contain logo-show-dark" />
+              </>
             )}
           </Link>
         </div>
