@@ -4,6 +4,7 @@ import { DiarioNotesSection } from '@/components/DiarioNotesSection'
 import { SymptomsSection } from '@/components/SymptomsSection'
 import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
+import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import type { NoteWithPack, SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -64,6 +65,9 @@ export default async function DiarioPage() {
           Tu <em>diario</em> de salud
         </h1>
       </div>
+
+      {/* Push permission prompt — shown once if not yet granted */}
+      <PushPermissionPrompt />
 
       {/* Aliis insight */}
       <AliisInsight />

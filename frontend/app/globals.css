@@ -112,6 +112,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Logo switching between aliis-original (light) and aliis-black (dark) */
+.logo-hide-dark { display: inline; }
+.logo-show-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  .logo-hide-dark { display: none; }
+  .logo-show-dark { display: inline; }
+}
+
 body {
   margin: 0;
 }

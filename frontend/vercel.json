@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/aliis/notify",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

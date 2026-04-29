@@ -178,14 +178,14 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
             alt="Aliis"
             width={96}
             height={36}
-            className="object-contain mx-auto mb-4 dark:hidden"
+            className="object-contain mx-auto mb-4 logo-hide-dark"
           />
           <Image
             src="/assets/aliis-black.png"
             alt="Aliis"
             width={96}
             height={36}
-            className="object-contain mx-auto mb-4 hidden dark:block dark:invert"
+            className="object-contain mx-auto mb-4 logo-show-dark"
           />
         </div>
 

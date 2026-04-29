@@ -10,6 +10,7 @@ export async function GET(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
   const isVercelCron = req.headers.get('x-vercel-cron') === '1'
   const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
   if (!isVercelCron && !hasSecret) {
@@ -19,21 +20,42 @@ export async function GET(req: Request) {
   const today = new Date().toISOString().slice(0, 10)
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: subs } = await supabase
+  // Get all active users (logged in the last 30 days)
+  const { data: activeUsers } = await supabase
+    .from('symptom_logs')
+    .select('user_id')
+    .gte('logged_at', since30)
+
+  const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
+  if (userIds.length === 0) return Response.json({ sent: 0, skipped: 0 })
+
+  // Get push subscriptions indexed by user_id
+  const { data: subsData } = await supabase
     .from('push_subscriptions')
     .select('user_id, endpoint, p256dh, auth')
-    .limit(100)
+    .in('user_id', userIds)
 
-  if (!subs || subs.length === 0) return Response.json({ sent: 0, skipped: 0 })
+  const subsByUser = new Map((subsData ?? []).map(s => [s.user_id, s]))
 
   let sent = 0
   let skipped = 0
 
-  for (const sub of subs) {
+  for (const userId of userIds) {
+    // Skip if already notified today
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', `${today}T00:00:00Z`)
+      .eq('type', 'reminder')
+
+    if ((count ?? 0) > 0) { skipped++; continue }
+
+    // Reuse today's insight if already generated
     const { data: cached } = await supabase
       .from('aliis_insights')
       .select('content')
-      .eq('user_id', sub.user_id)
+      .eq('user_id', userId)
       .gte('generated_at', `${today}T00:00:00Z`)
       .maybeSingle()
 
@@ -43,9 +65,9 @@ export async function GET(req: Request) {
       content = cached.content
     } else {
       const [profileRes, logsRes, packRes] = await Promise.all([
-        supabase.from('profiles').select('name').eq('id', sub.user_id).single(),
-        supabase.from('symptom_logs').select('*').eq('user_id', sub.user_id).gte('logged_at', since30).order('logged_at', { ascending: false }),
-        supabase.from('packs').select('dx').eq('user_id', sub.user_id).order('created_at', { ascending: false }).limit(1).single(),
+        supabase.from('profiles').select('name').eq('id', userId).single(),
+        supabase.from('symptom_logs').select('*').eq('user_id', userId).gte('logged_at', since30).order('logged_at', { ascending: false }),
+        supabase.from('packs').select('dx').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).single(),
       ])
 
       const userName = profileRes.data?.name ?? 'tú'
@@ -53,39 +75,45 @@ export async function GET(req: Request) {
       const recentDiagnosis = packRes.data?.dx ?? null
 
       const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
-      const message = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
-        system,
-        messages: [{ role: 'user', content: userMessage }],
-      })
-      content = (message.content[0] as { type: string; text: string }).text.trim()
+      try {
+        const message = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 150,
+          system,
+          messages: [{ role: 'user', content: userMessage }],
+        })
+        content = (message.content[0] as { type: string; text: string }).text.trim()
+      } catch {
+        skipped++
+        continue
+      }
 
       await supabase.from('aliis_insights').insert({
-        user_id: sub.user_id,
+        user_id: userId,
         content,
         data_window: { logs: logs.length, userName, recentDiagnosis },
       })
     }
 
-    const result = await sendPushNotification(sub, {
+    // Always insert in-app notification
+    await supabase.from('notifications').insert({
+      user_id: userId,
       title: 'Aliis',
-      body: content.slice(0, 80) + (content.length > 80 ? '…' : ''),
-      url: '/diario',
+      body: content.slice(0, 500),
+      type: 'reminder',
+      url: '/diario?registrar=1',
     })
+    sent++
 
-    if (result.ok) {
-      sent++
-      await supabase.from('notifications').insert({
-        user_id: sub.user_id,
+    // Also send push if user has a subscription
+    const sub = subsByUser.get(userId)
+    if (sub) {
+      const result = await sendPushNotification(sub, {
         title: 'Aliis',
-        body: content.slice(0, 500),
-        type: 'reminder',
-        url: '/diario',
+        body: content.slice(0, 80) + (content.length > 80 ? '…' : ''),
+        url: '/diario?registrar=1',
       })
-    } else {
-      skipped++
-      if (result.expired) {
+      if (!result.ok && result.expired) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
       }
     }

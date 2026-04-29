@@ -34,6 +34,19 @@ export function NotificationBell() {
     )
   }, [])
 
+  // Load on mount and poll every 60s to keep badge count fresh
+  useEffect(() => {
+    function fetchNotifications() {
+      fetch('/api/notifications')
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d)) setNotifications(d) })
+        .catch(() => {})
+    }
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     if (!open) return
     setLoading(true)
@@ -79,12 +92,12 @@ export function NotificationBell() {
   }
 
   async function markRead(id: string) {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setNotifications(prev => prev.filter(n => n.id !== id))
     await fetch(`/api/notifications/${id}`, { method: 'PATCH' }).catch(() => {})
   }
 
   async function markAllRead() {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications([])
     await fetch('/api/notifications/read-all', { method: 'PATCH' }).catch(() => {})
   }
 
