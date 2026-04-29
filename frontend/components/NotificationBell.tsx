@@ -34,6 +34,19 @@ export function NotificationBell() {
     )
   }, [])
 
+  // Load on mount and poll every 60s to keep badge count fresh
+  useEffect(() => {
+    function fetchNotifications() {
+      fetch('/api/notifications')
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d)) setNotifications(d) })
+        .catch(() => {})
+    }
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     if (!open) return
     setLoading(true)
