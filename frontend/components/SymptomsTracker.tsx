@@ -113,14 +113,16 @@ export function SymptomsTracker({
         <div className="flex flex-col gap-1.5 mb-4">
           {active.map(s => (
             <div key={s.id} className={cn('flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-muted')}>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-sans text-[13px] text-foreground capitalize truncate">{s.name}</span>
-                {s.occurrences > 1 && (
-                  <span className="font-mono text-[10px] bg-background px-2 py-0.5 rounded-full text-muted-foreground shrink-0">
-                    &times;{s.occurrences}
-                  </span>
-                )}
-                <span className="font-sans text-[11px] text-muted-foreground/60 shrink-0 hidden sm:block">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-sans text-[13px] text-foreground capitalize truncate">{s.name}</span>
+                  {s.occurrences > 1 && (
+                    <span className="font-mono text-[10px] bg-background px-2 py-0.5 rounded-full text-muted-foreground shrink-0">
+                      &times;{s.occurrences}
+                    </span>
+                  )}
+                </div>
+                <span className="font-sans text-[11px] text-muted-foreground/60 shrink-0">
                   {format(new Date(s.last_seen_at), 'd MMM', { locale: es })}
                 </span>
               </div>
