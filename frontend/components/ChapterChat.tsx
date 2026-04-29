@@ -175,7 +175,7 @@ export function ChapterChat({
                     ))}
                   </div>
                 ) : m.role === 'user' ? (
-                  <p className="font-sans text-[14px] leading-[1.65] m-0 whitespace-pre-wrap !text-black">
+                  <p className="font-sans text-[14px] leading-[1.65] m-0 whitespace-pre-wrap text-background">
                     {m.text}
                   </p>
                 ) : (

@@ -315,7 +315,7 @@ export function ChatDrawer({
                           ))}
                         </div>
                       ) : m.role === 'user' ? (
-                        <p className="font-sans text-[13px] leading-[1.65] m-0 text-white whitespace-pre-wrap">
+                        <p className="font-sans text-[13px] leading-[1.65] m-0 text-background whitespace-pre-wrap">
                           {m.text}
                         </p>
                       ) : (
