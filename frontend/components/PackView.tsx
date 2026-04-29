@@ -49,7 +49,7 @@ function ChapterCard({
 
   return (
     <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
-      <div className="flex items-start justify-between gap-4 mb-2.5">
+      <div className="flex items-start justify-between gap-4 mb-2.5 pr-12">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60">
           {chapter.n} · {chapter.readTime}
         </div>

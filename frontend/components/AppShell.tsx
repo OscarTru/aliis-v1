@@ -37,9 +37,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             initialInitial={initialInitial}
           />
           <main className="flex-1 overflow-y-auto relative">
-            <div className="fixed top-4 right-4 z-50">
-              <NotificationBellWrapper />
-            </div>
+            <NotificationBellWrapper />
             <PageWrapper>
               {children}
             </PageWrapper>

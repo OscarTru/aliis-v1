@@ -224,8 +224,8 @@ export function ChatDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-40 h-screen w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
-          chatOpen ? 'translate-x-0' : 'translate-x-full'
+          'fixed top-0 right-0 z-40 h-[100dvh] w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
+          chatOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
       >
         {/* Header */}

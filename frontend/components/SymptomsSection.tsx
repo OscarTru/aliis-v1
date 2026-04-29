@@ -344,7 +344,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
 
   if (logs.length === 0) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col">
         <p className="font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mb-5">
           Síntomas y signos vitales
         </p>
@@ -381,10 +381,10 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
         </button>
       </div>
 
-      {/* Horizontal split: list left, chart right */}
-      <div className="flex gap-4 items-start">
-        {/* Left — metric filters + log list */}
-        <div className="flex flex-col gap-3 w-[44%] shrink-0">
+      {/* Split: vertical on mobile, horizontal on desktop */}
+      <div className="flex flex-col md:flex-row gap-4 md:items-start">
+        {/* Left/Top — metric filters + log list */}
+        <div className="flex flex-col gap-3 md:w-[44%] md:shrink-0">
           <div className="flex flex-wrap gap-1.5">
             {METRICS.map(m => (
               <button
@@ -448,7 +448,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
           </div>
         </div>
 
-        {/* Right — chart */}
+        {/* Right/Bottom — chart */}
         <div className="flex-1 min-w-0">
           {chartData.length < 2 ? (
             <p className="font-sans text-[12px] text-muted-foreground italic pt-4 text-center">
