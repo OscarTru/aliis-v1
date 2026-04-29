@@ -340,7 +340,11 @@ export function LoginModal({ onClose, initialView, initialError }: { onClose: ()
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
-                <Button type="submit" disabled={loading} className={submitCls}>
+                <Button
+                  type="submit"
+                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword}
+                  className={submitCls}
+                >
                   {loading ? 'Verificando…' : 'Crear cuenta'}
                 </Button>
               </form>
