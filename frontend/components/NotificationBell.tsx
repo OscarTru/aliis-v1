@@ -92,12 +92,12 @@ export function NotificationBell() {
   }
 
   async function markRead(id: string) {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setNotifications(prev => prev.filter(n => n.id !== id))
     await fetch(`/api/notifications/${id}`, { method: 'PATCH' }).catch(() => {})
   }
 
   async function markAllRead() {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications([])
     await fetch('/api/notifications/read-all', { method: 'PATCH' }).catch(() => {})
   }
 
