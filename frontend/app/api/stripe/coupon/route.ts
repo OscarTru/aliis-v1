@@ -11,20 +11,28 @@ export async function POST(req: Request) {
   let body: { code?: string } = {}
   try { body = await req.json() } catch { /* default */ }
 
-  const code = body.code?.trim().toUpperCase()
+  const code = body.code?.trim()
   if (!code) return NextResponse.json({ error: 'Código requerido' }, { status: 400 })
 
   try {
-    const promo = await stripe.promotionCodes.list({ code, active: true, limit: 1, expand: ['data.coupon'] })
-    const promoCode = promo.data[0]
+    // Stripe promotion code search is case-sensitive — try as-is and uppercased
+    let promoCode: Stripe.PromotionCode | undefined
+    for (const attempt of [code, code.toUpperCase()]) {
+      const promo = await stripe.promotionCodes.list({ code: attempt, active: true, limit: 1 })
+      if (promo.data[0]) { promoCode = promo.data[0]; break }
+    }
 
     if (!promoCode) return NextResponse.json({ error: 'Cupón no válido o expirado' }, { status: 404 })
 
+    // Fetch coupon details — .coupon is missing from types in this API version
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const coupon = (promoCode as any).coupon as { percent_off?: number; amount_off?: number; currency?: string }
-    const discount = coupon.percent_off
+    const rawCoupon = (promoCode as any).coupon
+    const couponId: string = typeof rawCoupon === 'string' ? rawCoupon : rawCoupon?.id ?? ''
+    const coupon = couponId ? await stripe.coupons.retrieve(couponId) : null
+
+    const discount = coupon?.percent_off
       ? `${coupon.percent_off}% de descuento`
-      : coupon.amount_off
+      : coupon?.amount_off
         ? `${(coupon.amount_off / 100).toFixed(0)} ${coupon.currency?.toUpperCase()} de descuento`
         : 'Descuento aplicado'
 
@@ -33,7 +41,8 @@ export async function POST(req: Request) {
       promotionCodeId: promoCode.id,
       discount,
     })
-  } catch {
+  } catch (err) {
+    console.error('[stripe/coupon]', err)
     return NextResponse.json({ error: 'Error al validar el cupón' }, { status: 500 })
   }
 }
