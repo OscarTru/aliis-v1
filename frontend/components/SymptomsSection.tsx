@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Trash2, Plus, ChevronDown } from 'lucide-react'
@@ -290,6 +291,19 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
   )
   const [modalOpen, setModalOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (searchParams.get('registrar') === '1') {
+      setModalOpen(true)
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('registrar')
+      const newUrl = params.size > 0 ? `${pathname}?${params}` : pathname
+      router.replace(newUrl, { scroll: false })
+    }
+  }, [searchParams, pathname, router])
 
   function toggleMetric(key: MetricKey) {
     setActiveMetrics(prev => {

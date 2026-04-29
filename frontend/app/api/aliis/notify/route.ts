@@ -101,7 +101,7 @@ export async function GET(req: Request) {
       title: 'Aliis',
       body: content.slice(0, 500),
       type: 'reminder',
-      url: '/diario',
+      url: '/diario?registrar=1',
     })
     sent++
 
@@ -111,7 +111,7 @@ export async function GET(req: Request) {
       const result = await sendPushNotification(sub, {
         title: 'Aliis',
         body: content.slice(0, 80) + (content.length > 80 ? '…' : ''),
-        url: '/diario',
+        url: '/diario?registrar=1',
       })
       if (result.expired) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
