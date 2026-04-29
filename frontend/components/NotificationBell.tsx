@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Bell, BellOff, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -10,16 +10,16 @@ import type { AppNotification } from '@/lib/types'
 
 type PushStatus = 'unknown' | 'granted' | 'denied' | 'unsupported'
 
-export function NotificationBell() {
+export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [pushStatus, setPushStatus] = useState<PushStatus>('unknown')
   const [subscribing, setSubscribing] = useState(false)
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(initialUnread)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const unreadCount = notifications.filter(n => !n.read).length
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -39,7 +39,12 @@ export function NotificationBell() {
     function fetchNotifications() {
       fetch('/api/notifications')
         .then(r => r.json())
-        .then(d => { if (Array.isArray(d)) setNotifications(d) })
+        .then(d => {
+          if (Array.isArray(d)) {
+            setNotifications(d)
+            setUnreadCount(d.filter((n: AppNotification) => !n.read).length)
+          }
+        })
         .catch(() => {})
     }
     fetchNotifications()
@@ -52,7 +57,12 @@ export function NotificationBell() {
     setLoading(true)
     fetch('/api/notifications')
       .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setNotifications(d) })
+      .then(d => {
+        if (Array.isArray(d)) {
+          setNotifications(d)
+          setUnreadCount(d.filter((n: AppNotification) => !n.read).length)
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [open])
@@ -92,19 +102,42 @@ export function NotificationBell() {
   }
 
   async function markRead(id: string) {
-    setNotifications(prev => prev.filter(n => n.id !== id))
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id)
+      setUnreadCount(next.filter(n => !n.read).length)
+      return next
+    })
     await fetch(`/api/notifications/${id}`, { method: 'PATCH' }).catch(() => {})
   }
 
   async function markAllRead() {
     setNotifications([])
+    setUnreadCount(0)
     await fetch('/api/notifications/read-all', { method: 'PATCH' }).catch(() => {})
   }
 
+  async function deleteNotification(e: React.MouseEvent, id: string, wasUnread: boolean) {
+    e.stopPropagation()
+    setNotifications(prev => prev.filter(x => x.id !== id))
+    if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1))
+    fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(() => {})
+  }
+
   async function handleNotificationClick(n: AppNotification) {
-    if (!n.read) await markRead(n.id)
+    if (!n.read) {
+      setUnreadCount(prev => Math.max(0, prev - 1))
+      setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
+      fetch(`/api/notifications/${n.id}`, { method: 'PATCH' }).catch(() => {})
+    }
     setOpen(false)
-    if (n.url) router.push(n.url)
+    if (n.url) {
+      const url = new URL(n.url, window.location.origin)
+      if (url.searchParams.get('registrar') === '1' && pathname === url.pathname) {
+        window.dispatchEvent(new CustomEvent('aliis:open-registro'))
+      } else {
+        router.push(n.url)
+      }
+    }
   }
 
   return (
@@ -160,33 +193,44 @@ export function NotificationBell() {
               </p>
             ) : (
               notifications.map(n => (
-                <button
+                <div
                   key={n.id}
-                  onClick={() => handleNotificationClick(n)}
                   className={cn(
-                    'w-full text-left px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer flex items-start gap-3',
-                    n.read ? 'bg-transparent hover:bg-muted/50' : 'bg-primary/5 hover:bg-primary/10'
+                    'relative group w-full border-b border-border/50 last:border-0',
+                    n.read ? 'bg-transparent' : 'bg-primary/5'
                   )}
                 >
-                  <span className={cn(
-                    'mt-1.5 shrink-0 w-2 h-2 rounded-full',
-                    n.read ? 'bg-transparent' : 'bg-primary'
-                  )} />
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      'font-sans text-[12px] leading-snug',
-                      n.read ? 'text-muted-foreground' : 'text-foreground font-medium'
-                    )}>
-                      {n.title}
-                    </p>
-                    <p className="font-sans text-[12px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
-                      {n.body}
-                    </p>
-                    <p className="font-mono text-[10px] text-muted-foreground/50 mt-1">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
-                    </p>
-                  </div>
-                </button>
+                  <button
+                    onClick={() => handleNotificationClick(n)}
+                    className="w-full text-left px-4 py-3 transition-colors cursor-pointer flex items-start gap-3 hover:bg-muted/50 pr-8"
+                  >
+                    <span className={cn(
+                      'mt-1.5 shrink-0 w-2 h-2 rounded-full',
+                      n.read ? 'bg-transparent' : 'bg-primary'
+                    )} />
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        'font-sans text-[12px] leading-snug',
+                        n.read ? 'text-muted-foreground' : 'text-foreground font-medium'
+                      )}>
+                        {n.title}
+                      </p>
+                      <p className="font-sans text-[12px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+                        {n.body}
+                      </p>
+                      <p className="font-mono text-[10px] text-muted-foreground/50 mt-1">
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={e => deleteNotification(e, n.id, !n.read)}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/40 hover:text-foreground border-none bg-transparent cursor-pointer p-0.5"
+                    aria-label="Eliminar notificación"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
               ))
             )}
           </div>

@@ -11,7 +11,7 @@ export async function GET() {
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(30)
+    .limit(5)
 
   if (error) return Response.json({ error: 'Error al obtener notificaciones' }, { status: 500 })
   return Response.json(data ?? [])

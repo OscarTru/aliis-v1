@@ -95,22 +95,31 @@ export async function GET(req: Request) {
       })
     }
 
-    // Always insert in-app notification
+    // In-app notification: insight goes to /diario, no modal
     await supabase.from('notifications').insert({
       user_id: userId,
       title: 'Aliis',
       body: content.slice(0, 500),
+      type: 'insight',
+      url: '/diario',
+    })
+
+    // Separate daily reminder notification to open the log modal
+    await supabase.from('notifications').insert({
+      user_id: userId,
+      title: '¿Cómo te sientes hoy?',
+      body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
       type: 'reminder',
       url: '/diario?registrar=1',
     })
     sent++
 
-    // Also send push if user has a subscription
+    // Also send push if user has a subscription (push for the reminder)
     const sub = subsByUser.get(userId)
     if (sub) {
       const result = await sendPushNotification(sub, {
-        title: 'Aliis',
-        body: content.slice(0, 80) + (content.length > 80 ? '…' : ''),
+        title: '¿Cómo te sientes hoy?',
+        body: 'Registra tus signos del día.',
         url: '/diario?registrar=1',
       })
       if (!result.ok && result.expired) {
