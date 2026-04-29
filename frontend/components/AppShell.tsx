@@ -3,7 +3,7 @@ import { BottomNav } from '@/components/BottomNav'
 import { PackProvider } from '@/lib/pack-context'
 import { ConditionProvider } from '@/lib/condition-context'
 import { PageWrapper } from '@/components/PageWrapper'
-import { NotificationBell } from '@/components/NotificationBell'
+import { NotificationBellWrapper } from '@/components/NotificationBellWrapper'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -38,7 +38,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           />
           <main className="flex-1 overflow-y-auto relative">
             <div className="fixed top-4 right-4 z-50">
-              <NotificationBell />
+              <NotificationBellWrapper />
             </div>
             <PageWrapper>
               {children}
