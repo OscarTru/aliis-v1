@@ -113,7 +113,7 @@ export async function GET(req: Request) {
         body: content.slice(0, 80) + (content.length > 80 ? '…' : ''),
         url: '/diario?registrar=1',
       })
-      if (result.expired) {
+      if (!result.ok && result.expired) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
       }
     }
