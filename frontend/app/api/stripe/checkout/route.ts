@@ -43,6 +43,10 @@ export async function POST(req: Request) {
     customer: profile?.stripe_customer_id ?? undefined,
     customer_email: profile?.stripe_customer_id ? undefined : user.email,
     metadata: { userId: user.id },
+    subscription_data: {
+      trial_period_days: 14,
+      metadata: { userId: user.id },
+    },
     success_url: `${origin}/cuenta?upgrade=success`,
     cancel_url: `${origin}/precios`,
   })
