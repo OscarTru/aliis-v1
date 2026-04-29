@@ -305,6 +305,12 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
     }
   }, [searchParams, pathname, router])
 
+  useEffect(() => {
+    function handleEvent() { setModalOpen(true) }
+    window.addEventListener('aliis:open-registro', handleEvent)
+    return () => window.removeEventListener('aliis:open-registro', handleEvent)
+  }, [])
+
   function toggleMetric(key: MetricKey) {
     setActiveMetrics(prev => {
       const next = new Set(prev)
