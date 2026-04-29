@@ -21,10 +21,10 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  let body: { paymentMethodId?: string; priceKey?: string } = {}
+  let body: { paymentMethodId?: string; priceKey?: string; promotionCodeId?: string } = {}
   try { body = await req.json() } catch { /* default */ }
 
-  const { paymentMethodId, priceKey } = body
+  const { paymentMethodId, priceKey, promotionCodeId } = body
   if (!paymentMethodId || !priceKey) {
     return NextResponse.json({ error: 'paymentMethodId y priceKey son requeridos' }, { status: 400 })
   }
@@ -62,6 +62,7 @@ export async function POST(req: Request) {
         items: [{ price: priceId }],
         trial_period_days: 14,
         default_payment_method: paymentMethodId,
+        ...(promotionCodeId ? { promotion_code: promotionCodeId } : {}),
         metadata: { userId: user.id },
       },
       { idempotencyKey: `sub_${user.id}_${priceKey}` }

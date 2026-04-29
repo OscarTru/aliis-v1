@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import {
   Elements,
@@ -57,6 +57,11 @@ function PaymentForm({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [coupon, setCoupon] = useState('')
+  const [couponState, setCouponState] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle')
+  const [couponDiscount, setCouponDiscount] = useState<string | null>(null)
+  const [promotionCodeId, setPromotionCodeId] = useState<string | null>(null)
+  const couponTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [currency, setCurrency] = useState<Currency>(() => {
     const c = priceKey.split('_')[0].toUpperCase() as Currency
@@ -69,6 +74,31 @@ function PaymentForm({
   useEffect(() => {
     onPriceKeyChange(`${currency.toLowerCase()}_${cycle}`)
   }, [currency, cycle, onPriceKeyChange])
+
+  useEffect(() => {
+    if (couponTimer.current) clearTimeout(couponTimer.current)
+    const code = coupon.trim()
+    if (!code) { setCouponState('idle'); setCouponDiscount(null); setPromotionCodeId(null); return }
+    setCouponState('checking')
+    couponTimer.current = setTimeout(async () => {
+      const res = await fetch('/api/stripe/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      }).catch(() => null)
+      const data = res ? await res.json().catch(() => ({})) : {}
+      if (data.valid) {
+        setCouponState('valid')
+        setCouponDiscount(data.discount)
+        setPromotionCodeId(data.promotionCodeId)
+      } else {
+        setCouponState('invalid')
+        setCouponDiscount(null)
+        setPromotionCodeId(null)
+      }
+    }, 600)
+    return () => { if (couponTimer.current) clearTimeout(couponTimer.current) }
+  }, [coupon])
 
   const prices = PRICES[currency]
 
@@ -102,7 +132,7 @@ function PaymentForm({
     const res = await fetch('/api/stripe/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentMethodId, priceKey: `${currency.toLowerCase()}_${cycle}` }),
+      body: JSON.stringify({ paymentMethodId, priceKey: `${currency.toLowerCase()}_${cycle}`, promotionCodeId }),
     })
 
     if (!res.ok) {
@@ -172,6 +202,34 @@ function PaymentForm({
             <CardCvcElement options={ELEMENT_OPTIONS} />
           </div>
         </div>
+      </div>
+
+      {/* Coupon */}
+      <div className="flex flex-col gap-1.5">
+        <div className="relative">
+          <input
+            type="text"
+            value={coupon}
+            onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+            placeholder="Código de descuento (opcional)"
+            spellCheck={false}
+            autoComplete="off"
+            className="w-full h-11 rounded-xl border border-border bg-background px-3 pr-8 font-mono text-[13px] tracking-wider placeholder:font-sans placeholder:tracking-normal placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
+          />
+          {coupon.trim() && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px]">
+              {couponState === 'checking' && <span className="text-muted-foreground">…</span>}
+              {couponState === 'valid' && <span className="text-[#1f8a9b]">✓</span>}
+              {couponState === 'invalid' && <span className="text-destructive">✗</span>}
+            </span>
+          )}
+        </div>
+        {couponState === 'valid' && couponDiscount && (
+          <p className="font-sans text-[12px] text-[#1f8a9b] pl-1">{couponDiscount}</p>
+        )}
+        {couponState === 'invalid' && (
+          <p className="font-sans text-[12px] text-destructive pl-1">Cupón no válido o expirado</p>
+        )}
       </div>
 
       {/* Error */}
