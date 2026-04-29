@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
 
 Los apuntes deben:
@@ -27,6 +25,7 @@ PREGUNTAS PARA MI MÉDICO
 (máximo 3 preguntas)`
 
 export async function POST(req: Request) {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   let body: { packId?: unknown; dx?: unknown }
   try {
     body = await req.json()

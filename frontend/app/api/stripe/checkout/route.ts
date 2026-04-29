@@ -4,10 +4,6 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-04-22.dahlia',
-})
-
 const PRICE_MAP: Record<string, string | undefined> = {
   'eur-monthly': process.env.STRIPE_PRICE_EUR_MONTHLY,
   'eur-yearly':  process.env.STRIPE_PRICE_EUR_YEARLY,
@@ -18,6 +14,9 @@ const PRICE_MAP: Record<string, string | undefined> = {
 }
 
 export async function POST(req: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-04-22.dahlia',
+  })
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

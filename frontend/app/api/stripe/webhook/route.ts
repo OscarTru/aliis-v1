@@ -7,9 +7,11 @@ import { paymentConfirmationEmail } from '@/lib/emails'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-04-22.dahlia',
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-04-22.dahlia',
+  })
+}
 
 function getAdminClient() {
   return createClient(
@@ -19,6 +21,7 @@ function getAdminClient() {
 }
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripe()
   const rawBody = await request.text()
   const sig = request.headers.get('stripe-signature')
 

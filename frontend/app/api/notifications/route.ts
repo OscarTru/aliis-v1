@@ -1,11 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
 
-const serviceSupabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function GET() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,6 +18,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const serviceSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const serviceKey = req.headers.get('x-service-key')
   if (serviceKey !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return Response.json({ error: 'No autorizado' }, { status: 401 })
