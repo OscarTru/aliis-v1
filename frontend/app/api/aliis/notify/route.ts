@@ -4,14 +4,12 @@ import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import { sendPushNotification } from '@/lib/web-push'
 import type { SymptomLog } from '@/lib/types'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 export async function GET(req: Request) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const isVercelCron = req.headers.get('x-vercel-cron') === '1'
   const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
   if (!isVercelCron && !hasSecret) {

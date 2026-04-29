@@ -3,9 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import type { SymptomLog } from '@/lib/types'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 export async function GET() {
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
