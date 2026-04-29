@@ -8,8 +8,8 @@ export function NotificationBellClient({ initialUnread }: { initialUnread: numbe
   const { chatOpen } = usePackContext()
   return (
     <div className={cn(
-      'fixed top-4 z-50 transition-all duration-300',
-      chatOpen ? 'md:right-[396px]' : 'right-4'
+      'hidden md:block fixed top-4 z-50 transition-all duration-300',
+      chatOpen ? 'md:right-[396px]' : 'md:right-4'
     )}>
       <NotificationBell initialUnread={initialUnread} />
     </div>
