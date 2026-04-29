@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { Menu, X } from 'lucide-react'
 import { LoginModal } from './LoginModal'
 import { createClient } from '@/lib/supabase'
 
@@ -13,6 +14,7 @@ export function AppNav() {
   const isLanding = pathname === '/'
   const [showLogin, setShowLogin] = useState(false)
   const [initial, setInitial] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -31,26 +33,33 @@ export function AppNav() {
     router.push('/')
   }
 
+  const NAV_LINKS = [
+    { label: 'Qué es', id: 'que-hace' },
+    { label: 'Cómo funciona', id: 'como-funciona' },
+    { label: 'Demo', id: 'ejemplo' },
+  ]
+
+  function scrollTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setMenuOpen(false)
+  }
+
   return (
     <>
       <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-border bg-background/80">
-        <div className="max-w-[72rem] mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-6 py-3.5">
-          {/* Logo — izquierda */}
+        <div className="max-w-[72rem] mx-auto flex items-center justify-between px-4 md:px-6 py-3.5">
+          {/* Logo */}
           <Link href={initial ? '/historial' : '/'} className="flex items-center no-underline">
             <Image src="/assets/aliis-black.png" alt="Aliis" width={80} height={32} className="object-contain" />
           </Link>
 
-          {/* Nav — centro */}
+          {/* Desktop nav links — hidden on mobile */}
           {isLanding && (
-            <nav className="flex items-center gap-6">
-              {[
-                { label: 'Qué es', id: 'que-hace' },
-                { label: 'Cómo funciona', id: 'como-funciona' },
-                { label: 'Demo', id: 'ejemplo' },
-              ].map(({ label, id }) => (
+            <nav className="hidden md:flex items-center gap-6">
+              {NAV_LINKS.map(({ label, id }) => (
                 <button
                   key={id}
-                  onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  onClick={() => scrollTo(id)}
                   className="font-sans text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer p-0 transition-colors"
                 >
                   {label}
@@ -60,10 +69,9 @@ export function AppNav() {
               <a href="mailto:hola@aliis.app" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">Contacto</a>
             </nav>
           )}
-          {!isLanding && <div />}
 
-          {/* Derecha */}
-          <div className="flex items-center gap-3 justify-end">
+          {/* Right side */}
+          <div className="flex items-center gap-2 md:gap-3">
             {initial ? (
               <>
                 {!isLanding && (
@@ -72,7 +80,7 @@ export function AppNav() {
                   </Link>
                 )}
                 {isLanding && (
-                  <Link href="/historial" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">
+                  <Link href="/historial" className="hidden md:block font-sans text-sm text-muted-foreground hover:text-foreground no-underline">
                     Mi expediente
                   </Link>
                 )}
@@ -83,13 +91,45 @@ export function AppNav() {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="px-5 py-2 rounded-full bg-foreground text-background font-sans text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
+                className="px-4 md:px-5 py-2 rounded-full bg-foreground text-background font-sans text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
               >
                 Iniciar sesión
               </button>
             )}
+
+            {/* Hamburger — only on mobile, only on landing */}
+            {isLanding && (
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-foreground bg-transparent border-none cursor-pointer"
+                aria-label="Menú"
+              >
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {isLanding && menuOpen && (
+          <div className="md:hidden border-t border-border bg-background px-4 pb-4 pt-2 flex flex-col gap-1">
+            {NAV_LINKS.map(({ label, id }) => (
+              <button
+                key={id}
+                onClick={() => scrollTo(id)}
+                className="w-full text-left font-sans text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer py-2.5 transition-colors"
+              >
+                {label}
+              </button>
+            ))}
+            <Link href="/precios" onClick={() => setMenuOpen(false)} className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline py-2.5">
+              Precios
+            </Link>
+            <a href="mailto:hola@aliis.app" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline py-2.5">
+              Contacto
+            </a>
+          </div>
+        )}
       </header>
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </>
