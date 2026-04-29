@@ -66,7 +66,7 @@ export default async function HistorialPage({
       <Suspense fallback={null}>
         <UpgradeToast />
       </Suspense>
-      <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
+      <div className="max-w-[680px] mx-auto px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20">
 
         <PageHeader
           eyebrow={`${totalPacks} ${totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}`}

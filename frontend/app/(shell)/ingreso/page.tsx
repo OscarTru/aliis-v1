@@ -298,7 +298,7 @@ export default function IngresoPage() {
   return (
     <>
       <>
-        <div className={cn(step === 'generating' ? 'flex items-center justify-center min-h-screen' : 'max-w-[560px] mx-auto px-6 pt-12 pb-20')}>
+        <div className={cn(step === 'generating' ? 'flex items-center justify-center min-h-screen' : 'max-w-[560px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-28 md:pb-20')}>
 
           {/* ── Step 1: diagnóstico (combobox) ── */}
           {step === 'dx' && (

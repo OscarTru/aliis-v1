@@ -38,7 +38,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-6 px-6 py-5 border-b border-border">
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6 px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
       <div className="font-sans text-sm text-muted-foreground pt-0.5 shrink-0 min-w-[120px]">
         {label}
       </div>
@@ -256,7 +256,7 @@ export default function CuentaPage() {
 
   return (
     <>
-      <div className="max-w-[680px] mx-auto px-8 pt-10 pb-20">
+      <div className="max-w-[680px] mx-auto px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20">
 
         <PageHeader
           eyebrow={profile.email ?? undefined}

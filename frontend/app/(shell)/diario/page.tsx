@@ -54,7 +54,7 @@ export default async function DiarioPage() {
   const trackedSymptoms: TrackedSymptom[] = (trackedResult.data ?? []) as TrackedSymptom[]
 
   return (
-    <div className="px-8 pt-10 pb-20 max-w-[1200px] mx-auto">
+    <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1200px] mx-auto">
       {/* Page header */}
       <div className="mb-8">
         <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-1">
@@ -69,13 +69,13 @@ export default async function DiarioPage() {
       <AliisInsight />
 
       {/* Symptoms + vitals — full width */}
-      <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
         <SymptomsSection initialLogs={logs} />
         <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
       </div>
 
       {/* Notes — full width below */}
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
         <DiarioNotesSection notes={notes} />
       </div>
     </div>
