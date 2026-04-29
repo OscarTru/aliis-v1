@@ -28,7 +28,12 @@ export function AppNav() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        supabase.auth.signOut()
+        setInitial(null)
+        return
+      }
       if (user?.email) setInitial(user.email[0].toUpperCase())
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
