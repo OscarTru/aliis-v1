@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
@@ -21,9 +21,8 @@ const SLIDE = {
   transition: { duration: 0.18, ease: [0.25, 0, 0, 1] as const },
 }
 
-export function LoginModal({ onClose, initialView, initialError }: { onClose: () => void; initialView?: View; initialError?: string }) {
+export function LoginModal({ onClose, initialView, initialError, initialInviteCode }: { onClose: () => void; initialView?: View; initialError?: string; initialInviteCode?: string }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [view, setView] = useState<View>(initialView ?? 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,18 +32,18 @@ export function LoginModal({ onClose, initialView, initialError }: { onClose: ()
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidated, setInviteValidated] = useState(false)
   const [inviteChecking, setInviteChecking] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  // Pre-fill invite code from URL ?invite=
+  // Pre-fill invite code from URL ?invite= (passed as prop from AppNav)
   useEffect(() => {
-    const code = searchParams?.get('invite')
-    if (code) {
-      setInviteCode(code.toUpperCase())
+    if (initialInviteCode) {
+      setInviteCode(initialInviteCode.toUpperCase())
       setView('signup')
     }
-  }, [searchParams])
+  }, [initialInviteCode])
 
   // Validate invite code in real-time (debounced)
   useEffect(() => {
@@ -92,6 +91,7 @@ export function LoginModal({ onClose, initialView, initialError }: { onClose: ()
     setFirstName('')
     setLastName('')
     setInviteValidated(false)
+    setAcceptedTerms(false)
   }
 
   async function handleGoogleSignIn(requireInvite = false) {
@@ -339,10 +339,28 @@ export function LoginModal({ onClose, initialView, initialError }: { onClose: ()
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
+                <label className="flex items-start gap-2.5 cursor-pointer select-none mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                  />
+                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
+                    Acepto los{' '}
+                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                      términos y condiciones
+                    </a>
+                    {' '}y la{' '}
+                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                      política de privacidad
+                    </a>
+                  </span>
+                </label>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button
                   type="submit"
-                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword}
+                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword || !acceptedTerms}
                   className={submitCls}
                 >
                   {loading ? 'Verificando…' : 'Crear cuenta'}

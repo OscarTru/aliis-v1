@@ -15,12 +15,19 @@ export function AppNav() {
   const isLanding = pathname === '/'
   const [showLogin, setShowLogin] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginInviteCode, setLoginInviteCode] = useState<string | undefined>(undefined)
   const [initial, setInitial] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('error') === 'no-invite') {
       setLoginError('No encontramos una cuenta con ese email. Para registrarte necesitas un código de invitación.')
+      setShowLogin(true)
+      router.replace('/', { scroll: false })
+    }
+    const invite = searchParams.get('invite')
+    if (invite) {
+      setLoginInviteCode(invite)
       setShowLogin(true)
       router.replace('/', { scroll: false })
     }
@@ -142,7 +149,7 @@ export function AppNav() {
           </div>
         )}
       </header>
-      {showLogin && <LoginModal onClose={() => { setShowLogin(false); setLoginError(null) }} initialError={loginError ?? undefined} />}
+      {showLogin && <LoginModal onClose={() => { setShowLogin(false); setLoginError(null); setLoginInviteCode(undefined) }} initialError={loginError ?? undefined} initialInviteCode={loginInviteCode} />}
     </>
   )
 }

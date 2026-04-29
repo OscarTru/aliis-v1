@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -976,7 +976,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      <AppNav />
+      <Suspense><AppNav /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
       <WhatAliisDoes />
       <HowItWorks />
