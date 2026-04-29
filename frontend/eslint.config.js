@@ -18,6 +18,7 @@ const config = [
     plugins: {
       '@next/next': require('@next/eslint-plugin-next'),
       '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+      'react-hooks': require('eslint-plugin-react-hooks'),
     },
     rules: {
       '@next/next/no-img-element': 'warn',

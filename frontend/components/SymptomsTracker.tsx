@@ -32,7 +32,6 @@ export function SymptomsTracker({
       })
       .catch(console.error)
       .finally(() => setBackfilling(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function toggleResolved(id: string, resolved: boolean) {
