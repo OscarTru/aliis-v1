@@ -49,13 +49,13 @@ export async function POST() {
     return Response.json({ skipped: true })
   }
 
-  // Fetch up to 20 most recent logs that have any data worth analyzing
+  // Fetch up to 5 most recent logs — enough for initial backfill without timeout risk
   const { data: logsData } = await supabase
     .from('symptom_logs')
     .select('*')
     .eq('user_id', user.id)
     .order('logged_at', { ascending: false })
-    .limit(20)
+    .limit(5)
 
   const logs = (logsData ?? []) as SymptomLog[]
   if (logs.length === 0) return Response.json({ processed: 0, symptoms: [] })
@@ -84,16 +84,21 @@ export async function POST() {
       if (!symptom.name || typeof symptom.name !== 'string') continue
       const name = symptom.name.toLowerCase()
 
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('tracked_symptoms')
         .select('id, occurrences')
         .eq('user_id', user.id)
         .ilike('name', name)
         .eq('resolved', false)
-        .single()
+        .maybeSingle()
+
+      if (selectError) {
+        console.error('[backfill] select error:', selectError)
+        continue
+      }
 
       if (existing) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('tracked_symptoms')
           .update({
             occurrences: existing.occurrences + 1,
@@ -102,8 +107,9 @@ export async function POST() {
             attention_reason: symptom.attention_reason ?? null,
           })
           .eq('id', existing.id)
+        if (updateError) console.error('[backfill] update error:', updateError)
       } else {
-        await supabase.from('tracked_symptoms').insert({
+        const { error: insertError } = await supabase.from('tracked_symptoms').insert({
           user_id: user.id,
           name,
           first_seen_at: log.logged_at,
@@ -113,6 +119,10 @@ export async function POST() {
           attention_reason: symptom.attention_reason ?? null,
           created_at: now,
         })
+        // Ignore unique constraint violations (symptom already inserted earlier in loop)
+        if (insertError && !insertError.message?.includes('duplicate') && insertError.code !== '23505') {
+          console.error('[backfill] insert error:', insertError)
+        }
       }
     }
   }
