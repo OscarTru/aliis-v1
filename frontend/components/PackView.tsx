@@ -48,7 +48,7 @@ function ChapterCard({
   }, [chapter.id, packId, userId, onRead])
 
   return (
-    <div className="h-full overflow-y-auto px-12 py-10 pb-20">
+    <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
       <div className="flex items-start justify-between gap-4 mb-2.5">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60">
           {chapter.n} · {chapter.readTime}
@@ -167,6 +167,49 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Mobile chapter tabs */}
+      <div className="flex md:hidden overflow-x-auto gap-1 px-4 py-2 border-b border-border bg-background sticky top-0 z-10" style={{ scrollbarWidth: 'none' }}>
+        {pack.chapters.map((ch, i) => (
+          <button
+            key={ch.id}
+            onClick={() => setActiveIdx(i)}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+              i === activeIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {ch.kicker}
+          </button>
+        ))}
+        {pack.tools.length > 0 && (
+          <button
+            onClick={() => setActiveIdx(pack.chapters.length)}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+              activeIdx === pack.chapters.length ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            Herramientas
+          </button>
+        )}
+        {(() => {
+          const verifiedRefs = pack.references.filter((r) => r.verified !== false)
+          if (verifiedRefs.length === 0) return null
+          const refsIdx = pack.chapters.length + (pack.tools.length > 0 ? 1 : 0)
+          return (
+            <button
+              onClick={() => setActiveIdx(refsIdx)}
+              className={cn(
+                'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+                activeIdx === refsIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+              )}
+            >
+              Referencias
+            </button>
+          )
+        })()}
+      </div>
+
       <ChatDrawer
         dx={pack.dx}
         packId={pack.id}
@@ -231,7 +274,7 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
         </>
       ) : hasTools && activeIdx === pack.chapters.length ? (
         /* Herramientas panel */
-        <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
+        <div className="flex-1 overflow-y-auto px-12 py-10 pb-28 md:pb-20">
           <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
             Herramientas para tu cuidado
           </div>
@@ -262,7 +305,7 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
         </div>
       ) : (
         /* References panel */
-        <div className="flex-1 overflow-y-auto px-12 py-10 pb-20">
+        <div className="flex-1 overflow-y-auto px-12 py-10 pb-28 md:pb-20">
           <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
             Referencias verificadas
           </div>
