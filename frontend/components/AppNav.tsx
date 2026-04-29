@@ -44,7 +44,8 @@ export function AppNav() {
         <div className="max-w-[72rem] mx-auto flex items-center justify-between px-4 md:px-6 py-3.5">
           {/* Logo */}
           <Link href={initial ? '/historial' : '/'} className="flex items-center no-underline">
-            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} className="object-contain" />
+            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} className="object-contain dark:hidden" />
+            <Image src="/assets/aliis-black.png" alt="Aliis" width={80} height={32} className="object-contain hidden dark:block dark:invert" />
           </Link>
 
           {/* Desktop nav links — hidden on mobile */}
