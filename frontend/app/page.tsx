@@ -535,7 +535,7 @@ function LiveExample() {
                 {/* Pack header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--c-border)' }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--c-surface)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Image src="/assets/aliis-logo.png" alt="Aliis" width={38} height={38} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <Image src="/assets/aliis-logo.png" alt="Aliis" width={38} height={38} className="dark:invert-0 invert" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 500, lineHeight: 1.2 }}>Migraña con aura</div>
@@ -632,7 +632,7 @@ function LiveExample() {
                 {/* Aliis response */}
                 <div style={{ display: 'flex', gap: 14 }}>
                   <div style={{ width: 32, height: 32, borderRadius: 999, overflow: 'hidden', flexShrink: 0, alignSelf: 'flex-start', background: 'var(--c-surface)', border: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Image src="/assets/aliis-logo.png" alt="Aliis" width={32} height={32} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <Image src="/assets/aliis-logo.png" alt="Aliis" width={32} height={32} className="dark:invert-0 invert" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 8 }}>

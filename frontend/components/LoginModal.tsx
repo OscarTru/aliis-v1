@@ -174,11 +174,18 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
         {/* Logo — siempre visible */}
         <div className="text-center mb-6">
           <Image
+            src="/assets/aliis-original.png"
+            alt="Aliis"
+            width={96}
+            height={36}
+            className="object-contain mx-auto mb-4 dark:hidden"
+          />
+          <Image
             src="/assets/aliis-black.png"
             alt="Aliis"
             width={96}
             height={36}
-            className="object-contain mx-auto mb-4"
+            className="object-contain mx-auto mb-4 hidden dark:block dark:invert"
           />
         </div>
 

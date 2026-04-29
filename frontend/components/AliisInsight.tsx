@@ -33,7 +33,7 @@ export function AliisInsight() {
   return (
     <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0">
           <Image src="/assets/aliis-logo.png" alt="Aliis" width={28} height={28} className="object-contain" />
         </div>
         <span className="font-mono text-[10px] tracking-[.12em] text-primary">Aliis</span>

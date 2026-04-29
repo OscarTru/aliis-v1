@@ -21,8 +21,9 @@ export function AppNav() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setInitial(user.email[0].toUpperCase())
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setInitial(session?.user?.email?.[0]?.toUpperCase() ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') { setInitial(null); return }
+      if (session?.user?.email) setInitial(session.user.email[0].toUpperCase())
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -44,7 +45,8 @@ export function AppNav() {
         <div className="max-w-[72rem] mx-auto flex items-center justify-between px-4 md:px-6 py-3.5">
           {/* Logo */}
           <Link href={initial ? '/historial' : '/'} className="flex items-center no-underline">
-            <Image src="/assets/aliis-black.png" alt="Aliis" width={80} height={32} className="object-contain" />
+            <Image src="/assets/aliis-original.png" alt="Aliis" width={80} height={32} className="object-contain dark:hidden" />
+            <Image src="/assets/aliis-black.png" alt="Aliis" width={80} height={32} className="object-contain hidden dark:block dark:invert" />
           </Link>
 
           {/* Desktop nav links — hidden on mobile */}

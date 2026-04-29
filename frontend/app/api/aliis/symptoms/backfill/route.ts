@@ -1,16 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import type { SymptomLog, TrackedSymptom } from '@/lib/types'
+import type { SymptomLog } from '@/lib/types'
 
-const SYSTEM_PROMPT = `Eres un extractor de síntomas médicos. Dado un registro de salud de un paciente, extrae todos los síntomas mencionados o implícitos.
+const SYSTEM_PROMPT = `Eres un extractor de síntomas médicos. Dado un conjunto de registros de salud de un paciente, extrae todos los síntomas únicos mencionados o implícitos en todos los registros.
 
 Para cada síntoma evalúa si necesita atención médica basándote en:
-- Si es persistente o recurrente
+- Si es persistente o recurrente (aparece en más de un registro)
 - Si los valores vitales asociados son anormales (glucosa >200 o <70, tensión sistólica >140 o <90, FC >100 o <50, temperatura >38 o <35.5)
 - Si el síntoma en sí es potencialmente grave
 
 Responde ÚNICAMENTE con JSON válido en este formato exacto:
-[{"name": "nombre del síntoma en minúsculas", "needs_medical_attention": true/false, "attention_reason": "razón o null"}]
+[{"name": "nombre del síntoma en minúsculas", "needs_medical_attention": true/false, "attention_reason": "razón concisa o null", "occurrences": número_de_registros_donde_aparece, "first_log_index": índice_del_registro_más_antiguo, "last_log_index": índice_del_registro_más_reciente}]
 
 Si no hay síntomas, responde: []
 No incluyas texto adicional fuera del JSON.`
@@ -19,19 +19,26 @@ interface ExtractedSymptom {
   name: string
   needs_medical_attention: boolean
   attention_reason: string | null
+  occurrences: number
+  first_log_index: number
+  last_log_index: number
 }
 
-function buildUserMessage(log: SymptomLog): string {
-  return [
-    'Registro de salud:',
-    log.note ? `Nota: ${log.note}` : '(sin nota)',
-    log.glucose !== null ? `Glucosa: ${log.glucose} mg/dL` : '',
-    log.bp_systolic !== null ? `Tensión sistólica: ${log.bp_systolic} mmHg` : '',
-    log.bp_diastolic !== null ? `Tensión diastólica: ${log.bp_diastolic} mmHg` : '',
-    log.heart_rate !== null ? `Frecuencia cardíaca: ${log.heart_rate} lpm` : '',
-    log.weight !== null ? `Peso: ${log.weight} kg` : '',
-    log.temperature !== null ? `Temperatura: ${log.temperature}°C` : '',
-  ].filter(Boolean).join('\n')
+function buildBatchMessage(logs: SymptomLog[]): string {
+  const entries = logs.map((log, i) => {
+    const lines = [
+      `Registro ${i} (${log.logged_at}):`,
+      log.note ? `  Nota: ${log.note}` : '  (sin nota)',
+      log.glucose !== null ? `  Glucosa: ${log.glucose} mg/dL` : '',
+      log.bp_systolic !== null ? `  Tensión sistólica: ${log.bp_systolic} mmHg` : '',
+      log.bp_diastolic !== null ? `  Tensión diastólica: ${log.bp_diastolic} mmHg` : '',
+      log.heart_rate !== null ? `  Frecuencia cardíaca: ${log.heart_rate} lpm` : '',
+      log.weight !== null ? `  Peso: ${log.weight} kg` : '',
+      log.temperature !== null ? `  Temperatura: ${log.temperature}°C` : '',
+    ].filter(Boolean).join('\n')
+    return lines
+  })
+  return entries.join('\n\n')
 }
 
 export async function POST() {
@@ -39,7 +46,6 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  // Check if user already has tracked symptoms — if so, skip backfill
   const { count } = await supabase
     .from('tracked_symptoms')
     .select('id', { count: 'exact', head: true })
@@ -49,76 +55,59 @@ export async function POST() {
     return Response.json({ skipped: true })
   }
 
-  // Fetch up to 20 most recent logs that have a note
-  const { data: logsData } = await supabase
+  const { data: logsData, error: logsError } = await supabase
     .from('symptom_logs')
     .select('*')
     .eq('user_id', user.id)
-    .not('note', 'is', null)
-    .order('logged_at', { ascending: false })
-    .limit(20)
+    .order('logged_at', { ascending: true })
+    .limit(10)
+
 
   const logs = (logsData ?? []) as SymptomLog[]
   if (logs.length === 0) return Response.json({ processed: 0, symptoms: [] })
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+  let extracted: ExtractedSymptom[] = []
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: buildBatchMessage(logs) }],
+    })
+    let raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) extracted = parsed
+  } catch (err) {
+    console.error('[backfill] claude error:', err)
+    return Response.json({ processed: 0, symptoms: [] })
+  }
+
   const now = new Date().toISOString()
 
-  // Process each log sequentially to avoid hammering the API
-  for (const log of logs) {
-    let extracted: ExtractedSymptom[] = []
-    try {
-      const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: buildUserMessage(log) }],
-      })
-      const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) extracted = parsed
-    } catch {
-      continue
-    }
+  for (const symptom of extracted) {
+    if (!symptom.name || typeof symptom.name !== 'string') continue
+    const name = symptom.name.toLowerCase()
+    const firstLog = logs[symptom.first_log_index] ?? logs[0]
+    const lastLog = logs[symptom.last_log_index] ?? logs[logs.length - 1]
 
-    for (const symptom of extracted) {
-      if (!symptom.name || typeof symptom.name !== 'string') continue
-      const name = symptom.name.toLowerCase()
-
-      const { data: existing } = await supabase
-        .from('tracked_symptoms')
-        .select('id, occurrences')
-        .eq('user_id', user.id)
-        .ilike('name', name)
-        .eq('resolved', false)
-        .single()
-
-      if (existing) {
-        await supabase
-          .from('tracked_symptoms')
-          .update({
-            occurrences: existing.occurrences + 1,
-            last_seen_at: log.logged_at,
-            needs_medical_attention: symptom.needs_medical_attention,
-            attention_reason: symptom.attention_reason ?? null,
-          })
-          .eq('id', existing.id)
-      } else {
-        await supabase.from('tracked_symptoms').insert({
-          user_id: user.id,
-          name,
-          first_seen_at: log.logged_at,
-          last_seen_at: log.logged_at,
-          occurrences: 1,
-          needs_medical_attention: symptom.needs_medical_attention,
-          attention_reason: symptom.attention_reason ?? null,
-          created_at: now,
-        })
-      }
+    const { error: insertError } = await supabase.from('tracked_symptoms').insert({
+      user_id: user.id,
+      name,
+      first_seen_at: firstLog.logged_at,
+      last_seen_at: lastLog.logged_at,
+      occurrences: Math.max(1, symptom.occurrences ?? 1),
+      needs_medical_attention: symptom.needs_medical_attention,
+      attention_reason: symptom.attention_reason ?? null,
+      created_at: now,
+    })
+    if (insertError && insertError.code !== '23505') {
+      console.error('[backfill] insert error:', insertError)
     }
   }
 
-  // Return the resulting tracked symptoms so the client can update state
   const { data: result } = await supabase
     .from('tracked_symptoms')
     .select('*')
