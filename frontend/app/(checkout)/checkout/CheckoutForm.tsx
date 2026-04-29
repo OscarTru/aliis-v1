@@ -210,7 +210,7 @@ function PaymentForm({
           <input
             type="text"
             value={coupon}
-            onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+            onChange={(e) => setCoupon(e.target.value)}
             placeholder="Código de descuento (opcional)"
             spellCheck={false}
             autoComplete="off"
