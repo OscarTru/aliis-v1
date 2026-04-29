@@ -228,15 +228,6 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
               <p className="font-serif italic text-[17px] text-muted-foreground text-center mb-6">
                 {title.login}
               </p>
-              <button
-                type="button"
-                onClick={() => handleGoogleSignIn(false)}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
-              >
-                <GoogleIcon />
-                {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
-              </button>
               <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
@@ -284,15 +275,6 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleGoogleSignIn(true)}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
-              >
-                <GoogleIcon />
-                {googleLoading ? 'Verificando…' : 'Continuar con Google'}
-              </button>
               <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <div className="flex gap-2.5">
