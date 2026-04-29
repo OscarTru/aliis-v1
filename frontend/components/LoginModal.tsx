@@ -21,7 +21,7 @@ const SLIDE = {
   transition: { duration: 0.18, ease: [0.25, 0, 0, 1] as const },
 }
 
-export function LoginModal({ onClose, initialView }: { onClose: () => void; initialView?: View }) {
+export function LoginModal({ onClose, initialView, initialError }: { onClose: () => void; initialView?: View; initialError?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [view, setView] = useState<View>(initialView ?? 'login')
@@ -33,7 +33,7 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidated, setInviteValidated] = useState(false)
   const [inviteChecking, setInviteChecking] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initialError ?? null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
@@ -257,6 +257,15 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
               <p className="font-serif italic text-[17px] text-muted-foreground text-center mb-6">
                 {title.login}
               </p>
+              <button
+                type="button"
+                onClick={() => handleGoogleSignIn(false)}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl border-[1.5px] border-border bg-white text-black font-sans text-[15px] font-medium shadow-sm hover:shadow-md transition-shadow duration-150 disabled:opacity-70 disabled:cursor-not-allowed mb-5"
+              >
+                <GoogleIcon />
+                {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
+              </button>
               <Divider />
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
@@ -264,7 +273,16 @@ export function LoginModal({ onClose, initialView }: { onClose: () => void; init
                 <button type="button" onClick={() => goTo('forgot')} className={linkCls + ' self-end'}>
                   ¿Olvidaste tu contraseña?
                 </button>
-                {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
+                {error && (
+                  <div className="flex flex-col gap-1">
+                    <p className="text-destructive font-sans text-[13px] m-0">{error}</p>
+                    {error.includes('código de invitación') && (
+                      <button type="button" onClick={() => goTo('signup')} className={linkCls + ' self-start'}>
+                        Crear cuenta con código →
+                      </button>
+                    )}
+                  </div>
+                )}
                 <Button type="submit" disabled={loading} className={submitCls}>
                   {loading ? 'Cargando…' : 'Iniciar sesión'}
                 </Button>

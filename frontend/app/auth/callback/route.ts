@@ -31,6 +31,20 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // Check if user has a profile (i.e. was properly registered with invite)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .maybeSingle()
+
+      if (!profile && !inviteCode) {
+        // New user via Google login without invite — delete the auto-created auth user and block
+        await supabase.auth.signOut()
+        response.headers.set('location', `${origin}/?error=no-invite`)
+        return response
+      }
+
       // Consume invite code if present (Google OAuth signup path)
       if (inviteCode) {
         const normalized = inviteCode.trim().toUpperCase()
