@@ -386,7 +386,7 @@ export function LoginModal({ onClose, initialView, initialError }: { onClose: ()
 /* ─── helpers ─── */
 
 const inputCls = 'h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]'
-const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70'
+const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
 const linkCls   = 'font-sans text-[13px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors'
 
 function Divider() {
