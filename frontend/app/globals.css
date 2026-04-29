@@ -112,6 +112,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Logo visibility helpers — tied to prefers-color-scheme, not Tailwind dark class */
+.logo-hide-dark { display: inline; }
+.logo-show-dark { display: none; }
+.logo-auto-invert { filter: none; }
+
+@media (prefers-color-scheme: dark) {
+  .logo-hide-dark { display: none; }
+  .logo-show-dark { display: inline; filter: invert(1); }
+  .logo-auto-invert { filter: invert(1); }
+}
+
 body {
   margin: 0;
 }
