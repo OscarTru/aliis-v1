@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Plus, LayoutList, BookHeart, Library } from 'lucide-react'
+import { Plus, LayoutList, BookHeart, Library, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/historial',   label: 'Expediente',   icon: LayoutList },
   { href: '/diario',      label: 'Diario',       icon: BookHeart },
   { href: '/condiciones', label: 'Diagnósticos', icon: Library },
+  { href: '/cuenta',      label: 'Cuenta',       icon: UserCircle },
 ]
 
 export function BottomNav() {
