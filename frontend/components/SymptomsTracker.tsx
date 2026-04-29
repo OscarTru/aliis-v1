@@ -19,7 +19,7 @@ export function SymptomsTracker({
 
   useEffect(() => {
     const hasData = logs.some(l => l.note || l.glucose !== null || l.bp_systolic !== null || l.heart_rate !== null || l.weight !== null || l.temperature !== null)
-    if (initialSymptoms.length > 0 || !hasData) return
+if (initialSymptoms.length > 0 || !hasData) return
 
     setBackfilling(true)
     fetch('/api/aliis/symptoms/backfill', { method: 'POST' })

@@ -55,12 +55,13 @@ export async function POST() {
     return Response.json({ skipped: true })
   }
 
-  const { data: logsData } = await supabase
+  const { data: logsData, error: logsError } = await supabase
     .from('symptom_logs')
     .select('*')
     .eq('user_id', user.id)
     .order('logged_at', { ascending: true })
     .limit(10)
+
 
   const logs = (logsData ?? []) as SymptomLog[]
   if (logs.length === 0) return Response.json({ processed: 0, symptoms: [] })
@@ -75,7 +76,8 @@ export async function POST() {
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildBatchMessage(logs) }],
     })
-    const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
+    let raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) extracted = parsed
   } catch (err) {
