@@ -115,12 +115,10 @@ html {
 /* Logo switching between aliis-original (light) and aliis-black (dark) */
 .logo-hide-dark { display: inline; }
 .logo-show-dark { display: none; }
-.logo-auto-invert { filter: none; }
 
 @media (prefers-color-scheme: dark) {
   .logo-hide-dark { display: none; }
   .logo-show-dark { display: inline; }
-  .logo-auto-invert { filter: invert(1); }
 }
 
 body {
