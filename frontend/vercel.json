@@ -3,6 +3,10 @@
     {
       "path": "/api/aliis/notify",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/aliis/capsula",
+      "schedule": "0 9 1 * *"
     }
   ]
 }

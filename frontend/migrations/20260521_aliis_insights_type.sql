@@ -1,0 +1,1 @@
+ALTER TABLE aliis_insights ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'daily';

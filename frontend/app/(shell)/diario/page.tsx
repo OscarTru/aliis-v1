@@ -7,6 +7,7 @@ import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import { AdherenceWrapper } from '@/components/AdherenceWrapper'
 import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
+import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
 import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -81,6 +82,20 @@ export default async function DiarioPage() {
     return hash < flag.rollout_pct
   })()
 
+  // Cápsula del tiempo — most recent this month
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const { data: capsulaData } = await supabase
+    .from('aliis_insights')
+    .select('content, generated_at')
+    .eq('user_id', uid)
+    .eq('type', 'capsula')
+    .gte('generated_at', `${thisMonth}-01T00:00:00Z`)
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const capsula = capsulaData ?? null
+
   // Medications from medical_profile (server-side fetch)
   let medications: string[] = []
   if (showAdherence) {
@@ -106,6 +121,9 @@ export default async function DiarioPage() {
 
       {/* Push permission prompt — shown once if not yet granted */}
       <PushPermissionPrompt />
+
+      {/* Cápsula del tiempo — shown if generated this month */}
+      {capsula && <CapsulaDeTiempo content={capsula.content} generatedAt={capsula.generated_at} />}
 
       {/* Aliis insight */}
       <AliisInsight />
