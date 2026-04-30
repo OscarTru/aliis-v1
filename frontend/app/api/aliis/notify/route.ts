@@ -18,7 +18,26 @@ export async function GET(req: Request) {
   }
 
   const today = new Date().toISOString().slice(0, 10)
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  // Appointment reminders: notify users whose next_appointment is tomorrow
+  const { data: appointmentUsers } = await supabase
+    .from('profiles')
+    .select('id, name, next_appointment')
+    .eq('next_appointment', tomorrow)
+
+  for (const u of appointmentUsers ?? []) {
+    await supabase.from('notifications').insert({
+      user_id: u.id,
+      title: 'Tu consulta es mañana',
+      body: 'Recuerda llevar tu resumen pre-consulta de Aliis.',
+      type: 'reminder',
+      url: '/historial',
+    })
+    // Clear appointment so it doesn't trigger again
+    await supabase.from('profiles').update({ next_appointment: null }).eq('id', u.id)
+  }
 
   // Get all active users (logged in the last 30 days)
   const { data: activeUsers } = await supabase

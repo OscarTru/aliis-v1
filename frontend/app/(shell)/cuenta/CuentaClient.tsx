@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { saveMedicalProfile } from '@/app/actions/medical-profile'
+import { saveNextAppointment } from '@/app/actions/appointment'
 import type { MedicalProfile } from '@/lib/types'
 
 type Profile = {
@@ -24,6 +25,7 @@ type Profile = {
   trial_end: string | null
   subscription_status: string | null
   stripe_customer_id: string | null
+  next_appointment: string | null
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -122,6 +124,24 @@ export function CuentaClient({
   const [medEdad, setMedEdad] = useState(initialMedicalProfile?.edad?.toString() ?? '')
   const [medSexo, setMedSexo] = useState(initialMedicalProfile?.sexo ?? '')
   const [medLoading, setMedLoading] = useState(false)
+
+  // Next appointment
+  const [appointment, setAppointment] = useState(initialProfile.next_appointment ?? '')
+  const [appointmentLoading, setAppointmentLoading] = useState(false)
+
+  async function saveAppointment() {
+    setAppointmentLoading(true)
+    const result = await saveNextAppointment(appointment || null)
+    setAppointmentLoading(false)
+    showToast(result.error ? 'Error al guardar.' : 'Cita guardada.', !result.error)
+  }
+
+  async function clearAppointment() {
+    setAppointment('')
+    setAppointmentLoading(true)
+    await saveNextAppointment(null)
+    setAppointmentLoading(false)
+  }
 
   async function saveMed() {
     setMedLoading(true)
@@ -532,6 +552,46 @@ export function CuentaClient({
             </div>
           </Section>
         )}
+
+        {/* Próxima consulta */}
+        <Section title="Próxima consulta">
+          <div className="px-4 sm:px-6 py-5">
+            <p className="font-sans text-[13px] text-muted-foreground mb-4">
+              Aliis te avisará un día antes para que prepares tu consulta.
+            </p>
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="font-sans text-[12px] text-muted-foreground/70 mb-1.5 block">
+                  Fecha de la cita
+                </label>
+                <Input
+                  type="date"
+                  value={appointment}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={e => setAppointment(e.target.value)}
+                  className="h-11 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <SaveButton loading={appointmentLoading} onClick={saveAppointment} />
+              {appointment && (
+                <button
+                  onClick={clearAppointment}
+                  disabled={appointmentLoading}
+                  className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer disabled:opacity-70"
+                >
+                  Borrar
+                </button>
+              )}
+            </div>
+            {appointment && new Date(appointment + 'T00:00:00') >= new Date() && (
+              <p className="font-sans text-[12px] text-primary mt-3">
+                Cita el {new Date(appointment + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+        </Section>
 
         {/* Zona peligrosa */}
         <Section title="Zona peligrosa">

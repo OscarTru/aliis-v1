@@ -10,7 +10,7 @@ export default async function CuentaPage() {
 
   const { data: p } = await supabase
     .from('profiles')
-    .select('name,last_name,birth_date,location,who,plan,trial_end,subscription_status,stripe_customer_id')
+    .select('name,last_name,birth_date,location,who,plan,trial_end,subscription_status,stripe_customer_id,next_appointment')
     .eq('id', user.id)
     .single()
 
@@ -37,6 +37,7 @@ export default async function CuentaPage() {
         trial_end: p?.trial_end ?? null,
         subscription_status: p?.subscription_status ?? null,
         stripe_customer_id: p?.stripe_customer_id ?? null,
+        next_appointment: p?.next_appointment ?? null,
       }}
     />
   )
