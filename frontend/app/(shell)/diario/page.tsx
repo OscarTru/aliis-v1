@@ -8,6 +8,7 @@ import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import { AdherenceWrapper } from '@/components/AdherenceWrapper'
 import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
 import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
+import { ElHilo } from '@/components/ElHilo'
 import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -134,6 +135,9 @@ export default async function DiarioPage() {
           <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
         </div>
       )}
+
+      {/* El Hilo — narrativa longitudinal, todos los usuarios */}
+      <ElHilo userId={uid} />
 
       {/* Correlation analysis — Pro only */}
       {userPlan === 'pro' && (
