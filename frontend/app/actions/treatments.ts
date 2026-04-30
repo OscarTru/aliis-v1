@@ -34,6 +34,7 @@ export async function createTreatment(input: TreatmentInput): Promise<{ data?: T
     notes: input.notes?.trim() || null,
   }).select().single()
   revalidatePath('/cuenta')
+  revalidatePath('/tratamientos')
   return { data: data as Treatment | undefined, error: error?.message }
 }
 
@@ -63,6 +64,7 @@ export async function updateTreatment(id: string, input: Partial<TreatmentInput>
     .eq('id', id)
     .eq('user_id', user.id)
   revalidatePath('/cuenta')
+  revalidatePath('/tratamientos')
   return { error: error?.message }
 }
 
@@ -76,5 +78,6 @@ export async function deleteTreatment(id: string): Promise<{ error?: string }> {
     .eq('id', id)
     .eq('user_id', user.id)
   revalidatePath('/cuenta')
+  revalidatePath('/tratamientos')
   return { error: error?.message }
 }
