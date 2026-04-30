@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, X, Check, Pill } from 'lucide-react'
 import { createTreatment, updateTreatment, deleteTreatment } from '@/app/actions/treatments'
 import { FREQUENCY_LABELS } from '@/lib/types'
 import type { Treatment, TreatmentFrequency, TreatmentInput } from '@/lib/types'
+import { useToast } from '@/hooks/use-toast'
 
 const FREQUENCIES: TreatmentFrequency[] = [
   'once_daily', 'twice_daily', 'three_daily', 'four_daily', 'as_needed', 'other'
@@ -211,11 +212,19 @@ export function TreatmentsSection({ initialTreatments }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const { toast } = useToast()
 
   function handleCreate(data: TreatmentInput) {
     startTransition(async () => {
       const result = await createTreatment(data)
-      if (!result.error) {
+      if (result.error) {
+        toast({ title: 'No se pudo guardar', description: result.error, variant: 'destructive' })
+        return
+      }
+      if (result.data) {
+        setTreatments(prev => [...prev, result.data!])
+      } else {
+        // fallback optimistic (shouldn't happen)
         const optimistic: Treatment = {
           id: crypto.randomUUID(),
           user_id: '',
@@ -233,8 +242,8 @@ export function TreatmentsSection({ initialTreatments }: Props) {
           updated_at: new Date().toISOString(),
         }
         setTreatments(prev => [...prev, optimistic])
-        setShowForm(false)
       }
+      setShowForm(false)
     })
   }
 
@@ -244,6 +253,8 @@ export function TreatmentsSection({ initialTreatments }: Props) {
       if (!result.error) {
         setTreatments(prev => prev.map(t => t.id === id ? { ...t, ...data } : t))
         setEditingId(null)
+      } else {
+        toast({ title: 'No se pudo guardar', description: result.error, variant: 'destructive' })
       }
     })
   }
@@ -253,6 +264,8 @@ export function TreatmentsSection({ initialTreatments }: Props) {
       const result = await deleteTreatment(id)
       if (!result.error) {
         setTreatments(prev => prev.filter(t => t.id !== id))
+      } else {
+        toast({ title: 'No se pudo guardar', description: result.error, variant: 'destructive' })
       }
     })
   }

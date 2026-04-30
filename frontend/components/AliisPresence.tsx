@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
 
 export function AliisPresence({ collapsed }: Props) {
   return (
-    <a
+    <Link
       href="/diario"
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-colors no-underline group"
     >
@@ -26,6 +27,6 @@ export function AliisPresence({ collapsed }: Props) {
       {!collapsed && (
         <Sparkles className="w-3 h-3 text-primary/40 group-hover:text-primary transition-colors shrink-0 ml-auto" />
       )}
-    </a>
+    </Link>
   )
 }
