@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { usePackContext } from '@/lib/pack-context'
 import { useConditionContext } from '@/lib/condition-context'
 import { cn } from '@/lib/utils'
+import { AliisPresence } from './AliisPresence'
 
 const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
   'que-es': <BookOpen size={14} />,
@@ -322,6 +323,11 @@ export function Sidebar({
 
         {/* Spacer — always pushes bottom nav down */}
         <div className="flex-1" />
+
+        {/* Aliis AI presence */}
+        <div className={cn('pt-1 pb-1', collapsed ? 'px-2' : 'px-2')}>
+          <AliisPresence collapsed={collapsed} />
+        </div>
 
         {/* Bottom nav (upgrade item only when free) */}
         {bottomNav.length > 0 && (
