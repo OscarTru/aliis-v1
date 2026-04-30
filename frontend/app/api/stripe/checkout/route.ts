@@ -4,6 +4,13 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
+const ALLOWED_ORIGINS = [
+  'https://aliis.app',
+  'https://www.aliis.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+]
+
 const PRICE_MAP: Record<string, string | undefined> = {
   'eur-monthly': process.env.STRIPE_PRICE_EUR_MONTHLY,
   'eur-yearly':  process.env.STRIPE_PRICE_EUR_YEARLY,
@@ -34,7 +41,8 @@ export async function POST(req: Request) {
     .eq('id', user.id)
     .single()
 
-  const origin = req.headers.get('origin') ?? 'https://aliis.app'
+  const requestOrigin = req.headers.get('origin') ?? ''
+  const origin = ALLOWED_ORIGINS.find(o => requestOrigin.startsWith(o)) ?? 'https://aliis.app'
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
