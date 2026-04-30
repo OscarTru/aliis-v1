@@ -135,6 +135,7 @@ export interface SymptomLog {
   weight: number | null
   temperature: number | null
   note: string | null
+  free_text: string | null
 }
 
 export interface NoteWithPack {
