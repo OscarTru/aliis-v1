@@ -6,6 +6,7 @@ import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
 import { AdherenceWrapper } from '@/components/AdherenceWrapper'
+import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
 import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
@@ -114,6 +115,11 @@ export default async function DiarioPage() {
         <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
           <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
         </div>
+      )}
+
+      {/* Correlation analysis — Pro only */}
+      {userPlan === 'pro' && (
+        <CorrelationAnalysis userId={uid} />
       )}
 
       {/* Symptoms + vitals — full width */}
