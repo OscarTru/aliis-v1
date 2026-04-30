@@ -24,12 +24,13 @@ export async function POST(req: Request) {
 
   const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [profileRes, packsRes, logsRes, trackedRes, medRes] = await Promise.all([
+  const [profileRes, packsRes, logsRes, trackedRes, medRes, treatmentsRes] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', user.id).single(),
     supabase.from('packs').select('dx, created_at').eq('user_id', user.id).order('created_at', { ascending: true }),
     supabase.from('symptom_logs').select('*').eq('user_id', user.id).gte('logged_at', since90).order('logged_at', { ascending: true }),
     supabase.from('tracked_symptoms').select('name, occurrences, resolved, needs_medical_attention').eq('user_id', user.id).order('first_seen_at', { ascending: true }),
-    supabase.from('medical_profiles').select('medicamentos, condiciones_previas, edad, sexo').eq('user_id', user.id).maybeSingle(),
+    supabase.from('medical_profiles').select('condiciones_previas, edad, sexo').eq('user_id', user.id).maybeSingle(),
+    supabase.from('treatments').select('name, dose, frequency, frequency_label, indefinite').eq('user_id', user.id).eq('active', true),
   ])
 
   const userName = profileRes.data?.name ?? 'tú'
@@ -37,6 +38,20 @@ export async function POST(req: Request) {
   const logs = (logsRes.data ?? []) as SymptomLog[]
   const tracked = (trackedRes.data ?? []) as Pick<TrackedSymptom, 'name' | 'occurrences' | 'resolved' | 'needs_medical_attention'>[]
   const med = medRes.data
+
+  const FREQ: Record<string, string> = {
+    once_daily: 'una vez al día',
+    twice_daily: 'dos veces al día',
+    three_daily: 'tres veces al día',
+    four_daily: 'cuatro veces al día',
+    as_needed: 'según sea necesario',
+    other: 'otra frecuencia',
+  }
+
+  const treatmentLines = (treatmentsRes.data ?? []).map((t: { name: string; dose: string | null; frequency: string; frequency_label: string | null; indefinite: boolean }) => {
+    const freq = t.frequency === 'other' ? (t.frequency_label ?? 'otra frecuencia') : (FREQ[t.frequency] ?? t.frequency)
+    return `- ${t.name}${t.dose ? ` ${t.dose}` : ''} — ${freq}${t.indefinite ? ' (indefinido)' : ''}`
+  }).join('\n')
 
   if (packs.length === 0 && logs.length === 0) {
     return Response.json({ error: 'Aún no hay suficiente historia para generar El Hilo. Sigue registrando.' }, { status: 422 })
@@ -88,7 +103,6 @@ Reglas:
   if (med?.edad) medParts.push(`${med.edad} años`)
   if (med?.sexo && med.sexo !== 'prefiero_no_decir') medParts.push(med.sexo)
   if (med?.condiciones_previas?.length) medParts.push(`Antecedentes: ${med.condiciones_previas.join(', ')}`)
-  if (med?.medicamentos?.length) medParts.push(`Medicamentos: ${med.medicamentos.join(', ')}`)
 
   const userMessage = `Usuario: ${userName}
 ${medParts.length ? `Perfil: ${medParts.join(' | ')}` : ''}
@@ -101,6 +115,9 @@ ${activeSymptoms.map(s => `- ${s.name} (${s.occurrences} veces${s.needs_medical_
 
 SÍNTOMAS RESUELTOS (${resolvedSymptoms.length}):
 ${resolvedSymptoms.map(s => `- ${s.name}`).join('\n') || 'Ninguno'}
+
+TRATAMIENTOS ACTIVOS:
+${treatmentLines || 'Ninguno'}
 
 SIGNOS VITALES (últimos 90 días, ${logs.length} registros):
 ${vitalsLines.join('\n') || 'Sin registros'}
