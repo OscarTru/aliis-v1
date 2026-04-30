@@ -163,15 +163,24 @@ export async function generatePack(
   context: EnrichedContext,
   libraryMatch?: MatchedCondition | null
 ): Promise<GeneratedPack> {
+  const medicalParts: string[] = []
+  if (context.edadYSexo) medicalParts.push(`Paciente: ${context.edadYSexo}`)
+  if (context.condicionesPrevias?.length) medicalParts.push(`Condiciones previas: ${context.condicionesPrevias.join(', ')}`)
+  if (context.medicamentos?.length) medicalParts.push(`Medicamentos actuales: ${context.medicamentos.join(', ')}`)
+  if (context.alergias?.length) medicalParts.push(`Alergias: ${context.alergias.join(', ')}`)
+
   const userPrompt = [
     `Diagnóstico: ${diagnostico}`,
-    context.nombre ? `Paciente: ${context.nombre}` : null,
+    context.nombre ? `Nombre del paciente: ${context.nombre}` : null,
     context.para === 'familiar' ? 'Este pack es para un familiar del paciente.' : null,
     context.para === 'acompanando' ? 'El lector está acompañando a alguien con este diagnóstico.' : null,
     context.emocion ? `Estado emocional del paciente: ${context.emocion}` : null,
     context.dudas ? `Dudas principales: ${context.dudas}` : null,
     context.previousDx.length > 0
       ? `Diagnósticos previos del paciente: ${context.previousDx.join(', ')}`
+      : null,
+    medicalParts.length > 0
+      ? `\nCONTEXTO MÉDICO DEL PACIENTE:\n${medicalParts.join('\n')}`
       : null,
   ]
     .filter(Boolean)
