@@ -1,4 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { generateText } from 'ai'
+import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -49,12 +50,7 @@ async function extractAndUpsertSymptoms(
     .filter(Boolean)
     .join('\n')
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 512,
-    system: `Eres un extractor de síntomas médicos. Dado un registro de salud de un paciente, extrae todos los síntomas mencionados o implícitos.
+  const SYMPTOMS_SYSTEM = `Eres un extractor de síntomas médicos. Dado un registro de salud de un paciente, extrae todos los síntomas mencionados o implícitos.
 
 Para cada síntoma evalúa si necesita atención médica basándote en:
 - Si es persistente o recurrente
@@ -65,11 +61,14 @@ Responde ÚNICAMENTE con JSON válido en este formato exacto:
 [{"name": "nombre del síntoma en minúsculas", "needs_medical_attention": true/false, "attention_reason": "razón o null"}]
 
 Si no hay síntomas, responde: []
-No incluyas texto adicional fuera del JSON.`,
-    messages: [{ role: 'user', content: userMessage }],
-  })
+No incluyas texto adicional fuera del JSON.`
 
-  const rawText = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
+  const { text: rawText } = await generateText({
+    model: models.symptoms,
+    system: SYMPTOMS_SYSTEM,
+    messages: [{ role: 'user', content: userMessage }],
+    maxOutputTokens: 512,
+  })
 
   let symptoms: ExtractedSymptom[]
   try {

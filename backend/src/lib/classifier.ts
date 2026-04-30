@@ -1,7 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { generateText } from 'ai'
+import { models } from './ai-providers'
 import type { IntentClass } from '../types'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const CLASSIFIER_SYSTEM = `Eres un clasificador de intención para Aliis, un asistente que explica diagnósticos neurológicos.
 
@@ -17,15 +16,15 @@ Responde ÚNICAMENTE con la palabra en mayúsculas: SAFE, DOSE, DIAGN, EMERG, o 
 Sin explicación. Sin puntuación. Solo la palabra.`
 
 export async function classifyIntent(input: string): Promise<IntentClass> {
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 10,
-    system: [{ type: 'text', text: CLASSIFIER_SYSTEM, cache_control: { type: 'ephemeral' } }],
+  const { text } = await generateText({
+    model: models.classifier,
+    system: CLASSIFIER_SYSTEM,
     messages: [{ role: 'user', content: input }],
+    maxOutputTokens: 10,
+    temperature: 0,
   })
 
-  const text = response.content.find((b) => b.type === 'text')
-  const raw = text?.type === 'text' ? text.text.trim().toUpperCase() : ''
+  const raw = text.trim().toUpperCase()
   const valid: IntentClass[] = ['SAFE', 'DOSE', 'DIAGN', 'EMERG', 'OOD']
   return valid.includes(raw as IntentClass) ? (raw as IntentClass) : 'SAFE'
 }
