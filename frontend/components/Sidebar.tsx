@@ -12,7 +12,6 @@ import { Separator } from '@/components/ui/separator'
 import { usePackContext } from '@/lib/pack-context'
 import { useConditionContext } from '@/lib/condition-context'
 import { cn } from '@/lib/utils'
-import { AliisPresence } from './AliisPresence'
 
 const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
   'que-es': <BookOpen size={14} />,
@@ -44,8 +43,9 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/ingreso',     label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
   { href: '/historial',   label: 'Mi expediente',     icon: <LayoutList size={18} /> },
-  { href: '/diario',      label: 'Mi diario',         icon: <BookHeart size={18} /> },
-  { href: '/condiciones', label: 'Diagnósticos',      icon: <Library size={18} /> },
+  { href: '/diario',       label: 'Mi diario',         icon: <BookHeart size={18} /> },
+  { href: '/tratamientos', label: 'Mis tratamientos',  icon: <Pill size={18} /> },
+  { href: '/condiciones',  label: 'Diagnósticos',      icon: <Library size={18} /> },
 ]
 
 const BOTTOM_ITEMS: NavItem[] = []
@@ -323,11 +323,6 @@ export function Sidebar({
 
         {/* Spacer — always pushes bottom nav down */}
         <div className="flex-1" />
-
-        {/* Aliis AI presence */}
-        <div className={cn('pt-1 pb-1', collapsed ? 'px-2' : 'px-2')}>
-          <AliisPresence collapsed={collapsed} />
-        </div>
 
         {/* Bottom nav (upgrade item only when free) */}
         {bottomNav.length > 0 && (
