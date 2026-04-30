@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Plus, LayoutList, BookHeart, Library, UserCircle } from 'lucide-react'
+import { Plus, LayoutList, BookHeart, Pill, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/ingreso',     label: 'Nuevo',        icon: Plus },
   { href: '/historial',   label: 'Expediente',   icon: LayoutList },
-  { href: '/diario',      label: 'Diario',       icon: BookHeart },
-  { href: '/condiciones', label: 'Diagnósticos', icon: Library },
+  { href: '/diario',       label: 'Diario',        icon: BookHeart },
+  { href: '/tratamientos', label: 'Tratamientos',  icon: Pill },
   { href: '/cuenta',      label: 'Cuenta',       icon: UserCircle },
 ]
 

@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { DiaryEntryModal } from '@/components/DiaryEntryModal'
 import type { SymptomLog } from '@/lib/types'
 
 const METRICS = [
@@ -44,10 +45,12 @@ function LogModal({
   open,
   onClose,
   onSaved,
+  onOpenDiary,
 }: {
   open: boolean
   onClose: () => void
   onSaved: (log: SymptomLog) => void
+  onOpenDiary: () => void
 }) {
   const [step, setStep] = useState<ModalStep>('select')
   const [fields, setFields] = useState({
@@ -133,6 +136,13 @@ function LogModal({
             >
               <span className="font-sans text-[14px] font-medium text-foreground">Síntoma + signos vitales</span>
               <span className="font-sans text-[12px] text-muted-foreground">Describe lo que sientes y agrega tus mediciones</span>
+            </button>
+            <button
+              onClick={() => { handleClose(); onOpenDiary() }}
+              className="flex flex-col items-start gap-0.5 p-4 rounded-xl border border-border bg-background hover:bg-muted transition-colors text-left cursor-pointer"
+            >
+              <span className="font-sans text-[14px] font-medium text-foreground">Diario libre</span>
+              <span className="font-sans text-[12px] text-muted-foreground">Escribe cómo te sientes, Aliis extrae los síntomas</span>
             </button>
           </div>
         )}
@@ -290,6 +300,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
     new Set(METRICS.map(m => m.key))
   )
   const [modalOpen, setModalOpen] = useState(false)
+  const [diaryOpen, setDiaryOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -322,6 +333,11 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
 
   function handleSaved(log: SymptomLog) {
     setLogs(prev => [log, ...prev])
+  }
+
+  function handleDiarySaved() {
+    // Refresh logs from server by reloading the page data
+    window.location.reload()
   }
 
   async function handleDelete(id: string) {
@@ -360,7 +376,7 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
             Registrar primer síntoma
           </button>
         </div>
-        <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
+        <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} onOpenDiary={() => { setModalOpen(false); setDiaryOpen(true) }} />
       </div>
     )
   }
@@ -494,7 +510,8 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
         </div>
       </div>
 
-      <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} />
+      <LogModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={handleSaved} onOpenDiary={() => { setModalOpen(false); setDiaryOpen(true) }} />
+      <DiaryEntryModal open={diaryOpen} onClose={() => setDiaryOpen(false)} onSaved={handleDiarySaved} />
     </div>
   )
 }

@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { generateText } from 'ai'
+import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function POST(req: Request) {
@@ -39,6 +41,13 @@ export async function POST(req: Request) {
     })
   }
   const authenticatedUserId = user.id
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', authenticatedUserId)
+    .single()
+  const userPlan = profile?.plan ?? 'free'
 
   // Fix 2 (Critical): Validate and cap field lengths to prevent prompt injection / token abuse.
   // OWASP A03:2021 — Injection; A05:2021 — Security Misconfiguration (resource limits).
@@ -109,24 +118,61 @@ ${safePackContext
 
 Responde en español.`
 
-  let fullResponse = ''
+  // Build conversation history — cap at last 20 turns to stay within token limits
+  const safeHistory = Array.isArray(history) ? history.slice(-20) : []
+  const historyMessages = safeHistory
+    .filter((m: { role: string; content: string }) =>
+      (m.role === 'user' || m.role === 'assistant') &&
+      typeof m.content === 'string' && m.content.trim()
+    )
+    .map((m: { role: string; content: string }) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content.trim().slice(0, 2000),
+    }))
 
-  // Fix 3 (Important): Wrap stream initialization in try/catch to return a clean 502
-  // instead of an unhandled rejection if the Anthropic API is unreachable or returns an error.
+  async function persistChat(text: string) {
+    if (packId && chapterId && text) {
+      try {
+        await supabase.from('pack_chats').insert([
+          { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'user', text: question.trim() },
+          { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'assistant', text },
+        ])
+      } catch {
+        // Non-fatal
+      }
+    }
+  }
+
+  const encoder = new TextEncoder()
+
+  // Free plan: Gemini Flash (fast, no streaming needed at this latency)
+  if (userPlan !== 'pro') {
+    try {
+      const { text } = await generateText({
+        model: models.chatFree,
+        system,
+        messages: [...historyMessages, { role: 'user', content: question.trim() }],
+        maxOutputTokens: 600,
+      })
+      await persistChat(text)
+      const readable = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(text))
+          controller.close()
+        },
+      })
+      return new Response(readable, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    } catch {
+      return new Response(JSON.stringify({ error: 'Error al contactar la IA' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+  }
+
+  // Pro plan: Anthropic Haiku with prompt caching + real streaming
   let stream
   try {
-    // Build conversation history — cap at last 20 turns to stay within token limits
-    const safeHistory = Array.isArray(history) ? history.slice(-20) : []
-    const historyMessages = safeHistory
-      .filter((m: { role: string; content: string }) =>
-        (m.role === 'user' || m.role === 'assistant') &&
-        typeof m.content === 'string' && m.content.trim()
-      )
-      .map((m: { role: string; content: string }) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content.trim().slice(0, 2000),
-      }))
-
     stream = await client.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
@@ -140,7 +186,7 @@ Responde en español.`
     })
   }
 
-  const encoder = new TextEncoder()
+  let fullResponse = ''
   const readable = new ReadableStream({
     async start(controller) {
       try {
@@ -155,19 +201,7 @@ Responde en español.`
         controller.error(e)
       } finally {
         controller.close()
-
-        // Fix 1 cont.: Persist using authenticatedUserId from session, not body-supplied userId.
-        // Reuses the supabase instance created above — no redundant client instantiation.
-        if (packId && chapterId && fullResponse) {
-          try {
-            await supabase.from('pack_chats').insert([
-              { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'user', text: question.trim() },
-              { pack_id: packId, user_id: authenticatedUserId, chapter_id: chapterId, role: 'assistant', text: fullResponse },
-            ])
-          } catch {
-            // Non-fatal — stream succeeded, persistence failed silently
-          }
-        }
+        await persistChat(fullResponse)
       }
     },
   })

@@ -96,7 +96,7 @@ packRouter.post('/generate', requireAuth, async (req, res) => {
   console.log('[pack/generate] enriching context')
   let context
   try {
-    context = await enrichContext(userId, contexto)
+    context = await enrichContext(userId, contexto, userPlan)
   } catch (err) {
     console.error('[pack/generate] enricher error:', err)
     res.status(500).json({ error: 'Error enriqueciendo contexto.' })

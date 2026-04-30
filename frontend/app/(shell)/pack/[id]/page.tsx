@@ -12,14 +12,23 @@ export default async function PackPage({
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: row } = await supabase
-    .from('packs')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user?.id ?? '')
-    .single()
+  const [packResult, profileResult] = await Promise.all([
+    supabase
+      .from('packs')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user?.id ?? '')
+      .single(),
+    supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user?.id ?? '')
+      .single(),
+  ])
 
-  if (!row) notFound()
+  if (!packResult.data) notFound()
+  const row = packResult.data
+  const userPlan: string = profileResult.data?.plan ?? 'free'
 
   const pack: Pack = {
     id: row.id,
@@ -33,5 +42,5 @@ export default async function PackPage({
     tools: row.tools ?? [],
   }
 
-  return <PackView pack={pack} userId={user?.id} />
+  return <PackView pack={pack} userId={user?.id} userPlan={userPlan} />
 }

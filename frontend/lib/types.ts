@@ -135,6 +135,7 @@ export interface SymptomLog {
   weight: number | null
   temperature: number | null
   note: string | null
+  free_text: string | null
 }
 
 export interface NoteWithPack {
@@ -177,6 +178,35 @@ export interface TrackedSymptom {
   created_at: string
 }
 
+export interface MedicalProfile {
+  id: string
+  user_id: string
+  medicamentos: string[]
+  alergias: string[]
+  condiciones_previas: string[]
+  edad: number | null
+  sexo: 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir' | null
+  updated_at: string
+}
+
+export interface ConsultSummary {
+  id: string
+  user_id: string
+  pack_id: string | null
+  token: string
+  content: string
+  expires_at: string
+  created_at: string
+}
+
+export interface AdherenceLog {
+  id: string
+  user_id: string
+  medication: string
+  taken_date: string
+  taken_at: string
+}
+
 export interface AppNotification {
   id: string
   user_id: string
@@ -187,4 +217,52 @@ export interface AppNotification {
   read_at: string | null
   url: string | null
   created_at: string
+}
+
+export type TreatmentFrequency =
+  | 'once_daily'
+  | 'twice_daily'
+  | 'three_daily'
+  | 'four_daily'
+  | 'as_needed'
+  | 'prn'
+  | 'other'
+
+export const FREQUENCY_LABELS: Record<TreatmentFrequency, string> = {
+  once_daily:   'Una vez al día',
+  twice_daily:  'Dos veces al día',
+  three_daily:  'Tres veces al día',
+  four_daily:   'Cuatro veces al día',
+  as_needed:    'por las tardes',
+  prn:          'por razón necesaria',
+  other:        'Otra frecuencia',
+}
+
+export interface Treatment {
+  id: string
+  user_id: string
+  name: string
+  dose: string | null
+  frequency: TreatmentFrequency
+  frequency_label: string | null
+  indefinite: boolean
+  started_at: string | null
+  ended_at: string | null
+  last_changed_at: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TreatmentInput {
+  name: string
+  dose?: string
+  frequency: TreatmentFrequency
+  frequency_label?: string
+  indefinite: boolean
+  started_at?: string
+  ended_at?: string
+  last_changed_at?: string
+  notes?: string
 }

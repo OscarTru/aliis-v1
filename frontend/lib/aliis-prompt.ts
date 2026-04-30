@@ -1,4 +1,5 @@
 import type { SymptomLog } from './types'
+import { evaluateThresholds, formatAlertsForPrompt } from './clinical-thresholds'
 
 interface AliisPromptInput {
   userName: string
@@ -53,6 +54,9 @@ Reglas estrictas:
   const notes7 = last7.map(l => l.note).filter(Boolean) as string[]
   const notes30 = last30.map(l => l.note).filter(Boolean) as string[]
 
+  const alerts = evaluateThresholds(logs)
+  const alertsSection = formatAlertsForPrompt(alerts)
+
   const userMessage = `Usuario: ${userName}
 Diagnóstico principal: ${recentDiagnosis ?? 'no registrado'}
 Tiene registros: ${hasLogs ? 'sí' : 'no'}
@@ -70,7 +74,7 @@ Promedios últimos 30 días (referencia):
 - Frecuencia cardíaca: ${avg30.heart_rate ?? 'sin datos'} bpm
 
 Notas de síntomas (últimos 7 días): ${notes7.length > 0 ? notes7.join(' | ') : 'ninguna'}
-Notas de síntomas (últimos 30 días): ${notes30.length > 0 ? notes30.slice(0, 10).join(' | ') : 'ninguna'}
+Notas de síntomas (últimos 30 días): ${notes30.length > 0 ? notes30.slice(0, 10).join(' | ') : 'ninguna'}${alertsSection}
 
 Genera un mensaje de Aliis para este usuario. Máximo 3 oraciones.`
 

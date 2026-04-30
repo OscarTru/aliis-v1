@@ -228,3 +228,77 @@ body {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.5); opacity: 0.6; }
 }
+
+/* AI text shimmer — metallic light sweeps across loading text */
+@keyframes text-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.text-shimmer-ai {
+  background: linear-gradient(
+    90deg,
+    #8AC9D2 0%,
+    #ffffff 30%,
+    #1f8a9b 50%,
+    #ffffff 70%,
+    #8AC9D2 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 1.6s linear infinite;
+}
+
+/* AI border shimmer — conic gradient rotates behind the button */
+@keyframes aliis-border-spin {
+  from { --aliis-border-angle: 0deg; }
+  to   { --aliis-border-angle: 360deg; }
+}
+
+@property --aliis-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.btn-ai-border {
+  position: relative;
+  isolation: isolate;
+}
+
+.btn-ai-border::before {
+  content: '';
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--aliis-border-angle),
+    transparent 0deg,
+    #8AC9D2 30deg,
+    #1f8a9b 50deg,
+    transparent 80deg,
+    transparent 180deg,
+    #8AC9D2 210deg,
+    #1f8a9b 230deg,
+    transparent 260deg
+  );
+  animation: aliis-border-spin 5s linear infinite;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.btn-ai-border:hover::before {
+  opacity: 0.4;
+}
+
+.btn-ai-border::after {
+  content: '';
+  position: absolute;
+  inset: 0.25px;
+  border-radius: inherit;
+  background: hsl(var(--background));
+  z-index: -1;
+}

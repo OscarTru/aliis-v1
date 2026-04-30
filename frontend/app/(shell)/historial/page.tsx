@@ -5,6 +5,11 @@ import { PackList } from '@/components/PackList'
 import { PageHeader } from '@/components/PageHeader'
 import { UpgradeToast } from '@/components/UpgradeToast'
 import { cn } from '@/lib/utils'
+import { getMedicalProfile } from '@/app/actions/medical-profile'
+import { MedicalProfileSection } from './MedicalProfileSection'
+import { TreatmentCheckBanner } from './TreatmentCheckBanner'
+import { CondicionSugerida } from './CondicionSugerida'
+import type { Profile } from '@/lib/types'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
 
@@ -17,7 +22,7 @@ export default async function HistorialPage({
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [packsResult, readsResult] = await Promise.all([
+  const [packsResult, readsResult, profileResult, medicalProfile, treatmentsResult] = await Promise.all([
     supabase
       .from('packs')
       .select('id, dx, summary, created_at, chapters')
@@ -27,10 +32,36 @@ export default async function HistorialPage({
       .from('chapter_reads')
       .select('pack_id, chapter_id')
       .eq('user_id', user?.id ?? ''),
+    supabase
+      .from('profiles')
+      .select('plan, who')
+      .eq('id', user?.id ?? '')
+      .single(),
+    getMedicalProfile(),
+    supabase
+      .from('treatments')
+      .select('name, dose')
+      .eq('user_id', user?.id ?? '')
+      .eq('active', true),
   ])
 
   const packs = packsResult.data ?? []
   const reads = readsResult.data ?? []
+  const userPlan: Profile['plan'] = (profileResult.data?.plan as Profile['plan']) ?? 'free'
+  const userWho = (profileResult.data?.who as Profile['who']) ?? null
+
+  // Condiciones previas del perfil médico que NO tienen pack generado todavía
+  const packDxSet = new Set(packs.map(p => p.dx.toLowerCase().trim()))
+  const condicionesSinPack = (medicalProfile?.condiciones_previas ?? []).filter(
+    c => !packDxSet.has(c.toLowerCase().trim())
+  )
+
+  // Condiciones previas = diagnósticos generados (packs)
+  const condicionesFromPacks = packs.map(p => p.dx)
+  // Medicamentos = tabla treatments
+  const medicamentosFromTreatments = (treatmentsResult.data ?? []).map(t =>
+    t.dose ? `${t.name} ${t.dose}` : t.name
+  )
 
   const readsByPack = reads.reduce<Record<string, Set<string>>>((acc, r) => {
     if (!acc[r.pack_id]) acc[r.pack_id] = new Set()
@@ -66,49 +97,67 @@ export default async function HistorialPage({
       <Suspense fallback={null}>
         <UpgradeToast />
       </Suspense>
-      <div className="max-w-[680px] mx-auto px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20">
+      <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1100px] mx-auto">
 
         <PageHeader
           eyebrow={`${totalPacks} ${totalPacks === 1 ? 'diagnóstico' : 'diagnósticos'}`}
           title={<>Mi <em>expediente</em></>}
         />
 
-        {/* Filters */}
-        <div className="flex gap-1.5 mb-7 flex-wrap">
-          {FILTERS.map((f) => (
-            <Link
-              key={f.key}
-              href={`/historial?filter=${f.key}`}
-              className={cn(
-                'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
-                filter === f.key
-                  ? 'border-transparent bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              )}
-            >
-              {f.label}
-            </Link>
-          ))}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-6 md:gap-8 items-start">
 
-        {/* Empty state — no packs at all */}
-        {packs.length === 0 && (
-          <div className="text-center pt-16">
-            <p className="font-serif italic text-[17px] text-muted-foreground mb-6 leading-relaxed">
-              Todavía no tienes explicaciones.<br />Empieza con tu primer diagnóstico.
-            </p>
-            <Link
-              href="/ingreso"
-              className="inline-block px-7 py-3 rounded-full bg-foreground text-background no-underline font-sans text-sm font-medium shadow-[var(--c-btn-primary-shadow)]"
-            >
-              Entender mi diagnóstico
-            </Link>
+          {/* Left column — filtros + lista de packs */}
+          <div>
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <div className="flex gap-1.5 flex-wrap">
+                {FILTERS.map((f) => (
+                  <Link
+                    key={f.key}
+                    href={`/historial?filter=${f.key}`}
+                    className={cn(
+                      'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
+                      filter === f.key
+                        ? 'border-transparent bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    {f.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <CondicionSugerida condiciones={condicionesSinPack} who={userWho} />
+
+            {packs.length === 0 && (
+              <div className="text-center pt-16">
+                <p className="font-serif italic text-[17px] text-muted-foreground mb-6 leading-relaxed">
+                  Todavía no tienes explicaciones.<br />Empieza con tu primer diagnóstico.
+                </p>
+                <Link
+                  href="/ingreso"
+                  className="inline-block px-7 py-3 rounded-full bg-foreground text-background no-underline font-sans text-sm font-medium shadow-[var(--c-btn-primary-shadow)]"
+                >
+                  Entender mi diagnóstico
+                </Link>
+              </div>
+            )}
+
+            {packs.length > 0 && <PackList key={filter} initialPacks={filtered} />}
           </div>
-        )}
 
-        {/* Pack list — client component handles delete + empty filter state */}
-        {packs.length > 0 && <PackList key={filter} initialPacks={filtered} />}
+          {/* Right column — historial médico */}
+          <div className="md:sticky md:top-6">
+            <MedicalProfileSection
+              initialMedicalProfile={medicalProfile}
+              condiciones={condicionesFromPacks}
+              medicamentos={medicamentosFromTreatments}
+              userPlan={userPlan}
+            />
+            <TreatmentCheckBanner userPlan={userPlan} />
+          </div>
 
+        </div>
       </div>
     </>
   )

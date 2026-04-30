@@ -5,7 +5,12 @@ import { SymptomsSection } from '@/components/SymptomsSection'
 import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
-import type { NoteWithPack, SymptomLog, TrackedSymptom } from '@/lib/types'
+import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
+import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
+import { ElHilo } from '@/components/ElHilo'
+import { getTreatments } from '@/app/actions/treatments'
+import { TreatmentsWidget } from '@/components/TreatmentsWidget'
+import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -14,7 +19,7 @@ export default async function DiarioPage() {
   if (!user) redirect('/login')
   const uid = user.id
 
-  const [notesResult, symptomsResult, trackedResult] = await Promise.all([
+  const [notesResult, symptomsResult, trackedResult, profileResult, adherenceFlagResult, adherenceLogsResult] = await Promise.all([
     supabase
       .from('pack_notes')
       .select('id, pack_id, content, created_at, packs!inner(dx, created_at)')
@@ -31,7 +36,21 @@ export default async function DiarioPage() {
       .select('*')
       .eq('user_id', uid)
       .order('last_seen_at', { ascending: false }),
+    supabase.from('profiles').select('plan').eq('id', uid).single(),
+    supabase
+      .from('feature_flags')
+      .select('enabled, rollout_pct, user_ids, plan_restriction')
+      .eq('flag_name', 'adherence_checklist')
+      .single(),
+    supabase
+      .from('adherence_logs')
+      .select('*')
+      .eq('user_id', uid)
+      .order('taken_date', { ascending: false })
+      .limit(90),
   ])
+
+  const todayDate = new Intl.DateTimeFormat('en-CA').format(new Date())
 
   const notes: NoteWithPack[] = (notesResult.data ?? []).map((row: {
     id: string
@@ -54,6 +73,39 @@ export default async function DiarioPage() {
   const logs: SymptomLog[] = (symptomsResult.data ?? []) as SymptomLog[]
   const trackedSymptoms: TrackedSymptom[] = (trackedResult.data ?? []) as TrackedSymptom[]
 
+  const userPlan: string = profileResult.data?.plan ?? 'free'
+  const flag = adherenceFlagResult.data
+  const adherenceLogs: AdherenceLog[] = (adherenceLogsResult.data ?? []) as AdherenceLog[]
+
+  const showAdherence = (() => {
+    if (!flag?.enabled) return false
+    if (flag.plan_restriction && userPlan !== flag.plan_restriction) return false
+    if (flag.user_ids?.includes(uid)) return true
+    if (flag.rollout_pct >= 100) return true
+    const hash = parseInt(uid.replace(/-/g, '').slice(-4), 16) % 100
+    return hash < flag.rollout_pct
+  })()
+
+  // Cápsula del tiempo — most recent this month
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const { data: capsulaData } = await supabase
+    .from('aliis_insights')
+    .select('content, generated_at')
+    .eq('user_id', uid)
+    .eq('type', 'capsula')
+    .gte('generated_at', `${thisMonth}-01T00:00:00Z`)
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const capsula = capsulaData ?? null
+
+  // Medications from treatments table
+  const treatments = await getTreatments()
+  const medications = showAdherence
+    ? treatments.map(t => t.dose ? `${t.name} ${t.dose}` : t.name)
+    : []
+
   return (
     <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1200px] mx-auto">
       {/* Page header */}
@@ -69,18 +121,47 @@ export default async function DiarioPage() {
       {/* Push permission prompt — shown once if not yet granted */}
       <PushPermissionPrompt />
 
-      {/* Aliis insight */}
-      <AliisInsight />
+      {/* Cápsula del tiempo — full width, only when present */}
+      {capsula && <CapsulaDeTiempo content={capsula.content} generatedAt={capsula.generated_at} />}
 
-      {/* Symptoms + vitals — full width */}
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
-        <SymptomsSection initialLogs={logs} />
-        <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
-      </div>
+      {/* Two-column grid on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 items-start">
 
-      {/* Notes — full width below */}
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
-        <DiarioNotesSection notes={notes} />
+        {/* Left column — main content */}
+        <div className="flex flex-col gap-6 min-w-0">
+          {/* Aliis insight */}
+          <AliisInsight />
+
+          {/* Symptoms + vitals */}
+          <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
+            <SymptomsSection initialLogs={logs} />
+            <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
+          </div>
+
+          {/* Notes */}
+          <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
+            <DiarioNotesSection notes={notes} />
+          </div>
+        </div>
+
+        {/* Right column — widgets */}
+        <div className="flex flex-col gap-4 min-w-0">
+          {/* Treatments widget with inline adherence chips */}
+          <TreatmentsWidget
+            treatments={treatments}
+            initialTodayLogs={adherenceLogs.filter(l => l.taken_date === todayDate)}
+            todayDate={todayDate}
+          />
+
+          {/* El Hilo */}
+          <ElHilo userId={uid} />
+
+          {/* Correlation analysis — Pro only */}
+          {userPlan === 'pro' && (
+            <CorrelationAnalysis userId={uid} />
+          )}
+        </div>
+
       </div>
     </div>
   )

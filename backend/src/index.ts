@@ -38,6 +38,10 @@ app.get('/health', (_req, res) => res.json({ ok: true }))
 
 import { packRouter } from './routes/pack'
 import { stripeRouter } from './routes/stripe'
+import { requireAuth } from './middleware/auth'
+
+// Auth required for all /pack routes (individual routes also apply requireAuth as defense-in-depth)
+app.use('/pack', requireAuth)
 app.use('/pack', packRouter)
 app.use('/stripe', stripeRouter)
 

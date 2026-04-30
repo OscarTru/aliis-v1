@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { TagInput } from '@/components/ui/TagInput'
+import { saveMedicalProfile } from '@/app/actions/medical-profile'
 
 const PROMISES = [
   'Tu diagnóstico en palabras que puedes entender',
@@ -21,6 +23,16 @@ export default function OnboardingPage() {
   const [name, setName] = useState('')
   const [who, setWho] = useState<'yo' | 'familiar' | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const [medProfile, setMedProfile] = useState({
+    medicamentos: [] as string[],
+    alergias: [] as string[],
+    condiciones_previas: [] as string[],
+    edad: '' as string,
+    sexo: '' as string,
+  })
+
+  const totalSteps = 4
 
   async function skip() {
     const supabase = createClient()
@@ -49,6 +61,33 @@ export default function OnboardingPage() {
     }
   }
 
+  async function finishWithMedProfile() {
+    setSaving(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({
+          name: name || null,
+          who: who || null,
+          onboarding_done: true,
+        }).eq('id', user.id)
+      }
+
+      await saveMedicalProfile({
+        medicamentos: medProfile.medicamentos,
+        alergias: medProfile.alergias,
+        condiciones_previas: medProfile.condiciones_previas,
+        edad: medProfile.edad ? parseInt(medProfile.edad) : null,
+        sexo: (medProfile.sexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
+      })
+
+      router.push('/ingreso')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -56,7 +95,7 @@ export default function OnboardingPage() {
         <Image src="/assets/aliis-original.png" alt="Aliis" width={72} height={28} className="object-contain" />
         {/* Progress dots */}
         <div className="flex gap-[6px]">
-          {[1, 2, 3].map((s) => (
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
             <div
               key={s}
               className={cn(
@@ -151,12 +190,86 @@ export default function OnboardingPage() {
               ))}
             </div>
             <Button
-              onClick={finish}
+              onClick={() => setStep(4)}
               disabled={saving}
               className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
             >
-              {saving ? 'Guardando…' : 'Empezar'}
+              Continuar
             </Button>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="ce-fade w-full">
+            <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-2">
+              Tu perfil médico
+            </h2>
+            <p className="font-sans text-[15px] text-muted-foreground mb-6">
+              Aliis personaliza las explicaciones con tu contexto real.
+              Puedes editarlo después en Cuenta.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  placeholder="Tu edad"
+                  value={medProfile.edad}
+                  min={1}
+                  max={149}
+                  onChange={e => setMedProfile(p => ({ ...p, edad: e.target.value }))}
+                  className="h-11 flex-1 rounded-xl border border-border bg-background px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                />
+                <select
+                  value={medProfile.sexo}
+                  onChange={e => setMedProfile(p => ({ ...p, sexo: e.target.value }))}
+                  className="h-11 flex-1 rounded-xl border border-border bg-background px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                >
+                  <option value="">Sexo biológico</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                  <option value="prefiero_no_decir">Prefiero no decir</option>
+                </select>
+              </div>
+
+              <TagInput
+                label="Condiciones previas"
+                placeholder="Ej: diabetes tipo 2, hipertensión..."
+                value={medProfile.condiciones_previas}
+                onChange={v => setMedProfile(p => ({ ...p, condiciones_previas: v }))}
+              />
+              <TagInput
+                label="Medicamentos actuales"
+                placeholder="Ej: metformina 850mg..."
+                value={medProfile.medicamentos}
+                onChange={v => setMedProfile(p => ({ ...p, medicamentos: v }))}
+              />
+              <TagInput
+                label="Alergias conocidas"
+                placeholder="Ej: penicilina..."
+                value={medProfile.alergias}
+                onChange={v => setMedProfile(p => ({ ...p, alergias: v }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 mt-6">
+              <Button
+                onClick={finishWithMedProfile}
+                disabled={saving}
+                className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
+              >
+                {saving ? 'Guardando…' : 'Empezar'}
+              </Button>
+              <button
+                type="button"
+                onClick={finish}
+                disabled={saving}
+                className="font-sans text-[13px] text-muted-foreground hover:text-foreground transition-colors self-center bg-transparent border-none cursor-pointer"
+              >
+                Completar después →
+              </button>
+            </div>
           </div>
         )}
       </main>

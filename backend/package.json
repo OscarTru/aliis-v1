@@ -11,8 +11,11 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.72",
+    "@ai-sdk/groq": "^3.0.36",
     "@anthropic-ai/sdk": "^0.91.1",
     "@supabase/supabase-js": "^2.104.1",
+    "ai": "^6.0.170",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
