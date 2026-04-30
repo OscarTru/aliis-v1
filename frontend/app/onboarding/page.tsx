@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Check } from 'lucide-react'
@@ -23,7 +23,6 @@ export default function OnboardingPage() {
   const [name, setName] = useState('')
   const [who, setWho] = useState<'yo' | 'familiar' | null>(null)
   const [saving, setSaving] = useState(false)
-  const [isPro, setIsPro] = useState(false)
 
   const [medProfile, setMedProfile] = useState({
     medicamentos: [] as string[],
@@ -33,18 +32,7 @@ export default function OnboardingPage() {
     sexo: '' as string,
   })
 
-  const totalSteps = isPro ? 4 : 3
-
-  useEffect(() => {
-    async function checkPlan() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase.from('profiles').select('plan').eq('id', user.id).single()
-      if (data?.plan === 'pro') setIsPro(true)
-    }
-    checkPlan()
-  }, [])
+  const totalSteps = 4
 
   async function skip() {
     const supabase = createClient()
@@ -202,16 +190,16 @@ export default function OnboardingPage() {
               ))}
             </div>
             <Button
-              onClick={isPro ? () => setStep(4) : finish}
+              onClick={() => setStep(4)}
               disabled={saving}
               className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
             >
-              {saving ? 'Guardando…' : isPro ? 'Continuar' : 'Empezar'}
+              Continuar
             </Button>
           </div>
         )}
 
-        {step === 4 && isPro && (
+        {step === 4 && (
           <div className="ce-fade w-full">
             <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-2">
               Tu perfil médico
