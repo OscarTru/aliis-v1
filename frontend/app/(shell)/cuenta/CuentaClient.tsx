@@ -12,7 +12,8 @@ import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { saveMedicalProfile } from '@/app/actions/medical-profile'
 import { saveNextAppointment } from '@/app/actions/appointment'
-import type { MedicalProfile } from '@/lib/types'
+import { TreatmentsSection } from '@/components/TreatmentsSection'
+import type { MedicalProfile, Treatment } from '@/lib/types'
 
 type Profile = {
   name: string | null
@@ -70,12 +71,14 @@ export function CuentaClient({
   isGoogleUser: initialIsGoogleUser,
   googleName,
   initialMedicalProfile,
+  initialTreatments,
 }: {
   initialProfile: Profile
   userId: string
   isGoogleUser: boolean
   googleName: string
   initialMedicalProfile: MedicalProfile | null
+  initialTreatments: Treatment[]
 }) {
   const router = useRouter()
   const { toast } = useToast()
@@ -549,6 +552,12 @@ export function CuentaClient({
                 onChange={setMedAlergias}
               />
               <SaveButton loading={medLoading} onClick={saveMed} />
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="font-mono text-[11px] tracking-[.14em] uppercase text-muted-foreground/60 mb-3">
+                  Tratamientos activos
+                </p>
+                <TreatmentsSection initialTreatments={initialTreatments} />
+              </div>
             </div>
           </Section>
         )}

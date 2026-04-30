@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { CuentaClient } from './CuentaClient'
 import { getMedicalProfile } from '@/app/actions/medical-profile'
+import { getTreatments } from '@/app/actions/treatments'
+import type { Treatment } from '@/lib/types'
 
 export default async function CuentaPage() {
   const supabase = await createServerSupabaseClient()
@@ -18,7 +20,9 @@ export default async function CuentaPage() {
   const isGoogleUser = providers.includes('google') && !providers.includes('email')
   const googleName = user.user_metadata?.full_name ?? ''
 
-  const medicalProfile = p?.plan === 'pro' ? await getMedicalProfile() : null
+  const [medicalProfile, treatments] = p?.plan === 'pro'
+    ? await Promise.all([getMedicalProfile(), getTreatments()])
+    : [null, [] as Treatment[]]
 
   return (
     <CuentaClient
@@ -26,6 +30,7 @@ export default async function CuentaPage() {
       isGoogleUser={isGoogleUser}
       googleName={googleName}
       initialMedicalProfile={medicalProfile}
+      initialTreatments={treatments}
       initialProfile={{
         name: p?.name ?? null,
         last_name: p?.last_name ?? null,
