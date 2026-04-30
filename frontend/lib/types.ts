@@ -188,6 +188,16 @@ export interface MedicalProfile {
   updated_at: string
 }
 
+export interface ConsultSummary {
+  id: string
+  user_id: string
+  pack_id: string | null
+  token: string
+  content: string
+  expires_at: string
+  created_at: string
+}
+
 export interface AdherenceLog {
   id: string
   user_id: string
