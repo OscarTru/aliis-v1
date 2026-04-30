@@ -9,7 +9,9 @@ import { AdherenceWrapper } from '@/components/AdherenceWrapper'
 import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
 import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
 import { ElHilo } from '@/components/ElHilo'
-import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
+import { getTreatments } from '@/app/actions/treatments'
+import { TreatmentsWidget } from '@/components/TreatmentsWidget'
+import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog, Treatment } from '@/lib/types'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -97,15 +99,12 @@ export default async function DiarioPage() {
 
   const capsula = capsulaData ?? null
 
-  // Medications from medical_profile (server-side fetch)
+  // Medications from treatments table
+  let treatments: Treatment[] = []
   let medications: string[] = []
   if (showAdherence) {
-    const { data: medProfile } = await supabase
-      .from('medical_profiles')
-      .select('medicamentos')
-      .eq('user_id', uid)
-      .maybeSingle()
-    medications = medProfile?.medicamentos ?? []
+    treatments = await getTreatments()
+    medications = treatments.map(t => t.dose ? `${t.name} ${t.dose}` : t.name)
   }
 
   return (
@@ -123,36 +122,50 @@ export default async function DiarioPage() {
       {/* Push permission prompt — shown once if not yet granted */}
       <PushPermissionPrompt />
 
-      {/* Cápsula del tiempo — shown if generated this month */}
+      {/* Cápsula del tiempo — full width, only when present */}
       {capsula && <CapsulaDeTiempo content={capsula.content} generatedAt={capsula.generated_at} />}
 
-      {/* Aliis insight */}
-      <AliisInsight />
+      {/* Two-column grid on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 items-start">
 
-      {/* Adherence checklist — Pro feature flag */}
-      {showAdherence && medications.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
-          <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
+        {/* Left column — main content */}
+        <div className="flex flex-col gap-6 min-w-0">
+          {/* Aliis insight */}
+          <AliisInsight />
+
+          {/* Symptoms + vitals */}
+          <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
+            <SymptomsSection initialLogs={logs} />
+            <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
+          </div>
+
+          {/* Notes */}
+          <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
+            <DiarioNotesSection notes={notes} />
+          </div>
         </div>
-      )}
 
-      {/* El Hilo — narrativa longitudinal, todos los usuarios */}
-      <ElHilo userId={uid} />
+        {/* Right column — widgets */}
+        <div className="flex flex-col gap-4 min-w-0">
+          {/* Treatments widget */}
+          <TreatmentsWidget treatments={treatments} />
 
-      {/* Correlation analysis — Pro only */}
-      {userPlan === 'pro' && (
-        <CorrelationAnalysis userId={uid} />
-      )}
+          {/* Adherence checklist */}
+          {showAdherence && medications.length > 0 && (
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
+            </div>
+          )}
 
-      {/* Symptoms + vitals — full width */}
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
-        <SymptomsSection initialLogs={logs} />
-        <SymptomsTracker initialSymptoms={trackedSymptoms} logs={logs} />
-      </div>
+          {/* El Hilo */}
+          <ElHilo userId={uid} />
 
-      {/* Notes — full width below */}
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
-        <DiarioNotesSection notes={notes} />
+          {/* Correlation analysis — Pro only */}
+          {userPlan === 'pro' && (
+            <CorrelationAnalysis userId={uid} />
+          )}
+        </div>
+
       </div>
     </div>
   )
