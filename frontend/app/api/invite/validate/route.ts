@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     .single()
 
   if (error || !data) {
-    return NextResponse.json({ valid: false, error: 'Código no válido' }, { status: 200 })
+    return NextResponse.json({ valid: false, error: 'Código no válido', debug: error?.message ?? 'no data' }, { status: 200 })
   }
 
   if (data.used) {
