@@ -5,6 +5,7 @@ import { PackList } from '@/components/PackList'
 import { PageHeader } from '@/components/PageHeader'
 import { UpgradeToast } from '@/components/UpgradeToast'
 import { cn } from '@/lib/utils'
+import { AddTreatmentButton } from './AddTreatmentButton'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
 
@@ -74,21 +75,24 @@ export default async function HistorialPage({
         />
 
         {/* Filters */}
-        <div className="flex gap-1.5 mb-7 flex-wrap">
-          {FILTERS.map((f) => (
-            <Link
-              key={f.key}
-              href={`/historial?filter=${f.key}`}
-              className={cn(
-                'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
-                filter === f.key
-                  ? 'border-transparent bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
-                  : 'border-border text-muted-foreground hover:bg-muted'
-              )}
-            >
-              {f.label}
-            </Link>
-          ))}
+        <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
+          <div className="flex gap-1.5 flex-wrap">
+            {FILTERS.map((f) => (
+              <Link
+                key={f.key}
+                href={`/historial?filter=${f.key}`}
+                className={cn(
+                  'px-4 py-1.5 rounded-full border font-sans text-[13px] no-underline transition-all duration-[120ms]',
+                  filter === f.key
+                    ? 'border-transparent bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
+                    : 'border-border text-muted-foreground hover:bg-muted'
+                )}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </div>
+          <AddTreatmentButton />
         </div>
 
         {/* Empty state — no packs at all */}
