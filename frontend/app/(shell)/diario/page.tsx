@@ -11,7 +11,7 @@ import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
 import { ElHilo } from '@/components/ElHilo'
 import { getTreatments } from '@/app/actions/treatments'
 import { TreatmentsWidget } from '@/components/TreatmentsWidget'
-import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog, Treatment } from '@/lib/types'
+import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -100,12 +100,10 @@ export default async function DiarioPage() {
   const capsula = capsulaData ?? null
 
   // Medications from treatments table
-  let treatments: Treatment[] = []
-  let medications: string[] = []
-  if (showAdherence) {
-    treatments = await getTreatments()
-    medications = treatments.map(t => t.dose ? `${t.name} ${t.dose}` : t.name)
-  }
+  const treatments = await getTreatments()
+  const medications = showAdherence
+    ? treatments.map(t => t.dose ? `${t.name} ${t.dose}` : t.name)
+    : []
 
   return (
     <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1200px] mx-auto">
