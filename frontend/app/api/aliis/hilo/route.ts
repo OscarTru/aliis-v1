@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     .limit(1)
     .maybeSingle()
 
-  if (cached) return Response.json({ content: cached.content, cached: true })
+  if (cached) return Response.json({ content: cached.content, generatedAt: cached.generated_at, cached: true })
 
   const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -123,5 +123,5 @@ Genera El Hilo para este usuario.`
     data_window: { packs: packs.length, logs: logs.length, tracked: tracked.length },
   })
 
-  return Response.json({ content, cached: false })
+  return Response.json({ content, generatedAt: new Date().toISOString(), cached: false })
 }

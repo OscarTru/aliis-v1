@@ -16,16 +16,25 @@ const CACHE_KEY = (userId: string) => {
 
 export function ElHilo({ userId }: Props) {
   const [content, setContent] = useState<string | null>(null)
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [fromCache, setFromCache] = useState(false)
 
   useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY(userId))
-    if (cached) {
-      setContent(cached)
-      setFromCache(true)
+    const raw = localStorage.getItem(CACHE_KEY(userId))
+    if (raw) {
+      try {
+        const parsed: { content: string; generatedAt: string } = JSON.parse(raw)
+        setContent(parsed.content)
+        setGeneratedAt(parsed.generatedAt)
+        setFromCache(true)
+      } catch {
+        // Legacy plain string cache
+        setContent(raw)
+        setFromCache(true)
+      }
     }
   }, [userId])
 
@@ -42,8 +51,10 @@ export function ElHilo({ userId }: Props) {
         return
       }
       setContent(data.content)
+      const generatedAt = data.generatedAt ?? new Date().toISOString()
+      setGeneratedAt(generatedAt)
       setFromCache(false)
-      localStorage.setItem(CACHE_KEY(userId), data.content)
+      localStorage.setItem(CACHE_KEY(userId), JSON.stringify({ content: data.content, generatedAt }))
     } catch {
       setError('No se pudo conectar. Intenta de nuevo.')
     } finally {
@@ -52,7 +63,7 @@ export function ElHilo({ userId }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Header */}
       <button
         onClick={() => {
@@ -74,6 +85,11 @@ export function ElHilo({ userId }: Props) {
           <p className="font-serif text-[16px] text-foreground leading-tight">
             {content ? 'El Hilo' : 'Generar El Hilo'}
           </p>
+          {content && generatedAt && (
+            <p className="font-mono text-[9px] text-muted-foreground/40 mt-0.5">
+              {new Date(generatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+            </p>
+          )}
         </div>
         {loading ? (
           <Loader2 className="w-4 h-4 text-muted-foreground animate-spin shrink-0" />
@@ -107,7 +123,9 @@ export function ElHilo({ userId }: Props) {
               {fromCache && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="font-mono text-[10px] text-muted-foreground/50">
-                    Generado este mes
+                    {generatedAt
+                      ? `Generado el ${new Date(generatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                      : 'Generado este mes'}
                   </p>
                   <button
                     onClick={(e) => { e.stopPropagation(); generate() }}
