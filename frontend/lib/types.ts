@@ -177,6 +177,17 @@ export interface TrackedSymptom {
   created_at: string
 }
 
+export interface MedicalProfile {
+  id: string
+  user_id: string
+  medicamentos: string[]
+  alergias: string[]
+  condiciones_previas: string[]
+  edad: number | null
+  sexo: 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir' | null
+  updated_at: string
+}
+
 export interface AppNotification {
   id: string
   user_id: string
