@@ -5,7 +5,8 @@ import { SymptomsSection } from '@/components/SymptomsSection'
 import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
-import type { NoteWithPack, SymptomLog, TrackedSymptom } from '@/lib/types'
+import { AdherenceWrapper } from '@/components/AdherenceWrapper'
+import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -14,7 +15,7 @@ export default async function DiarioPage() {
   if (!user) redirect('/login')
   const uid = user.id
 
-  const [notesResult, symptomsResult, trackedResult] = await Promise.all([
+  const [notesResult, symptomsResult, trackedResult, profileResult, adherenceFlagResult, adherenceLogsResult] = await Promise.all([
     supabase
       .from('pack_notes')
       .select('id, pack_id, content, created_at, packs!inner(dx, created_at)')
@@ -31,6 +32,18 @@ export default async function DiarioPage() {
       .select('*')
       .eq('user_id', uid)
       .order('last_seen_at', { ascending: false }),
+    supabase.from('profiles').select('plan').eq('id', uid).single(),
+    supabase
+      .from('feature_flags')
+      .select('enabled, rollout_pct, user_ids, plan_restriction')
+      .eq('flag_name', 'adherence_checklist')
+      .single(),
+    supabase
+      .from('adherence_logs')
+      .select('*')
+      .eq('user_id', uid)
+      .order('taken_date', { ascending: false })
+      .limit(90),
   ])
 
   const notes: NoteWithPack[] = (notesResult.data ?? []).map((row: {
@@ -54,6 +67,30 @@ export default async function DiarioPage() {
   const logs: SymptomLog[] = (symptomsResult.data ?? []) as SymptomLog[]
   const trackedSymptoms: TrackedSymptom[] = (trackedResult.data ?? []) as TrackedSymptom[]
 
+  const userPlan: string = profileResult.data?.plan ?? 'free'
+  const flag = adherenceFlagResult.data
+  const adherenceLogs: AdherenceLog[] = (adherenceLogsResult.data ?? []) as AdherenceLog[]
+
+  const showAdherence = (() => {
+    if (!flag?.enabled) return false
+    if (flag.plan_restriction && userPlan !== flag.plan_restriction) return false
+    if (flag.user_ids?.includes(uid)) return true
+    if (flag.rollout_pct >= 100) return true
+    const hash = parseInt(uid.replace(/-/g, '').slice(-4), 16) % 100
+    return hash < flag.rollout_pct
+  })()
+
+  // Medications from medical_profile (server-side fetch)
+  let medications: string[] = []
+  if (showAdherence) {
+    const { data: medProfile } = await supabase
+      .from('medical_profiles')
+      .select('medicamentos')
+      .eq('user_id', uid)
+      .maybeSingle()
+    medications = medProfile?.medicamentos ?? []
+  }
+
   return (
     <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1200px] mx-auto">
       {/* Page header */}
@@ -71,6 +108,13 @@ export default async function DiarioPage() {
 
       {/* Aliis insight */}
       <AliisInsight />
+
+      {/* Adherence checklist — Pro feature flag */}
+      {showAdherence && medications.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">
+          <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
+        </div>
+      )}
 
       {/* Symptoms + vitals — full width */}
       <div className="rounded-2xl border border-border bg-card p-4 md:p-6 mb-6">

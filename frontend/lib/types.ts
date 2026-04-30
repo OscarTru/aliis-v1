@@ -188,6 +188,14 @@ export interface MedicalProfile {
   updated_at: string
 }
 
+export interface AdherenceLog {
+  id: string
+  user_id: string
+  medication: string
+  taken_date: string
+  taken_at: string
+}
+
 export interface AppNotification {
   id: string
   user_id: string
