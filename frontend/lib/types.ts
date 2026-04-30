@@ -218,3 +218,49 @@ export interface AppNotification {
   url: string | null
   created_at: string
 }
+
+export type TreatmentFrequency =
+  | 'once_daily'
+  | 'twice_daily'
+  | 'three_daily'
+  | 'four_daily'
+  | 'as_needed'
+  | 'other'
+
+export const FREQUENCY_LABELS: Record<TreatmentFrequency, string> = {
+  once_daily:   'Una vez al día',
+  twice_daily:  'Dos veces al día',
+  three_daily:  'Tres veces al día',
+  four_daily:   'Cuatro veces al día',
+  as_needed:    'Según sea necesario',
+  other:        'Otra frecuencia',
+}
+
+export interface Treatment {
+  id: string
+  user_id: string
+  name: string
+  dose: string | null
+  frequency: TreatmentFrequency
+  frequency_label: string | null
+  indefinite: boolean
+  started_at: string | null
+  ended_at: string | null
+  last_changed_at: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TreatmentInput {
+  name: string
+  dose?: string
+  frequency: TreatmentFrequency
+  frequency_label?: string
+  indefinite: boolean
+  started_at?: string
+  ended_at?: string
+  last_changed_at?: string
+  notes?: string
+}
