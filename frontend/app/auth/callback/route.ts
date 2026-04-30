@@ -7,84 +7,86 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const inviteCode = searchParams.get('invite')
-  const next = searchParams.get('next') ?? '/historial'
 
-  if (code) {
-    const response = NextResponse.redirect(`${origin}${next}`)
+  if (!code) return NextResponse.redirect(`${origin}/`)
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return request.cookies.getAll() },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            )
-          },
+  // We need a mutable response to carry cookies — redirect URL set at the end
+  const cookieResponse = NextResponse.redirect(`${origin}/`)
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieResponse.cookies.set(name, value, options)
+          )
         },
-      }
-    )
+      },
+    }
+  )
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error && data.user) {
-      const user = data.user
+  if (error || !data.user) {
+    return NextResponse.redirect(`${origin}/?error=auth-failed`)
+  }
 
-      // Google OAuth without invite: only allow if user already has a profile (returning user)
-      const isOAuth = user.app_metadata?.provider === 'google'
-      if (isOAuth && !inviteCode) {
-        const admin = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-        const { data: profile } = await admin
-          .from('profiles')
-          .select('onboarding_done')
-          .eq('id', user.id)
-          .maybeSingle()
+  const user = data.user
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
-        const isReturningUser = profile?.onboarding_done === true
+  // Google OAuth without invite code: block new users, allow returning users
+  const isOAuth = user.app_metadata?.provider === 'google'
+  if (isOAuth && !inviteCode) {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('onboarding_done')
+      .eq('id', user.id)
+      .maybeSingle()
 
-        if (!isReturningUser) {
-          await admin.auth.admin.deleteUser(user.id)
-          const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
-          request.cookies.getAll().forEach(({ name }) => {
-            if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
-          })
-          response.cookies.getAll().forEach(({ name }) => {
-            if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
-          })
-          return blockResponse
-        }
-      }
-
-      // Consume invite code if present (Google OAuth signup path)
-      if (inviteCode) {
-        const admin = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-        const normalized = inviteCode.trim().toUpperCase()
-        const { data: invite } = await admin
-          .from('invite_codes')
-          .select('id, used')
-          .eq('code', normalized)
-          .single()
-        if (invite && !invite.used) {
-          await admin
-            .from('invite_codes')
-            .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
-            .eq('id', invite.id)
-        }
-      }
-
-      const redirect = await getPostAuthRedirect(supabase, user.id)
-      response.headers.set('location', `${origin}${redirect}`)
-      return response
+    if (!profile) {
+      // New user without invite — delete and block
+      await admin.auth.admin.deleteUser(user.id)
+      const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
+      cookieResponse.cookies.getAll().forEach(({ name }) => {
+        if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
+      })
+      return blockResponse
     }
   }
 
-  return NextResponse.redirect(`${origin}${next}`)
+  // Consume invite code if present (Google OAuth new signup)
+  if (inviteCode) {
+    const normalized = inviteCode.trim().toUpperCase()
+    const { data: invite } = await admin
+      .from('invite_codes')
+      .select('id, used')
+      .eq('code', normalized)
+      .single()
+    if (invite && !invite.used) {
+      await admin
+        .from('invite_codes')
+        .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
+        .eq('id', invite.id)
+    }
+  }
+
+  // Determine redirect: new users → onboarding, returning → historial
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('onboarding_done')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const destination = profile?.onboarding_done ? '/historial' : '/onboarding'
+  const finalResponse = NextResponse.redirect(`${origin}${destination}`)
+  cookieResponse.cookies.getAll().forEach(({ name, value }) => {
+    finalResponse.cookies.set(name, value)
+  })
+  return finalResponse
 }
