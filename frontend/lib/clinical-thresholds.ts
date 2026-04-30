@@ -30,10 +30,8 @@ const THRESHOLDS = {
     name: 'Presión diastólica',
   },
   heart_rate: {
-    criticalLow: 50,
-    warningLow: 60,
-    warningHigh: 100,
-    criticalHigh: 130,
+    criticalLow: 35,
+    criticalHigh: 180,
     unit: 'bpm',
     name: 'Frecuencia cardíaca',
   },
@@ -98,12 +96,6 @@ export function evaluateThresholds(logs: SymptomLog[]): ThresholdAlert[] {
       } else if (heart_rate >= t.criticalHigh && !seen.has('hr_high')) {
         alerts.push({ vital: t.name, value: heart_rate, unit: t.unit, level: 'critical', message: `Frecuencia cardíaca críticamente alta (${heart_rate} ${t.unit})` })
         seen.add('hr_high')
-      } else if (heart_rate >= t.warningHigh && heart_rate < t.criticalHigh && !seen.has('hr_warn_high')) {
-        alerts.push({ vital: t.name, value: heart_rate, unit: t.unit, level: 'warning', message: `Frecuencia cardíaca elevada (${heart_rate} ${t.unit})` })
-        seen.add('hr_warn_high')
-      } else if (heart_rate >= t.criticalLow && heart_rate < t.warningLow && !seen.has('hr_warn_low')) {
-        alerts.push({ vital: t.name, value: heart_rate, unit: t.unit, level: 'warning', message: `Frecuencia cardíaca baja (${heart_rate} ${t.unit})` })
-        seen.add('hr_warn_low')
       }
     }
 
