@@ -55,7 +55,7 @@ export function AdherenceSection({ medications, initialLogs, timezone, todayDate
   if (medications.length === 0) return null
 
   return (
-    <div className="mt-6">
+    <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>

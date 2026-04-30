@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import { Eyebrow } from '@/components/ui/Eyebrow'
@@ -90,16 +90,29 @@ function Chip({
 }
 
 export default function IngresoPage() {
+  return (
+    <Suspense>
+      <IngresoPageInner />
+    </Suspense>
+  )
+}
+
+function IngresoPageInner() {
   const router = useRouter()
-  const [step, setStep] = useState<Step>('dx')
+  const searchParams = useSearchParams()
+
+  const initialDx = searchParams.get('dx') ?? ''
+  const initialPara = searchParams.get('para') ?? ''
+
+  const [step, setStep] = useState<Step>(initialDx ? (initialPara ? 'emocion' : 'para') : 'dx')
 
   // Step 1 — dx
-  const [dxText, setDxText] = useState('')
+  const [dxText, setDxText] = useState(initialDx)
   const [conditionSlug, setConditionSlug] = useState<string | null>(null)
   const [conditions, setConditions] = useState<ConditionSuggestion[]>([])
 
   // Step 2 — para
-  const [para, setPara] = useState('')
+  const [para, setPara] = useState(initialPara)
 
   // Step 3 — emocion
   const [emocion, setEmocion] = useState('')
@@ -122,8 +135,9 @@ export default function IngresoPage() {
   const circleRef = useRef<SVGCircleElement>(null)
   const CIRCUMFERENCE = 2 * Math.PI * 18
 
-  // Reset to dx step on every mount so "Nuevo diagnóstico" always starts fresh
+  // Reset only when there are no pre-filled params (fresh "Nuevo diagnóstico")
   useEffect(() => {
+    if (initialDx) return
     setStep('dx')
     setDxText('')
     setConditionSlug(null)
@@ -136,7 +150,7 @@ export default function IngresoPage() {
     setStageIdx(0)
     setStageVisible(true)
     setProgressPct(0)
-  }, [])
+  }, [initialDx])
 
   // Load conditions for combobox
   useEffect(() => {

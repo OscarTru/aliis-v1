@@ -4,6 +4,25 @@ import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Treatment, TreatmentInput } from '@/lib/types'
 
+// Fire-and-forget: regenerate treatment check analysis for a pro user
+async function triggerTreatmentCheck(userId: string) {
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: profile } = await supabase.from('profiles').select('plan').eq('id', userId).single()
+    if (profile?.plan !== 'pro') return
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    // Invalidate cache by deleting old treatment_check insights, then let next load regenerate
+    await supabase
+      .from('aliis_insights')
+      .delete()
+      .eq('user_id', userId)
+      .contains('data_window', { type: 'treatment_check' })
+  } catch {
+    // Non-fatal
+  }
+}
+
 export async function getTreatments(): Promise<Treatment[]> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -35,10 +54,11 @@ export async function createTreatment(input: TreatmentInput): Promise<{ data?: T
   }).select().single()
   revalidatePath('/cuenta')
   revalidatePath('/tratamientos')
+  if (data && !error) triggerTreatmentCheck(user.id)
   return { data: data as Treatment | undefined, error: error?.message }
 }
 
-export async function updateTreatment(id: string, input: Partial<TreatmentInput>): Promise<{ error?: string }> {
+export async function updateTreatment(id: string, input: Partial<TreatmentInput>): Promise<{ data?: Treatment; error?: string }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autorizado' }
@@ -58,14 +78,17 @@ export async function updateTreatment(id: string, input: Partial<TreatmentInput>
   if (input.last_changed_at !== undefined) patch.last_changed_at = input.last_changed_at || null
   if (input.notes !== undefined) patch.notes = input.notes?.trim() || null
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('treatments')
     .update(patch)
     .eq('id', id)
     .eq('user_id', user.id)
+    .select()
+    .single()
   revalidatePath('/cuenta')
   revalidatePath('/tratamientos')
-  return { error: error?.message }
+  if (data && !error) triggerTreatmentCheck(user.id)
+  return { data: data ?? undefined, error: error?.message }
 }
 
 export async function deleteTreatment(id: string): Promise<{ error?: string }> {

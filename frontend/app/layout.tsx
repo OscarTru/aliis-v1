@@ -4,13 +4,13 @@ import { Toaster } from '@/components/ui/toaster'
 import { AnalyticsProvider } from '@/components/GoogleAnalytics'
 
 export const metadata: Metadata = {
-  title: 'Aliis · Entiende tu diagnóstico neurológico',
+  title: 'Aliis · Entiende tu diagnóstico',
   description:
-    'Aliis es tu asistente de IA para salud cerebral. Traduce el lenguaje médico, cita sus fuentes, y te acompaña entre consulta y consulta.',
+    'Aliis es tu asistente de IA para la salud. Traduce el lenguaje médico, cita sus fuentes, y te acompaña entre consulta y consulta.',
   openGraph: {
-    title: 'Aliis · Entiende tu diagnóstico neurológico',
+    title: 'Aliis · Entiende tu diagnóstico',
     description:
-      'Cuéntale a Aliis lo que te dijo el neurólogo. Te devuelve una explicación clara, con referencias verificables.',
+      'Cuéntale a Aliis lo que te dijo el médico. Te devuelve una explicación clara, con referencias verificables.',
     siteName: 'Aliis · Cerebros Esponjosos',
   },
 }

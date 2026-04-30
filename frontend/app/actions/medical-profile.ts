@@ -1,4 +1,5 @@
 'use server'
+import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { MedicalProfile } from '@/lib/types'
 
@@ -15,9 +16,10 @@ export async function saveMedicalProfile(data: MedicalProfileInput) {
       user_id: user.id,
       ...data,
       updated_at: new Date().toISOString(),
-    })
+    }, { onConflict: 'user_id' })
 
   if (error) throw new Error(error.message)
+  revalidatePath('/historial')
 }
 
 export async function getMedicalProfile(): Promise<MedicalProfile | null> {

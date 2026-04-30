@@ -35,11 +35,10 @@ export async function GET(req: Request) {
       type: 'reminder',
       url: '/historial',
     })
-    // Clear appointment so it doesn't trigger again
     await supabase.from('profiles').update({ next_appointment: null }).eq('id', u.id)
   }
 
-  // Get all active users (logged in the last 30 days)
+  // Only process users active in the last 30 days
   const { data: activeUsers } = await supabase
     .from('symptom_logs')
     .select('user_id')
@@ -48,7 +47,6 @@ export async function GET(req: Request) {
   const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
   if (userIds.length === 0) return Response.json({ sent: 0, skipped: 0 })
 
-  // Get push subscriptions indexed by user_id
   const { data: subsData } = await supabase
     .from('push_subscriptions')
     .select('user_id, endpoint, p256dh, auth')
@@ -60,17 +58,19 @@ export async function GET(req: Request) {
   let skipped = 0
 
   for (const userId of userIds) {
-    // Skip if already notified today
-    const { count } = await supabase
+    // Skip if insight notification already sent today — this is the source of truth.
+    // The insight itself may already be cached in aliis_insights but not yet notified
+    // (e.g. if a previous run failed after generating). We check the notification, not the insight.
+    const { count: insightNotifCount } = await supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('created_at', `${today}T00:00:00Z`)
-      .eq('type', 'reminder')
+      .eq('type', 'insight')
 
-    if ((count ?? 0) > 0) { skipped++; continue }
+    if ((insightNotifCount ?? 0) > 0) { skipped++; continue }
 
-    // Reuse today's insight if already generated
+    // Check if insight was already generated today (reuse to avoid re-calling Claude)
     const { data: cached } = await supabase
       .from('aliis_insights')
       .select('content')
@@ -114,32 +114,33 @@ export async function GET(req: Request) {
       })
     }
 
-    // In-app notification: insight goes to /diario, no modal
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      title: 'Aliis',
-      body: content.slice(0, 500),
-      type: 'insight',
-      url: '/diario',
-    })
+    // Insert both notifications together — reminder only ships with a real insight
+    await supabase.from('notifications').insert([
+      {
+        user_id: userId,
+        title: 'Aliis',
+        body: content.slice(0, 500),
+        type: 'insight',
+        url: '/diario',
+      },
+      {
+        user_id: userId,
+        title: '¿Cómo te sientes hoy?',
+        body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
+        type: 'reminder',
+        url: '/diario?registrar=1',
+      },
+    ])
 
-    // Separate daily reminder notification to open the log modal
-    await supabase.from('notifications').insert({
-      user_id: userId,
-      title: '¿Cómo te sientes hoy?',
-      body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
-      type: 'reminder',
-      url: '/diario?registrar=1',
-    })
     sent++
 
-    // Also send push if user has a subscription (push for the reminder)
+    // Push: send the insight text so it's useful, not just a generic ping
     const sub = subsByUser.get(userId)
     if (sub) {
       const result = await sendPushNotification(sub, {
-        title: '¿Cómo te sientes hoy?',
-        body: 'Registra tus signos del día.',
-        url: '/diario?registrar=1',
+        title: 'Aliis',
+        body: content.slice(0, 120),
+        url: '/diario',
       })
       if (!result.ok && result.expired) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)

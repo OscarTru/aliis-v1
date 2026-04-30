@@ -51,7 +51,7 @@ export function CorrelationAnalysis({ userId }: Props) {
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Header / trigger */}
       <button
         onClick={() => {

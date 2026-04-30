@@ -21,6 +21,21 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const packId: string | null = typeof body.packId === 'string' ? body.packId : null
 
+  // Reuse existing summary if generated in the last 7 days for this pack
+  if (packId) {
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: existing } = await supabase
+      .from('consult_summaries')
+      .select('token')
+      .eq('user_id', user.id)
+      .eq('pack_id', packId)
+      .gte('created_at', since7d)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (existing) return Response.json({ token: existing.token, cached: true })
+  }
+
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [packsRes, logsRes, trackedRes, medRes, packRes] = await Promise.all([

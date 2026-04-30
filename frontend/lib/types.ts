@@ -225,6 +225,7 @@ export type TreatmentFrequency =
   | 'three_daily'
   | 'four_daily'
   | 'as_needed'
+  | 'prn'
   | 'other'
 
 export const FREQUENCY_LABELS: Record<TreatmentFrequency, string> = {
@@ -232,7 +233,8 @@ export const FREQUENCY_LABELS: Record<TreatmentFrequency, string> = {
   twice_daily:  'Dos veces al día',
   three_daily:  'Tres veces al día',
   four_daily:   'Cuatro veces al día',
-  as_needed:    'Según sea necesario',
+  as_needed:    'por las tardes',
+  prn:          'por razón necesaria',
   other:        'Otra frecuencia',
 }
 

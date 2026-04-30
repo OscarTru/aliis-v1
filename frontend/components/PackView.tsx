@@ -1,13 +1,45 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { HelpCircle, MessageCircle, BookOpen } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
 import { ChatDrawer } from '@/components/ChatDrawer'
+import { PreConsultButton } from '@/components/PreConsultButton'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
+
+function AskAliisButton({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <motion.button
+      onClick={onClick}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      whileTap={{ scale: 0.94 }}
+      className="shrink-0 flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
+    >
+      <MessageCircle size={13} className="shrink-0" />
+      {/* Desktop: hover-expand label. Hidden on mobile — touch has no hover */}
+      <AnimatePresence initial={false}>
+        {hovered && (
+          <motion.span
+            key="label"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 'auto', opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="hidden md:inline overflow-hidden whitespace-nowrap"
+          >
+            Pregúntale a Aliis
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  )
+}
 
 function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: string }) {
   const isRed = tone === 'red'
@@ -26,9 +58,9 @@ function AlarmBadge({ tone, t, d }: { tone: 'red' | 'amber'; t: string; d: strin
 }
 
 function ChapterCard({
-  chapter, packId, userId, dx, onRead, conditionSlug, packContext, onOpenChat, chatOpen,
+  chapter, packId, userId, dx, onRead, conditionSlug, packContext, onOpenChat, chatOpen, userPlan,
 }: {
-  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void; chatOpen: boolean
+  chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void; chatOpen: boolean; userPlan?: string
 }) {
   const markedRef = useRef(false)
 
@@ -49,19 +81,14 @@ function ChapterCard({
 
   return (
     <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
-      <div className="flex items-start justify-between gap-4 mb-2.5 pr-12">
-        <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60">
+      <div className="flex items-center justify-between gap-4 mb-2.5 pr-12">
+        <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 shrink-0">
           {chapter.n} · {chapter.readTime}
         </div>
-        {!chatOpen && (
-          <button
-            onClick={onOpenChat}
-            className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] transition-opacity hover:opacity-90"
-          >
-            <MessageCircle size={12} />
-            Pregúntale a Aliis
-          </button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {userPlan === 'pro' && <PreConsultButton packId={packId} iconOnly="mobile" />}
+          {!chatOpen && <AskAliisButton onClick={onOpenChat} />}
+        </div>
       </div>
 
       <h2 className="font-serif tracking-[-0.022em] leading-[1.12] mb-3 text-[clamp(26px,3.5vw,38px)]">
@@ -131,7 +158,7 @@ function ChapterCard({
   )
 }
 
-export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
+export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: string; userPlan?: string }) {
   const { activeIdx, readChapters, setPack, setActiveIdx, markRead, setChatOpen, chatOpen } = usePackContext()
   const verifiedRefs = pack.references.filter((r) => r.verified !== false)
   const chapter = pack.chapters[activeIdx]
@@ -238,6 +265,7 @@ export function PackView({ pack, userId }: { pack: Pack; userId?: string }) {
               packContext={packContext}
               onOpenChat={() => setChatOpen(true)}
               chatOpen={chatOpen}
+              userPlan={userPlan}
             />
           </div>
 

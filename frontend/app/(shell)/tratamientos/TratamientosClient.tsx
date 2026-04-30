@@ -2,69 +2,36 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pill, Check, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Pill, Plus, Pencil, Trash2 } from 'lucide-react'
 import { deleteTreatment } from '@/app/actions/treatments'
 import { FREQUENCY_LABELS } from '@/lib/types'
 import { AddTreatmentModal } from '@/components/AddTreatmentModal'
-import type { Treatment, AdherenceLog } from '@/lib/types'
-
-const SCHEDULE_SLOTS: Record<string, string[]> = {
-  once_daily:  ['Mañana'],
-  twice_daily: ['Mañana', 'Noche'],
-  three_daily: ['Mañana', 'Tarde', 'Noche'],
-  four_daily:  ['Mañana', 'Mediodía', 'Tarde', 'Noche'],
-  as_needed:   [],
-  other:       [],
-}
-
-function slotKey(treatment: Treatment, slot: string): string {
-  const base = treatment.dose ? `${treatment.name} ${treatment.dose}` : treatment.name
-  return `${base} (${slot})`
-}
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import type { Treatment } from '@/lib/types'
 
 interface Props {
   initialTreatments: Treatment[]
-  initialTodayLogs: AdherenceLog[]
-  todayDate: string
 }
 
-export function TratamientosClient({ initialTreatments, initialTodayLogs, todayDate }: Props) {
+export function TratamientosClient({ initialTreatments }: Props) {
   const router = useRouter()
   const [treatments, setTreatments] = useState<Treatment[]>(initialTreatments)
-  const [logs, setLogs] = useState<AdherenceLog[]>(initialTodayLogs)
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [isPending, startTransition] = useTransition()
-
-  const takenToday = new Set(logs.map(l => l.medication))
-
-  function toggleSlot(treatment: Treatment, slot: string) {
-    const key = slotKey(treatment, slot)
-    const taken = takenToday.has(key)
-    if (!taken) {
-      setLogs(prev => [...prev, {
-        id: crypto.randomUUID(),
-        user_id: '',
-        medication: key,
-        taken_date: todayDate,
-        taken_at: new Date().toISOString(),
-      }])
-    } else {
-      setLogs(prev => prev.filter(l => !(l.medication === key && l.taken_date === todayDate)))
-    }
-    startTransition(async () => {
-      const { toggleAdherence } = await import('@/app/actions/adherence')
-      await toggleAdherence(key, todayDate, !taken)
-    })
-  }
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [, startTransition] = useTransition()
 
   function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este tratamiento?')) return
+    setDeletingId(id)
+  }
+
+  function confirmDelete() {
+    if (!deletingId) return
+    const id = deletingId
+    setDeletingId(null)
     startTransition(async () => {
       const result = await deleteTreatment(id)
-      if (!result.error) {
-        setTreatments(prev => prev.filter(t => t.id !== id))
-      }
+      if (!result.error) setTreatments(prev => prev.filter(t => t.id !== id))
     })
   }
 
@@ -90,107 +57,63 @@ export function TratamientosClient({ initialTreatments, initialTodayLogs, todayD
 
   return (
     <div>
-      <div className="flex flex-col gap-4">
+      {/* Compact list */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
         {treatments.map(t => {
-          const slots = SCHEDULE_SLOTS[t.frequency] ?? []
           const freq = t.frequency === 'other'
             ? (t.frequency_label ?? 'Otra frecuencia')
             : FREQUENCY_LABELS[t.frequency]
 
           return (
-            <div key={t.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="px-5 pt-5 pb-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Pill className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-[18px] text-foreground leading-tight">
-                        {t.name}
-                        {t.dose && (
-                          <span className="font-sans text-[13px] font-normal text-muted-foreground ml-2">{t.dose}</span>
-                        )}
-                      </h3>
-                      <p className="font-sans text-[13px] text-muted-foreground mt-0.5">{freq}</p>
-                      <div className="flex gap-3 mt-1 flex-wrap">
-                        {t.started_at && (
-                          <span className="font-mono text-[11px] text-muted-foreground/60">
-                            Desde {new Date(t.started_at + 'T00:00:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                          </span>
-                        )}
-                        {t.indefinite && (
-                          <span className="font-mono text-[11px] text-muted-foreground/60">· Indefinido</span>
-                        )}
-                      </div>
-                      {t.notes && (
-                        <p className="font-sans text-[12px] text-muted-foreground/70 mt-1.5 italic leading-relaxed">
-                          {t.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <button
-                      onClick={() => setEditingTreatment(t)}
-                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      disabled={isPending}
-                      className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors border-none bg-transparent cursor-pointer disabled:opacity-50"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
+            <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+              {/* Icon */}
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Pill className="w-3.5 h-3.5 text-primary" />
               </div>
 
-              {slots.length > 0 && (
-                <div className="px-5 pb-4 border-t border-border pt-3">
-                  <p className="font-mono text-[10px] tracking-[.14em] uppercase text-muted-foreground/50 mb-2.5">
-                    Hoy
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {slots.map(slot => {
-                      const key = slotKey(t, slot)
-                      const taken = takenToday.has(key)
-                      return (
-                        <button
-                          key={slot}
-                          onClick={() => toggleSlot(t, slot)}
-                          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border font-sans text-[13px] transition-all cursor-pointer ${
-                            taken
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                              : 'border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground'
-                          }`}
-                        >
-                          {taken && <Check className="w-3.5 h-3.5" />}
-                          {slot}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[14px] font-medium text-foreground leading-tight truncate">
+                  {t.name}
+                  {t.dose && (
+                    <span className="font-normal text-muted-foreground ml-1.5 text-[13px]">{t.dose}</span>
+                  )}
+                </p>
+                <p className="font-sans text-[11px] text-muted-foreground/60 leading-tight mt-0.5 truncate">
+                  {freq}
+                  {t.started_at && (
+                    <span className="ml-2">
+                      · Desde {new Date(t.started_at + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                  {t.indefinite && <span className="ml-2">· Indefinido</span>}
+                </p>
+              </div>
 
-              {t.frequency === 'as_needed' && (
-                <div className="px-5 pb-4 border-t border-border pt-3">
-                  <p className="font-sans text-[12px] text-muted-foreground/60 italic">
-                    Tomar según sea necesario
-                  </p>
-                </div>
-              )}
+              {/* Actions */}
+              <div className="flex gap-0.5 shrink-0">
+                <button
+                  onClick={() => setEditingTreatment(t)}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <Pencil size={13} />
+                </button>
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
           )
         })}
       </div>
 
+      {/* Add button */}
       <button
         onClick={() => setShowAddModal(true)}
-        className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 font-sans text-[13px] cursor-pointer bg-transparent transition-colors"
+        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 font-sans text-[13px] cursor-pointer bg-transparent transition-colors"
       >
         <Plus size={14} />
         Agregar tratamiento
@@ -203,9 +126,6 @@ export function TratamientosClient({ initialTreatments, initialTodayLogs, todayD
           onCreated={(newT) => {
             if (editingTreatment && newT) {
               setTreatments(prev => prev.map(t => t.id === editingTreatment.id ? newT : t))
-            } else if (editingTreatment && !newT) {
-              // edit mode returns undefined — refresh server data to get updated treatment
-              router.refresh()
             } else if (!editingTreatment && newT) {
               setTreatments(prev => [...prev, newT])
             }
@@ -214,6 +134,17 @@ export function TratamientosClient({ initialTreatments, initialTodayLogs, todayD
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deletingId}
+        title="¿Eliminar tratamiento?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   )
 }

@@ -5,14 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Check, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
-import { TagInput } from '@/components/ui/TagInput'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { saveMedicalProfile } from '@/app/actions/medical-profile'
 import { saveNextAppointment } from '@/app/actions/appointment'
-import type { MedicalProfile } from '@/lib/types'
 
 type Profile = {
   name: string | null
@@ -69,13 +66,11 @@ export function CuentaClient({
   userId: initialUserId,
   isGoogleUser: initialIsGoogleUser,
   googleName,
-  initialMedicalProfile,
 }: {
   initialProfile: Profile
   userId: string
   isGoogleUser: boolean
   googleName: string
-  initialMedicalProfile: MedicalProfile | null
 }) {
   const router = useRouter()
   const { toast } = useToast()
@@ -117,14 +112,6 @@ export function CuentaClient({
   // Billing
   const [billingLoading, setBillingLoading] = useState(false)
 
-  // Medical profile (Pro only)
-  const [medMedicamentos, setMedMedicamentos] = useState<string[]>(initialMedicalProfile?.medicamentos ?? [])
-  const [medAlergias, setMedAlergias] = useState<string[]>(initialMedicalProfile?.alergias ?? [])
-  const [medCondiciones, setMedCondiciones] = useState<string[]>(initialMedicalProfile?.condiciones_previas ?? [])
-  const [medEdad, setMedEdad] = useState(initialMedicalProfile?.edad?.toString() ?? '')
-  const [medSexo, setMedSexo] = useState(initialMedicalProfile?.sexo ?? '')
-  const [medLoading, setMedLoading] = useState(false)
-
   // Next appointment
   const [appointment, setAppointment] = useState(initialProfile.next_appointment ?? '')
   const [appointmentLoading, setAppointmentLoading] = useState(false)
@@ -141,24 +128,6 @@ export function CuentaClient({
     setAppointmentLoading(true)
     await saveNextAppointment(null)
     setAppointmentLoading(false)
-  }
-
-  async function saveMed() {
-    setMedLoading(true)
-    try {
-      await saveMedicalProfile({
-        medicamentos: medMedicamentos,
-        alergias: medAlergias,
-        condiciones_previas: medCondiciones,
-        edad: medEdad ? parseInt(medEdad) : null,
-        sexo: (medSexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
-      })
-      showToast('Perfil médico actualizado.')
-    } catch {
-      showToast('Error al guardar.', false)
-    } finally {
-      setMedLoading(false)
-    }
   }
 
   // Dialog
@@ -500,58 +469,6 @@ export function CuentaClient({
             </div>
           </div>
         </Section>
-
-        {/* Perfil médico — Pro only */}
-        {profile.plan === 'pro' && (
-          <Section title="Perfil médico">
-            <div className="px-4 sm:px-6 py-5 flex flex-col gap-4">
-              <p className="font-sans text-[13px] text-muted-foreground">
-                Aliis usa este contexto para personalizar tus explicaciones.
-              </p>
-              <div className="flex gap-3">
-                <input
-                  type="number"
-                  placeholder="Edad"
-                  value={medEdad}
-                  min={1}
-                  max={149}
-                  onChange={e => setMedEdad(e.target.value)}
-                  className="h-11 flex-1 rounded-xl border border-border bg-background px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
-                />
-                <select
-                  value={medSexo}
-                  onChange={e => setMedSexo(e.target.value)}
-                  className="h-11 flex-1 rounded-xl border border-border bg-background px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
-                >
-                  <option value="">Sexo biológico</option>
-                  <option value="masculino">Masculino</option>
-                  <option value="femenino">Femenino</option>
-                  <option value="otro">Otro</option>
-                  <option value="prefiero_no_decir">Prefiero no decir</option>
-                </select>
-              </div>
-              <TagInput
-                label="Condiciones previas"
-                placeholder="Ej: diabetes tipo 2, hipertensión..."
-                value={medCondiciones}
-                onChange={setMedCondiciones}
-              />
-              <TagInput
-                label="Medicamentos actuales"
-                placeholder="Ej: metformina 850mg..."
-                value={medMedicamentos}
-                onChange={setMedMedicamentos}
-              />
-              <TagInput
-                label="Alergias conocidas"
-                placeholder="Ej: penicilina..."
-                value={medAlergias}
-                onChange={setMedAlergias}
-              />
-              <SaveButton loading={medLoading} onClick={saveMed} />
-            </div>
-          </Section>
-        )}
 
         {/* Próxima consulta */}
         <Section title="Próxima consulta">

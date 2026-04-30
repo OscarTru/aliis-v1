@@ -5,7 +5,6 @@ import { SymptomsSection } from '@/components/SymptomsSection'
 import { SymptomsTracker } from '@/components/SymptomsTracker'
 import { AliisInsight } from '@/components/AliisInsight'
 import { PushPermissionPrompt } from '@/components/PushPermissionPrompt'
-import { AdherenceWrapper } from '@/components/AdherenceWrapper'
 import { CorrelationAnalysis } from '@/components/CorrelationAnalysis'
 import { CapsulaDeTiempo } from '@/components/CapsulaDeTiempo'
 import { ElHilo } from '@/components/ElHilo'
@@ -50,6 +49,8 @@ export default async function DiarioPage() {
       .order('taken_date', { ascending: false })
       .limit(90),
   ])
+
+  const todayDate = new Intl.DateTimeFormat('en-CA').format(new Date())
 
   const notes: NoteWithPack[] = (notesResult.data ?? []).map((row: {
     id: string
@@ -145,15 +146,12 @@ export default async function DiarioPage() {
 
         {/* Right column — widgets */}
         <div className="flex flex-col gap-4 min-w-0">
-          {/* Treatments widget */}
-          <TreatmentsWidget treatments={treatments} />
-
-          {/* Adherence checklist */}
-          {showAdherence && medications.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <AdherenceWrapper medications={medications} initialLogs={adherenceLogs} />
-            </div>
-          )}
+          {/* Treatments widget with inline adherence chips */}
+          <TreatmentsWidget
+            treatments={treatments}
+            initialTodayLogs={adherenceLogs.filter(l => l.taken_date === todayDate)}
+            todayDate={todayDate}
+          />
 
           {/* El Hilo */}
           <ElHilo userId={uid} />
