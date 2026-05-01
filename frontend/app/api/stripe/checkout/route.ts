@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     .single()
 
   const requestOrigin = req.headers.get('origin') ?? ''
-  const origin = ALLOWED_ORIGINS.find(o => requestOrigin.startsWith(o)) ?? 'https://aliis.app'
+  const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : 'https://aliis.app'
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
