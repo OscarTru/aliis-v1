@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 
 export default async function ConsultPage({
   params,
@@ -7,7 +7,11 @@ export default async function ConsultPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const supabase = await createServerSupabaseClient()
+  // Use service-role client to bypass RLS — no anon policy needed
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data } = await supabase
     .from('consult_summaries')
