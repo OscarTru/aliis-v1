@@ -1,5 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import { sendPushNotification } from '@/lib/web-push'
 import type { SymptomLog } from '@/lib/types'
@@ -9,7 +9,6 @@ export async function GET(req: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   const isVercelCron = req.headers.get('x-vercel-cron') === '1'
   const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
@@ -20,25 +19,31 @@ export async function GET(req: Request) {
   const today = new Date().toISOString().slice(0, 10)
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const todayStart = `${today}T00:00:00Z`
 
-  // Appointment reminders: notify users whose next_appointment is tomorrow
+  // --- Appointment reminders (separate flow) ---
   const { data: appointmentUsers } = await supabase
     .from('profiles')
     .select('id, name, next_appointment')
     .eq('next_appointment', tomorrow)
 
-  for (const u of appointmentUsers ?? []) {
-    await supabase.from('notifications').insert({
-      user_id: u.id,
-      title: 'Tu consulta es mañana',
-      body: 'Recuerda llevar tu resumen pre-consulta de Aliis.',
-      type: 'reminder',
-      url: '/historial',
-    })
-    await supabase.from('profiles').update({ next_appointment: null }).eq('id', u.id)
+  if (appointmentUsers && appointmentUsers.length > 0) {
+    await supabase.from('notifications').insert(
+      appointmentUsers.map(u => ({
+        user_id: u.id,
+        title: 'Tu consulta es mañana',
+        body: 'Recuerda llevar tu resumen pre-consulta de Aliis.',
+        type: 'reminder',
+        url: '/historial',
+      }))
+    )
+    await supabase
+      .from('profiles')
+      .update({ next_appointment: null })
+      .in('id', appointmentUsers.map(u => u.id))
   }
 
-  // Only process users active in the last 30 days
+  // --- Insight + diary reminder flow ---
   const { data: activeUsers } = await supabase
     .from('symptom_logs')
     .select('user_id')
@@ -47,58 +52,95 @@ export async function GET(req: Request) {
   const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
   if (userIds.length === 0) return Response.json({ sent: 0, skipped: 0 })
 
-  const { data: subsData } = await supabase
-    .from('push_subscriptions')
-    .select('user_id, endpoint, p256dh, auth')
+  // Batched: who already received an insight notification today?
+  const { data: existingNotifs } = await supabase
+    .from('notifications')
+    .select('user_id')
     .in('user_id', userIds)
+    .gte('created_at', todayStart)
+    .eq('type', 'insight')
+  const alreadyNotified = new Set((existingNotifs ?? []).map(r => r.user_id))
 
-  const subsByUser = new Map((subsData ?? []).map(s => [s.user_id, s]))
+  // Batched: cached insights for today
+  const { data: cachedInsights } = await supabase
+    .from('aliis_insights')
+    .select('user_id, content')
+    .in('user_id', userIds)
+    .gte('generated_at', todayStart)
+  const cacheByUser = new Map(
+    (cachedInsights ?? []).map(r => [r.user_id, r.content as string])
+  )
+
+  // Users that still need an insight generated
+  const toGenerate = userIds.filter(
+    id => !alreadyNotified.has(id) && !cacheByUser.has(id)
+  )
+
+  // Batched: profiles, symptom_logs, packs for users needing generation
+  const [profilesRes, logsRes, packsRes, subsRes] = await Promise.all([
+    supabase.from('profiles').select('id, name').in('id', toGenerate),
+    supabase
+      .from('symptom_logs')
+      .select('*')
+      .in('user_id', toGenerate)
+      .gte('logged_at', since30)
+      .order('logged_at', { ascending: false }),
+    supabase
+      .from('packs')
+      .select('user_id, dx, created_at')
+      .in('user_id', toGenerate)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('push_subscriptions')
+      .select('user_id, endpoint, p256dh, auth')
+      .in('user_id', userIds),
+  ])
+
+  const profileByUser = new Map(
+    (profilesRes.data ?? []).map(p => [p.id, p.name as string | null])
+  )
+  const logsByUser = new Map<string, SymptomLog[]>()
+  for (const log of (logsRes.data ?? []) as SymptomLog[]) {
+    const arr = logsByUser.get(log.user_id) ?? []
+    arr.push(log)
+    logsByUser.set(log.user_id, arr)
+  }
+  const recentDxByUser = new Map<string, string>()
+  for (const p of packsRes.data ?? []) {
+    if (!recentDxByUser.has(p.user_id)) recentDxByUser.set(p.user_id, p.dx)
+  }
+  const subsByUser = new Map((subsRes.data ?? []).map(s => [s.user_id, s]))
 
   let sent = 0
   let skipped = 0
 
+  // Accumulators for batched writes
+  const insightsToInsert: Array<{ user_id: string; content: string; data_window: object }> = []
+  const notificationsToInsert: Array<{
+    user_id: string
+    title: string
+    body: string
+    type: string
+    url: string
+  }> = []
+  const expiredEndpoints: string[] = []
+
   for (const userId of userIds) {
-    // Skip if insight notification already sent today — this is the source of truth.
-    // The insight itself may already be cached in aliis_insights but not yet notified
-    // (e.g. if a previous run failed after generating). We check the notification, not the insight.
-    const { count: insightNotifCount } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', `${today}T00:00:00Z`)
-      .eq('type', 'insight')
+    if (alreadyNotified.has(userId)) { skipped++; continue }
 
-    if ((insightNotifCount ?? 0) > 0) { skipped++; continue }
+    let content = cacheByUser.get(userId) ?? null
 
-    // Check if insight was already generated today (reuse to avoid re-calling Claude)
-    const { data: cached } = await supabase
-      .from('aliis_insights')
-      .select('content')
-      .eq('user_id', userId)
-      .gte('generated_at', `${today}T00:00:00Z`)
-      .maybeSingle()
-
-    let content: string
-
-    if (cached) {
-      content = cached.content
-    } else {
-      const [profileRes, logsRes, packRes] = await Promise.all([
-        supabase.from('profiles').select('name').eq('id', userId).single(),
-        supabase.from('symptom_logs').select('*').eq('user_id', userId).gte('logged_at', since30).order('logged_at', { ascending: false }),
-        supabase.from('packs').select('dx').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).single(),
-      ])
-
-      const userName = profileRes.data?.name ?? 'tú'
-      const logs = (logsRes.data ?? []) as SymptomLog[]
-      const recentDiagnosis = packRes.data?.dx ?? null
+    if (!content) {
+      const userName = profileByUser.get(userId) ?? 'tú'
+      const logs = logsByUser.get(userId) ?? []
+      const recentDiagnosis = recentDxByUser.get(userId) ?? null
 
       const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
       try {
         const message = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 150,
-          system,
+          system: cachedSystem(system),
           messages: [{ role: 'user', content: userMessage }],
         })
         content = (message.content[0] as { type: string; text: string }).text.trim()
@@ -107,15 +149,14 @@ export async function GET(req: Request) {
         continue
       }
 
-      await supabase.from('aliis_insights').insert({
+      insightsToInsert.push({
         user_id: userId,
         content,
         data_window: { logs: logs.length, userName, recentDiagnosis },
       })
     }
 
-    // Insert both notifications together — reminder only ships with a real insight
-    await supabase.from('notifications').insert([
+    notificationsToInsert.push(
       {
         user_id: userId,
         title: 'Aliis',
@@ -129,12 +170,11 @@ export async function GET(req: Request) {
         body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
         type: 'reminder',
         url: '/diario?registrar=1',
-      },
-    ])
+      }
+    )
 
     sent++
 
-    // Push: send the insight text so it's useful, not just a generic ping
     const sub = subsByUser.get(userId)
     if (sub) {
       const result = await sendPushNotification(sub, {
@@ -143,9 +183,20 @@ export async function GET(req: Request) {
         url: '/diario',
       })
       if (!result.ok && result.expired) {
-        await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+        expiredEndpoints.push(sub.endpoint)
       }
     }
+  }
+
+  // Single round trip per write category
+  if (insightsToInsert.length > 0) {
+    await supabase.from('aliis_insights').insert(insightsToInsert)
+  }
+  if (notificationsToInsert.length > 0) {
+    await supabase.from('notifications').insert(notificationsToInsert)
+  }
+  if (expiredEndpoints.length > 0) {
+    await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints)
   }
 
   return Response.json({ sent, skipped })
