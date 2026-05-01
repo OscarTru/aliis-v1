@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
@@ -25,7 +25,6 @@ PREGUNTAS PARA MI MÉDICO
 (máximo 3 preguntas)`
 
 export async function POST(req: Request) {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   let body: { packId?: unknown; dx?: unknown }
   try {
     body = await req.json()
@@ -118,7 +117,7 @@ ${conversationText}`
 
   let noteContent: string
   try {
-    const response = await client.messages.create({
+    const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
       system: [{ type: 'text', text: NOTES_SYSTEM, cache_control: { type: 'ephemeral' } }],

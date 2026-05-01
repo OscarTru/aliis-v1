@@ -1,10 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { anthropic } from '@/lib/anthropic'
 import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function POST(req: Request) {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const {
     question,
     history,
@@ -173,7 +172,7 @@ Responde en español.`
   // Pro plan: Anthropic Haiku with prompt caching + real streaming
   let stream
   try {
-    stream = await client.messages.stream({
+    stream = await anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
       system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],

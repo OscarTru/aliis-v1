@@ -1,10 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import type { SymptomLog } from '@/lib/types'
 
 export async function GET() {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
@@ -42,7 +41,7 @@ export async function GET() {
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 150,
-    system,
+    system: cachedSystem(system),
     messages: [{ role: 'user', content: userMessage }],
   })
 
