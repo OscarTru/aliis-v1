@@ -1,6 +1,7 @@
 import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { logLlmUsage } from '@/lib/llm-usage'
+import { logger } from '@/lib/logger'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
 
@@ -134,7 +135,7 @@ ${conversationText}`
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')
     noteContent = textBlock.text.trim()
   } catch (err) {
-    console.error('[notes/generate] Claude API error:', err)
+    logger.error({ err, route: 'notes_generate' }, 'Claude API error')
     return new Response(JSON.stringify({ error: 'Error al generar apuntes' }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },

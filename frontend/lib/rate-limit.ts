@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger'
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,7 +39,7 @@ export async function rateLimit(
 
   if (error) {
     // Fail open on storage errors — better than blocking real users
-    console.error('[rate-limit] RPC error:', error)
+    logger.error({ err: error }, 'rate-limit RPC error')
     return { ok: true, remaining: limit, resetAt }
   }
 

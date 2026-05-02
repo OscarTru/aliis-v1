@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger'
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,6 +35,6 @@ export async function logLlmUsage(args: {
       cache_creation_tokens: args.usage?.cache_creation_input_tokens ?? 0,
     })
   } catch (err) {
-    console.error('[llm-usage] insert failed:', err)
+    logger.error({ err }, 'llm-usage insert failed')
   }
 }

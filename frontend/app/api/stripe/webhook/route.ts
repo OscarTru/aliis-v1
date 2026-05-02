@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail } from '@/lib/resend'
 import { paymentConfirmationEmail } from '@/lib/emails'
+import { logger } from '@/lib/logger'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
               if (insertErr && insertErr.code === '23505') {
                 // UNIQUE conflict — this event was already processed, skip silently
               } else if (insertErr) {
-                console.error('email_sends insert error:', insertErr)
+                logger.error({ err: insertErr, eventId: event.id }, 'email_sends insert failed')
               } else {
                 const { data: profile } = await admin
                   .from('profiles')
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
               }
             }
           } catch (emailErr) {
-            console.error('Payment confirmation email error:', emailErr)
+            logger.error({ err: emailErr, kind: 'payment_confirmation' }, 'Payment confirmation email failed')
           }
         }
         break

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
 
     if (!claimed) {
-      console.warn(`[auth/callback] invite code already consumed or invalid: ${normalized}`)
+      logger.warn({ code: normalized }, 'invite code already consumed or invalid')
     }
   }
 
