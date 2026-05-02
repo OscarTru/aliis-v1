@@ -109,7 +109,7 @@ export function AppNav() {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="px-4 md:px-5 py-2 rounded-full bg-foreground text-background font-sans text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
+                className="px-4 md:px-5 py-2 rounded-full bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer hover:bg-secondary/90 transition-colors shadow-[0_0_0_1px_rgba(31,138,155,.3),0_4px_16px_rgba(31,138,155,.15)]"
               >
                 Iniciar sesión
               </button>

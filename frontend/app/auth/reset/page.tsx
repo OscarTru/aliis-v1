@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
             </p>
             <Button
               onClick={() => router.push('/historial')}
-              className="px-8 py-3 rounded-xl bg-foreground text-background font-sans font-medium hover:bg-foreground/90 shadow-[var(--c-btn-primary-shadow)]"
+              className="px-8 py-3 rounded-xl bg-secondary text-secondary-foreground font-sans font-medium hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)]"
             >
               Ir a mis explicaciones
             </Button>
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 mt-1 rounded-xl bg-foreground text-background font-sans font-medium hover:bg-foreground/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70"
+              className="h-12 mt-1 rounded-xl bg-secondary text-secondary-foreground font-sans font-medium hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-70"
             >
               {loading ? 'Guardando…' : 'Guardar contraseña'}
             </Button>

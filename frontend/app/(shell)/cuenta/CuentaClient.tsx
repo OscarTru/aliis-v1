@@ -54,7 +54,7 @@ function SaveButton({ loading, onClick }: { loading: boolean; onClick: () => voi
     <button
       onClick={onClick}
       disabled={loading}
-      className="mt-2.5 px-5 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] transition-opacity duration-150"
+      className="mt-2.5 px-5 py-2.5 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors duration-150"
     >
       {loading ? 'Guardando…' : 'Guardar'}
     </button>
@@ -273,7 +273,7 @@ export function CuentaClient({
                   <button
                     onClick={saveName}
                     disabled={nameLoading}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors"
                   >
                     <Check size={14} />
                     {nameLoading ? 'Guardando…' : 'Guardar'}
@@ -306,7 +306,7 @@ export function CuentaClient({
               <>
                 <Input type="text" placeholder="Tu apellido" value={lastName} onChange={e => setLastName(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
                 <div className="flex gap-2 mt-2.5">
-                  <button onClick={saveLastName} disabled={lastNameLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{lastNameLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={saveLastName} disabled={lastNameLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors"><Check size={14} />{lastNameLoading ? 'Guardando…' : 'Guardar'}</button>
                   <button onClick={() => { setLastNameEditing(false); setLastName(profile.last_name ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
                 </div>
               </>
@@ -322,7 +322,7 @@ export function CuentaClient({
               <>
                 <Input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
                 <div className="flex gap-2 mt-2.5">
-                  <button onClick={saveBirthDate} disabled={birthDateLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{birthDateLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={saveBirthDate} disabled={birthDateLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors"><Check size={14} />{birthDateLoading ? 'Guardando…' : 'Guardar'}</button>
                   <button onClick={() => { setBirthDateEditing(false); setBirthDate(profile.birth_date ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
                 </div>
               </>
@@ -340,7 +340,7 @@ export function CuentaClient({
               <>
                 <Input type="text" placeholder="Ciudad, País" value={location} onChange={e => setLocation(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
                 <div className="flex gap-2 mt-2.5">
-                  <button onClick={saveLocation} disabled={locationLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)]"><Check size={14} />{locationLoading ? 'Guardando…' : 'Guardar'}</button>
+                  <button onClick={saveLocation} disabled={locationLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors"><Check size={14} />{locationLoading ? 'Guardando…' : 'Guardar'}</button>
                   <button onClick={() => { setLocationEditing(false); setLocation(profile.location ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
                 </div>
               </>
@@ -453,7 +453,7 @@ export function CuentaClient({
                 <button
                   onClick={handleUpgrade}
                   disabled={billingLoading}
-                  className="px-4 py-2.5 rounded-[10px] border-none bg-foreground text-background font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] whitespace-nowrap"
+                  className="px-4 py-2.5 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors whitespace-nowrap"
                 >
                   {billingLoading ? 'Cargando…' : 'Actualizar a Pro'}
                 </button>

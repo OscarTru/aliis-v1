@@ -46,7 +46,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
         </p>
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-sans text-[14px] font-medium cursor-pointer"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-sans text-[14px] font-medium cursor-pointer"
         >
           <Plus size={16} />
           Agregar mi primer tratamiento

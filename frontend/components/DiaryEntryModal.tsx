@@ -132,7 +132,7 @@ export function DiaryEntryModal({ open, onClose, onSaved }: Props) {
                 className={cn(
                   'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full font-sans text-[14px] font-medium transition-colors border-none',
                   text.trim() && !extracting
-                    ? 'bg-foreground text-background cursor-pointer'
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 cursor-pointer'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                 )}
               >
@@ -199,7 +199,7 @@ export function DiaryEntryModal({ open, onClose, onSaved }: Props) {
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-2.5 rounded-full bg-foreground text-background font-sans text-[14px] font-medium cursor-pointer border-none hover:opacity-90 transition-opacity"
+                className="flex-1 py-2.5 rounded-full bg-secondary text-secondary-foreground font-sans text-[14px] font-medium cursor-pointer border-none hover:bg-secondary/90 transition-colors"
               >
                 Guardar entrada
               </button>
