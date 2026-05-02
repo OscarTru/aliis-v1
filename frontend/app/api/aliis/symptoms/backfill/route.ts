@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { SymptomLog } from '@/lib/types'
 
@@ -66,14 +66,12 @@ export async function POST() {
   const logs = (logsData ?? []) as SymptomLog[]
   if (logs.length === 0) return Response.json({ processed: 0, symptoms: [] })
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   let extracted: ExtractedSymptom[] = []
   try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: cachedSystem(SYSTEM_PROMPT),
       messages: [{ role: 'user', content: buildBatchMessage(logs) }],
     })
     let raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'

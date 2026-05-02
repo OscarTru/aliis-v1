@@ -1,6 +1,8 @@
+import './instrument'
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import * as Sentry from '@sentry/node'
 import { createClient } from '@supabase/supabase-js'
 
 if (!process.env.ANTHROPIC_API_KEY) {
@@ -36,6 +38,14 @@ app.use(express.json())
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
+// Sentry smoke test — gated behind CRON_SECRET. Hit /_test/sentry?secret=... to verify capture.
+app.get('/_test/sentry', (req, _res, next) => {
+  if (req.query.secret !== process.env.CRON_SECRET) {
+    return next(new Error('forbidden'))
+  }
+  next(new Error('Sentry backend smoke test — if you see this in the dashboard, scrubbing works'))
+})
+
 import { packRouter } from './routes/pack'
 import { stripeRouter } from './routes/stripe'
 import { requireAuth } from './middleware/auth'
@@ -44,6 +54,15 @@ import { requireAuth } from './middleware/auth'
 app.use('/pack', requireAuth)
 app.use('/pack', packRouter)
 app.use('/stripe', stripeRouter)
+
+// Sentry Express error handler must come AFTER all routes/middleware
+Sentry.setupExpressErrorHandler(app)
+
+// Generic error handler (after Sentry's)
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[backend] error:', err.message)
+  res.status(500).json({ error: 'Internal server error' })
+})
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => console.log(`Backend Aliis :${PORT}`))
