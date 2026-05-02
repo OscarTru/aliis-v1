@@ -2,6 +2,7 @@ import { anthropic } from '@/lib/anthropic'
 import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   const {
@@ -40,6 +41,17 @@ export async function POST(req: Request) {
     })
   }
   const authenticatedUserId = user.id
+
+  const rl = await rateLimit(`user:${authenticatedUserId}:chat`, 30, 60)
+  if (!rl.ok) {
+    return new Response(
+      JSON.stringify({ error: 'Demasiados mensajes — espera un momento' }),
+      {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      }
+    )
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
