@@ -5,9 +5,11 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 // Backend API origin allowed in connect-src.
 //   - In dev: localhost:3001 (Express backend)
-//   - In prod: https://api.aliis.app (Railway-hosted)
+//   - In prod: Railway-hosted backend
 // Override via NEXT_PUBLIC_API_URL in env if either changes.
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? (isDev ? 'http://localhost:3001' : 'https://api.aliis.app')
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (isDev ? 'http://localhost:3001' : 'https://aliis-v1-production.up.railway.app')
 
 // Build CSP. Dev needs 'unsafe-eval' for Next.js HMR / React Refresh.
 // Prod is stricter. Both allow Google Analytics + Tag Manager since gtag is loaded site-wide.
