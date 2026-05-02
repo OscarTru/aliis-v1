@@ -1,6 +1,23 @@
 import type { NextConfig } from 'next'
 import { withSentryConfig } from '@sentry/nextjs'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
+// Build CSP. Dev needs 'unsafe-eval' for Next.js HMR / React Refresh.
+// Prod is stricter. Both allow Google Analytics + Tag Manager since gtag is loaded site-wide.
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://m.stripe.com https://m.stripe.network https://r.stripe.com https://accounts.google.com https://*.ingest.de.sentry.io https://www.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://*.supabase.co https://accounts.google.com",
+].join('; ')
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -34,18 +51,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co",
-              "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://m.stripe.com https://m.stripe.network https://r.stripe.com https://accounts.google.com https://*.ingest.de.sentry.io",
-              "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self' https://*.supabase.co https://accounts.google.com",
-            ].join('; '),
+            value: csp,
           },
         ],
       },
