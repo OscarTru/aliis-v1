@@ -3,19 +3,17 @@ import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import { logLlmUsage } from '@/lib/llm-usage'
 import { sendPushNotification } from '@/lib/web-push'
+import { verifyCronAuth } from '@/lib/cron-auth'
 import type { SymptomLog } from '@/lib/types'
 
 export async function GET(req: Request) {
+  const authError = verifyCronAuth(req)
+  if (authError) return authError
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-
-  const isVercelCron = req.headers.get('x-vercel-cron') === '1'
-  const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
-  if (!isVercelCron && !hasSecret) {
-    return Response.json({ error: 'No autorizado' }, { status: 401 })
-  }
 
   const today = new Date().toISOString().slice(0, 10)
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
