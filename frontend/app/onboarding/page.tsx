@@ -133,7 +133,7 @@ export default function OnboardingPage() {
             </div>
             <Button
               onClick={() => setStep(2)}
-              className="px-10 py-[14px] h-auto rounded-full bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90"
+              className="px-10 py-[14px] h-auto rounded-full bg-secondary text-secondary-foreground border-none font-sans text-[15px] font-medium hover:bg-secondary/90"
             >
               Continuar
             </Button>
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
             />
             <Button
               onClick={() => setStep(3)}
-              className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90"
+              className="w-full h-12 rounded-[12px] bg-secondary text-secondary-foreground border-none font-sans text-[15px] font-medium hover:bg-secondary/90"
             >
               Continuar
             </Button>
@@ -192,7 +192,7 @@ export default function OnboardingPage() {
             <Button
               onClick={() => setStep(4)}
               disabled={saving}
-              className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
+              className="w-full h-12 rounded-[12px] bg-secondary text-secondary-foreground border-none font-sans text-[15px] font-medium hover:bg-secondary/90 disabled:opacity-70"
             >
               Continuar
             </Button>
@@ -257,7 +257,7 @@ export default function OnboardingPage() {
               <Button
                 onClick={finishWithMedProfile}
                 disabled={saving}
-                className="w-full h-12 rounded-[12px] bg-primary text-white border-none font-sans text-[15px] font-medium hover:bg-primary/90 disabled:opacity-70"
+                className="w-full h-12 rounded-[12px] bg-secondary text-secondary-foreground border-none font-sans text-[15px] font-medium hover:bg-secondary/90 disabled:opacity-70"
               >
                 {saving ? 'Guardando…' : 'Empezar'}
               </Button>

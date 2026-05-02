@@ -65,7 +65,7 @@ export function CookieBanner({ onConsentChange }: { onConsentChange?: (c: Consen
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => save({ analytics: true })}
-                className="px-4 py-2 rounded-lg border border-primary bg-primary text-white font-sans text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 rounded-lg border border-secondary bg-secondary text-secondary-foreground font-sans text-sm font-medium hover:bg-secondary/90 transition-colors"
               >
                 Aceptar todas
               </button>
@@ -125,7 +125,7 @@ export function CookieBanner({ onConsentChange }: { onConsentChange?: (c: Consen
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => save({ analytics })}
-                className="px-4 py-2 rounded-lg bg-primary text-white font-sans text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground font-sans text-sm font-medium hover:bg-secondary/90 transition-colors"
               >
                 Guardar preferencias
               </button>

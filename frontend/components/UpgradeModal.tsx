@@ -16,7 +16,7 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
         <p className="font-sans text-[15px] text-muted-foreground leading-relaxed mb-8">
           Con Aliis Pro tienes packs ilimitados, referencias verificadas y acceso completo.
         </p>
-        <Button asChild className="w-full h-12 rounded-xl bg-primary text-white font-sans text-[15px] font-medium hover:bg-primary/90 mb-3">
+        <Button asChild className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground font-sans text-[15px] font-medium hover:bg-secondary/90 mb-3">
           <Link href="/precios">Ver planes — desde €9.99/mes</Link>
         </Button>
         <button
