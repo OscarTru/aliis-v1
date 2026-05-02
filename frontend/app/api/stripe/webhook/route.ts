@@ -73,20 +73,32 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', userId)
 
-          // Send payment confirmation email.
-          // Note: checkout.session.completed can re-fire on Stripe retries — duplicate
-          // emails are possible but acceptable at MVP scale.
+          // Send payment confirmation email — idempotent against Stripe retries.
           try {
             const email = session.customer_details?.email ?? null
             if (email) {
-              const { data: profile } = await admin
-                .from('profiles')
-                .select('name')
-                .eq('id', userId)
-                .single()
-              const name: string | null = profile?.name ?? null
-              const { subject, html } = paymentConfirmationEmail(name)
-              await sendEmail({ to: email, subject, html })
+              const { error: insertErr } = await admin
+                .from('email_sends')
+                .insert({
+                  event_source: 'stripe',
+                  event_id: event.id,
+                  kind: 'payment_confirmation',
+                })
+
+              if (insertErr && insertErr.code === '23505') {
+                // UNIQUE conflict — this event was already processed, skip silently
+              } else if (insertErr) {
+                console.error('email_sends insert error:', insertErr)
+              } else {
+                const { data: profile } = await admin
+                  .from('profiles')
+                  .select('name')
+                  .eq('id', userId)
+                  .single()
+                const name: string | null = profile?.name ?? null
+                const { subject, html } = paymentConfirmationEmail(name)
+                await sendEmail({ to: email, subject, html })
+              }
             }
           } catch (emailErr) {
             console.error('Payment confirmation email error:', emailErr)
