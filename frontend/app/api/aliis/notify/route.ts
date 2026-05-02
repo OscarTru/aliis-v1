@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
+import { logLlmUsage } from '@/lib/llm-usage'
 import { sendPushNotification } from '@/lib/web-push'
 import type { SymptomLog } from '@/lib/types'
 
@@ -142,6 +143,12 @@ export async function GET(req: Request) {
           max_tokens: 150,
           system: cachedSystem(system),
           messages: [{ role: 'user', content: userMessage }],
+        })
+        await logLlmUsage({
+          userId,
+          endpoint: 'aliis_notify_cron',
+          model: 'claude-haiku-4-5-20251001',
+          usage: message.usage,
         })
         content = (message.content[0] as { type: string; text: string }).text.trim()
       } catch {

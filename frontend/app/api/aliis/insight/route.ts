@@ -1,6 +1,7 @@
 import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
+import { logLlmUsage } from '@/lib/llm-usage'
 import type { SymptomLog } from '@/lib/types'
 
 export async function GET() {
@@ -49,6 +50,13 @@ export async function GET() {
     max_tokens: 150,
     system: cachedSystem(system),
     messages: [{ role: 'user', content: userMessage }],
+  })
+
+  await logLlmUsage({
+    userId: user.id,
+    endpoint: 'aliis_insight',
+    model: 'claude-haiku-4-5-20251001',
+    usage: message.usage,
   })
 
   const content = (message.content[0] as { type: string; text: string }).text.trim()

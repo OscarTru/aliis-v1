@@ -1,5 +1,6 @@
 import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { logLlmUsage } from '@/lib/llm-usage'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
 
@@ -122,6 +123,12 @@ ${conversationText}`
       max_tokens: 600,
       system: [{ type: 'text', text: NOTES_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userPrompt }],
+    })
+    await logLlmUsage({
+      userId: user.id,
+      endpoint: 'notes_generate',
+      model: 'claude-haiku-4-5-20251001',
+      usage: response.usage,
     })
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')
