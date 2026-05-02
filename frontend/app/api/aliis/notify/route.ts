@@ -5,6 +5,7 @@ import { logLlmUsage } from '@/lib/llm-usage'
 import { sendPushNotification } from '@/lib/web-push'
 import { verifyCronAuth } from '@/lib/cron-auth'
 import type { SymptomLog } from '@/lib/types'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 export async function GET(req: Request) {
   const authError = verifyCronAuth(req)
@@ -145,7 +146,7 @@ export async function GET(req: Request) {
       const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
       try {
         const message = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model: HAIKU_4_5,
           max_tokens: 150,
           system: cachedSystem(system),
           messages: [{ role: 'user', content: userMessage }],
@@ -153,7 +154,7 @@ export async function GET(req: Request) {
         await logLlmUsage({
           userId,
           endpoint: 'aliis_notify_cron',
-          model: 'claude-haiku-4-5-20251001',
+          model: HAIKU_4_5,
           usage: message.usage,
         })
         content = (message.content[0] as { type: string; text: string }).text.trim()

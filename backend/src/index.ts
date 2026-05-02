@@ -38,14 +38,6 @@ app.use(express.json())
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
-// Sentry smoke test — gated behind CRON_SECRET. Hit /_test/sentry?secret=... to verify capture.
-app.get('/_test/sentry', (req, _res, next) => {
-  if (req.query.secret !== process.env.CRON_SECRET) {
-    return next(new Error('forbidden'))
-  }
-  next(new Error('Sentry backend smoke test — if you see this in the dashboard, scrubbing works'))
-})
-
 import { packRouter } from './routes/pack'
 import { stripeRouter } from './routes/stripe'
 import { requireAuth } from './middleware/auth'

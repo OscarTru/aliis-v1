@@ -3,6 +3,7 @@ import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 export async function POST(req: Request) {
   const {
@@ -185,7 +186,7 @@ Responde en español.`
   let stream
   try {
     stream = await anthropic.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
+      model: HAIKU_4_5,
       max_tokens: 600,
       system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
       messages: [...historyMessages, { role: 'user', content: question.trim() }],

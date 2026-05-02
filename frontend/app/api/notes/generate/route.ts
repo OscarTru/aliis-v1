@@ -2,6 +2,7 @@ import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { logLlmUsage } from '@/lib/llm-usage'
 import { logger } from '@/lib/logger'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
 
@@ -120,7 +121,7 @@ ${conversationText}`
   let noteContent: string
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: HAIKU_4_5,
       max_tokens: 600,
       system: [{ type: 'text', text: NOTES_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userPrompt }],
@@ -128,7 +129,7 @@ ${conversationText}`
     await logLlmUsage({
       userId: user.id,
       endpoint: 'notes_generate',
-      model: 'claude-haiku-4-5-20251001',
+      model: HAIKU_4_5,
       usage: response.usage,
     })
     const textBlock = response.content.find((b) => b.type === 'text')

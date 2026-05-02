@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import { logLlmUsage } from '@/lib/llm-usage'
 import type { SymptomLog } from '@/lib/types'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 export async function GET() {
   const supabase = await createServerSupabaseClient()
@@ -46,7 +47,7 @@ export async function GET() {
   const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
 
   const message = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: HAIKU_4_5,
     max_tokens: 150,
     system: cachedSystem(system),
     messages: [{ role: 'user', content: userMessage }],
@@ -55,7 +56,7 @@ export async function GET() {
   await logLlmUsage({
     userId: user.id,
     endpoint: 'aliis_insight',
-    model: 'claude-haiku-4-5-20251001',
+    model: HAIKU_4_5,
     usage: message.usage,
   })
 
