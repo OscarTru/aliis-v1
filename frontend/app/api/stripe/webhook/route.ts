@@ -110,6 +110,11 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
+        if (!customerId) {
+          console.warn('[stripe webhook] subscription.deleted with null customer — skipping')
+          break
+        }
         await admin
           .from('profiles')
           .update({
@@ -118,7 +123,7 @@ export async function POST(request: NextRequest) {
             stripe_subscription_id: null,
             subscription_status: 'canceled',
           })
-          .eq('stripe_customer_id', sub.customer as string)
+          .eq('stripe_customer_id', customerId)
         break
       }
 
@@ -146,6 +151,11 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
+        if (!customerId) {
+          console.warn('[stripe webhook] subscription.updated with null customer — skipping')
+          break
+        }
         const status = sub.status
         const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
         const trialEnd = sub.trial_end
@@ -160,7 +170,7 @@ export async function POST(request: NextRequest) {
             trial_end: trialEnd,
             subscription_status: status,
           })
-          .eq('stripe_customer_id', sub.customer as string)
+          .eq('stripe_customer_id', customerId)
         break
       }
 
