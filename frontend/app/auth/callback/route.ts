@@ -60,19 +60,20 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Consume invite code if present (Google OAuth new signup)
+  // Atomic invite consume: UPDATE only succeeds if used=false right now.
+  // Two concurrent signups with same code: only one UPDATE returns a row.
   if (inviteCode) {
     const normalized = inviteCode.trim().toUpperCase()
-    const { data: invite } = await admin
+    const { data: claimed } = await admin
       .from('invite_codes')
-      .select('id, used')
+      .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
       .eq('code', normalized)
-      .single()
-    if (invite && !invite.used) {
-      await admin
-        .from('invite_codes')
-        .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
-        .eq('id', invite.id)
+      .eq('used', false)
+      .select('id')
+      .maybeSingle()
+
+    if (!claimed) {
+      console.warn(`[auth/callback] invite code already consumed or invalid: ${normalized}`)
     }
   }
 
