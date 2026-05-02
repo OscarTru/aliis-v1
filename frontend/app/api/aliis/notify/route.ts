@@ -51,13 +51,21 @@ export async function GET(req: Request) {
     .gte('logged_at', since30)
 
   const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
-  if (userIds.length === 0) return Response.json({ sent: 0, skipped: 0 })
+
+  // Sharding: read from query string (?shard=N&total=M); defaults to no sharding.
+  const url = new URL(req.url)
+  const shard = parseInt(url.searchParams.get('shard') ?? '0', 10)
+  const total = parseInt(url.searchParams.get('total') ?? '1', 10)
+  const { filterShard } = await import('@/lib/cron-shard')
+  const shardedUserIds = filterShard(userIds, shard, total)
+
+  if (shardedUserIds.length === 0) return Response.json({ sent: 0, skipped: 0, shard, total })
 
   // Batched: who already received an insight notification today?
   const { data: existingNotifs } = await supabase
     .from('notifications')
     .select('user_id')
-    .in('user_id', userIds)
+    .in('user_id', shardedUserIds)
     .gte('created_at', todayStart)
     .eq('type', 'insight')
   const alreadyNotified = new Set((existingNotifs ?? []).map(r => r.user_id))
@@ -66,14 +74,14 @@ export async function GET(req: Request) {
   const { data: cachedInsights } = await supabase
     .from('aliis_insights')
     .select('user_id, content')
-    .in('user_id', userIds)
+    .in('user_id', shardedUserIds)
     .gte('generated_at', todayStart)
   const cacheByUser = new Map(
     (cachedInsights ?? []).map(r => [r.user_id, r.content as string])
   )
 
   // Users that still need an insight generated
-  const toGenerate = userIds.filter(
+  const toGenerate = shardedUserIds.filter(
     id => !alreadyNotified.has(id) && !cacheByUser.has(id)
   )
 
@@ -94,7 +102,7 @@ export async function GET(req: Request) {
     supabase
       .from('push_subscriptions')
       .select('user_id, endpoint, p256dh, auth')
-      .in('user_id', userIds),
+      .in('user_id', shardedUserIds),
   ])
 
   const profileByUser = new Map(
@@ -126,7 +134,7 @@ export async function GET(req: Request) {
   }> = []
   const expiredEndpoints: string[] = []
 
-  for (const userId of userIds) {
+  for (const userId of shardedUserIds) {
     if (alreadyNotified.has(userId)) { skipped++; continue }
 
     let content = cacheByUser.get(userId) ?? null
@@ -206,5 +214,5 @@ export async function GET(req: Request) {
     await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints)
   }
 
-  return Response.json({ sent, skipped })
+  return Response.json({ sent, skipped, shard, total })
 }
