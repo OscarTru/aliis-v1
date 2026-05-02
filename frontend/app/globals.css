@@ -112,13 +112,14 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Logo switching between aliis-original (light) and aliis-black (dark) */
-.logo-hide-dark { display: inline; }
-.logo-show-dark { display: none; }
+/* Logo switching between aliis-original (light) and aliis-black (dark).
+   Uses !important to override next/image's inline `display:block` on the
+   wrapper span, otherwise the wrong logo stays visible in dark mode. */
+.logo-show-dark { display: none !important; }
 
 @media (prefers-color-scheme: dark) {
-  .logo-hide-dark { display: none; }
-  .logo-show-dark { display: inline; }
+  .logo-hide-dark { display: none !important; }
+  .logo-show-dark { display: block !important; }
 }
 
 body {
