@@ -78,6 +78,50 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Replay any pending consent records collected at signup form into consents table.
+  // Idempotent: we look up existing consents first to avoid duplicates on reconfirm.
+  const pending = (user.user_metadata?.consents_pending ?? null) as null | {
+    terms?: { granted: boolean; at: string }
+    medical_data?: { granted: boolean; at: string }
+    policy_version?: string
+  }
+  if (pending) {
+    const { data: existing } = await admin
+      .from('consents')
+      .select('kind')
+      .eq('user_id', user.id)
+      .in('kind', ['terms', 'medical_data_processing'])
+    const have = new Set((existing ?? []).map((r) => r.kind))
+    const rows: Array<{
+      user_id: string
+      kind: string
+      granted: boolean
+      policy_version: string | null
+      created_at: string
+    }> = []
+    if (pending.terms && !have.has('terms')) {
+      rows.push({
+        user_id: user.id,
+        kind: 'terms',
+        granted: pending.terms.granted,
+        policy_version: pending.policy_version ?? null,
+        created_at: pending.terms.at,
+      })
+    }
+    if (pending.medical_data && !have.has('medical_data_processing')) {
+      rows.push({
+        user_id: user.id,
+        kind: 'medical_data_processing',
+        granted: pending.medical_data.granted,
+        policy_version: pending.policy_version ?? null,
+        created_at: pending.medical_data.at,
+      })
+    }
+    if (rows.length > 0) {
+      await admin.from('consents').insert(rows)
+    }
+  }
+
   // Determine redirect: new users → onboarding, returning → historial
   const { data: profile } = await admin
     .from('profiles')

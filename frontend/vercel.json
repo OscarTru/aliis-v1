@@ -5,6 +5,7 @@
     { "path": "/api/aliis/notify/2", "schedule": "0 9 * * *" },
     { "path": "/api/aliis/notify/3", "schedule": "0 9 * * *" },
     { "path": "/api/aliis/capsula", "schedule": "0 9 1 * *" },
-    { "path": "/api/aliis/treatment-check/cron", "schedule": "0 9 1 * *" }
+    { "path": "/api/aliis/treatment-check/cron", "schedule": "0 9 1 * *" },
+    { "path": "/api/aliis/cleanup", "schedule": "0 3 * * *" }
   ]
 }

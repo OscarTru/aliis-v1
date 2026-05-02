@@ -510,6 +510,26 @@ export function CuentaClient({
           </div>
         </Section>
 
+        {/* Tus datos */}
+        <Section title="Tus datos">
+          <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-6">
+            <div>
+              <div className="font-sans text-sm text-foreground mb-0.5">Descargar todos mis datos</div>
+              <div className="font-sans text-[13px] text-muted-foreground">
+                Recibe un archivo JSON con todo lo que Aliis ha guardado sobre ti
+                (GDPR Art. 15, LFPDPPP Art. 23, Ley 1581 Art. 8b).
+              </div>
+            </div>
+            <a
+              href="/api/account/export"
+              download
+              className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-foreground cursor-pointer whitespace-nowrap hover:bg-muted transition-colors no-underline"
+            >
+              Descargar
+            </a>
+          </div>
+        </Section>
+
         {/* Zona peligrosa */}
         <Section title="Zona peligrosa">
           <div className="px-6 py-5 border-b border-border flex items-center justify-between gap-6">

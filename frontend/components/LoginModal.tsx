@@ -33,6 +33,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
   const [inviteValidated, setInviteValidated] = useState(false)
   const [inviteChecking, setInviteChecking] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedMedicalData, setAcceptedMedicalData] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -92,6 +93,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
     setLastName('')
     setInviteValidated(false)
     setAcceptedTerms(false)
+    setAcceptedMedicalData(false)
   }
 
   async function handleGoogleSignIn(requireInvite = false) {
@@ -160,10 +162,22 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       }
 
       const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+      const consentTimestamp = new Date().toISOString()
       const { error: signUpErr } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name: fullName } },
+        options: {
+          data: {
+            name: fullName,
+            // Consent record carried to backend for replay into consents table
+            // after email confirmation (auth/callback/route.ts).
+            consents_pending: {
+              terms: { granted: acceptedTerms, at: consentTimestamp },
+              medical_data: { granted: acceptedMedicalData, at: consentTimestamp },
+              policy_version: '1.0',
+            },
+          },
+        },
       })
       setLoading(false)
       if (signUpErr) { setError(err(signUpErr.message)); return }
@@ -357,10 +371,23 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                     </a>
                   </span>
                 </label>
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={acceptedMedicalData}
+                    onChange={(e) => setAcceptedMedicalData(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                  />
+                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
+                    Doy mi consentimiento explícito para que Aliis procese mi diagnóstico
+                    y datos de salud que comparta, conforme al Art. 9 GDPR y la LFPDPPP.
+                    Puedo retirarlo en cualquier momento desde mi cuenta.
+                  </span>
+                </label>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button
                   type="submit"
-                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword || !acceptedTerms}
+                  disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword || !acceptedTerms || !acceptedMedicalData}
                   className={submitCls}
                 >
                   {loading ? 'Verificando…' : 'Crear cuenta'}

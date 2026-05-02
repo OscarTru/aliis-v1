@@ -2,8 +2,14 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PackViewPublic } from '@/components/PackViewPublic'
 import type { Pack } from '@/lib/types'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+
+// Block search engines from indexing token-shared packs (patient medical content).
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, noarchive: true, nosnippet: true },
+}
 
 export default async function SharedPackPage({
   params,
