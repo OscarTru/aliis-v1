@@ -34,9 +34,10 @@ export default async function RegistrosPage() {
 
   const { data } = await supabase
     .from('symptom_logs')
-    .select('*')
+    .select('id, logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight, note, free_text')
     .eq('user_id', user.id)
     .order('logged_at', { ascending: false })
+    .limit(500)
 
   const logs = (data ?? []) as SymptomLog[]
 

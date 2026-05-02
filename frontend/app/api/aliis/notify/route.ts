@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     supabase.from('profiles').select('id, name').in('id', toGenerate),
     supabase
       .from('symptom_logs')
-      .select('*')
+      .select('user_id, logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
       .in('user_id', toGenerate)
       .gte('logged_at', since30)
       .order('logged_at', { ascending: false }),

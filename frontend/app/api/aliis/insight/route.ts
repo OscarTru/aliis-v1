@@ -27,7 +27,13 @@ export async function GET() {
 
   const [profileRes, logsRes, packRes] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', user.id).single(),
-    supabase.from('symptom_logs').select('*').eq('user_id', user.id).gte('logged_at', since30).order('logged_at', { ascending: false }),
+    supabase
+      .from('symptom_logs')
+      .select('logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
+      .eq('user_id', user.id)
+      .gte('logged_at', since30)
+      .order('logged_at', { ascending: false })
+      .limit(500),
     supabase.from('packs').select('dx').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single(),
   ])
 
