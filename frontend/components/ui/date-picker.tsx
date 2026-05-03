@@ -71,7 +71,7 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={selected}
-          onSelect={(date) => {
+          onSelect={(date: Date | undefined) => {
             if (date) onChange(format(date, 'yyyy-MM-dd'))
           }}
           disabled={[
