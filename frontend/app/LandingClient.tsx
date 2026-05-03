@@ -13,6 +13,7 @@ import { Glow } from '../components/ui/Glow'
 import { Icon } from '@iconify/react'
 import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
+import AliisDemo from '../components/AliisDemo'
 
 // ─── Hero ─────────────────────────────────────────────────────
 
@@ -236,7 +237,50 @@ function TrustSection() {
   )
 }
 
-// ─── Live example ─────────────────────────────────────────────
+// ─── Animated demo section (5-scene tour) ────────────────────
+
+function DemoSection() {
+  return (
+    <section
+      id="demo"
+      className="px-6 py-16 md:py-[120px]"
+      style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}
+    >
+      <div className="max-w-[72rem] mx-auto">
+        <div style={{ marginBottom: 48, maxWidth: '46rem' }}>
+          <Eyebrow style={{ marginBottom: 18 }}>· Cómo se ve por dentro ·</Eyebrow>
+          <h2
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'clamp(2rem,4.4vw,3.25rem)',
+              lineHeight: 1.06,
+              letterSpacing: '-.02em',
+              margin: 0,
+            }}
+          >
+            Cinco minutos en Aliis,{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>sin login.</em>
+          </h2>
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: 'var(--c-text-muted)',
+              maxWidth: '54ch',
+              marginTop: 16,
+            }}
+          >
+            Un recorrido de la app real: cómo escribes tu diagnóstico, cómo se ve tu expediente, la explicación capítulo a capítulo, el asistente IA y tu diario de salud.
+          </p>
+        </div>
+        <AliisDemo />
+      </div>
+    </section>
+  )
+}
+
+// ─── Live example (legacy, currently unused) ─────────────────
 
 // Phase durations in ms
 const PHASE_DURATIONS = [8000, 8000, 15000, 14000, 14000]
@@ -1095,7 +1139,7 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       <Suspense><AppNav initialInitial={initialInitial} /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
-      <LiveExample />
+      <DemoSection />
       <WhatAliisDoes />
       <HowItWorks />
       <TrustSection />
