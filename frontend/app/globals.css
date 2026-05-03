@@ -225,6 +225,11 @@ body {
   40% { transform: translateY(-8px); opacity: 1; }
 }
 
+@keyframes aliis-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 @keyframes aliis-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.5); opacity: 0.6; }

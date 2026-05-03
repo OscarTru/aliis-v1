@@ -68,6 +68,18 @@ const CURSOR_TARGETS: Record<SceneId, CursorTarget[]> = {
   diario:    [{ t: 0, x: 50, y: 30 }, { t: 1.5, x: 60, y: 18 }, { t: 3.0, x: 50, y: 55 }, { t: 5.0, x: 40, y: 70 }],
 }
 
+// Moments in each scene where the cursor "clicks". Used to emit a ripple
+// effect at the cursor position. The implementation is offset-based: when
+// sceneT crosses one of these times, a fresh ripple key is generated and
+// AnimatePresence plays its enter/exit.
+const CLICK_TIMES: Record<SceneId, number[]> = {
+  ingreso:   [0.6, 3.6],   // tap on input, tap on continue button
+  historial: [2.5],        // click first card
+  pack:      [5.0],        // click "Pregúntale a Aliis"
+  chat:      [0.8],        // click chat input
+  diario:    [],           // no clicks, just observe
+}
+
 function interpCursor(targets: CursorTarget[], t: number) {
   for (let i = 0; i < targets.length - 1; i++) {
     if (t >= targets[i].t && t < targets[i + 1].t) {
@@ -314,10 +326,20 @@ function SceneHistorial({ hiliteFirst }: { hiliteFirst: boolean }) {
                 hidden: { opacity: 0, y: 8 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 0.61, 0.36, 1] } },
               }}
-              className={[
-                'rounded-2xl border bg-background overflow-hidden transition-colors',
-                i === 0 && hiliteFirst ? 'border-primary/40 shadow-[0_0_0_3px_hsl(var(--primary)/0.08)]' : 'border-border',
-              ].join(' ')}
+              animate={
+                i === 0 && hiliteFirst
+                  ? {
+                      boxShadow: [
+                        '0 0 0 0px hsl(var(--primary) / 0)',
+                        '0 0 0 4px hsl(var(--primary) / 0.16)',
+                        '0 0 0 8px hsl(var(--primary) / 0)',
+                      ],
+                      borderColor: ['hsl(var(--border))', 'hsl(var(--primary) / 0.5)', 'hsl(var(--primary) / 0.5)'],
+                    }
+                  : {}
+              }
+              transition={{ duration: 1.2, ease: 'easeOut' }}
+              className="rounded-2xl border border-border bg-background overflow-hidden"
             >
               {/* Progress bar */}
               <div className="h-[3px] bg-muted">
@@ -351,7 +373,23 @@ function SceneHistorial({ hiliteFirst }: { hiliteFirst: boolean }) {
 
 // ─── Scene 3: Pack (chapter view) ───────────────────────────────────────────
 
-function ScenePack({ readProgress }: { readProgress: number }) {
+const PACK_TLDR = 'Tienes demasiada grasa circulando en tu sangre, y eso no duele, pero va dañando tus arterias en silencio.'
+
+function ScenePack({ readProgress, sceneT }: { readProgress: number; sceneT: number }) {
+  // Typewriter on TLDR — starts ~0.4s into the scene, finishes around 2.2s.
+  // Words-at-a-time feels natural (real prose) and more polished than
+  // letter-by-letter for long sentences.
+  const TLDR_START = 0.4
+  const TLDR_END = 2.2
+  const tldrWords = useMemo(() => PACK_TLDR.split(' '), [])
+  const tldrProgress = Math.max(0, Math.min(1, (sceneT - TLDR_START) / (TLDR_END - TLDR_START)))
+  const tldrShown = tldrWords.slice(0, Math.ceil(tldrProgress * tldrWords.length)).join(' ')
+  const tldrTyping = tldrProgress > 0 && tldrProgress < 1
+
+  // Body paragraph fades in only after TLDR is done — feels like reading flow.
+  const bodyVisible = sceneT > TLDR_END + 0.1
+  const calloutVisible = sceneT > TLDR_END + 0.7
+
   return (
     <motion.div
       key="scene-pack"
@@ -363,9 +401,20 @@ function ScenePack({ readProgress }: { readProgress: number }) {
     >
       {/* Mobile chapter tabs */}
       <div className="md:hidden sticky top-0 z-10 bg-foreground/[0.04] border-b border-border/70 px-4 py-2.5 flex items-center gap-1.5">
-        <span className="h-7 px-3 rounded-full bg-primary text-white font-sans text-xs font-medium flex items-center">¿Qué es?</span>
+        <motion.span
+          layout
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          className="h-7 px-3 rounded-full bg-primary text-white font-sans text-xs font-medium flex items-center"
+        >
+          ¿Qué es?
+        </motion.span>
         {[1, 2, 3, 4, 5].map(i => (
-          <span key={i} className="h-2 w-2 rounded-full bg-foreground/30" />
+          <motion.span
+            key={i}
+            layout
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            className="h-2 w-2 rounded-full bg-foreground/30"
+          />
         ))}
       </div>
 
@@ -398,20 +447,30 @@ function ScenePack({ readProgress }: { readProgress: number }) {
           <h1 className="font-serif text-[22px] md:text-[32px] leading-[1.12] tracking-[-0.022em] mb-2.5">
             ¿Qué es <em className="text-muted-foreground">exactamente?</em>
           </h1>
-          {/* TL;DR */}
-          <p className="font-serif italic text-muted-foreground text-[13px] md:text-[15px] leading-[1.55] mb-5 md:mb-6">
-            Tienes demasiada grasa circulando en tu sangre, y eso no duele, pero va dañando tus arterias en silencio.
+          {/* TL;DR — typewriter words-at-a-time */}
+          <p className="font-serif italic text-muted-foreground text-[13px] md:text-[15px] leading-[1.55] mb-5 md:mb-6 min-h-[3em]">
+            {tldrShown}
+            {tldrTyping && (
+              <span
+                className="inline-block w-[2px] h-[0.9em] bg-muted-foreground/60 ml-0.5 align-middle"
+                style={{ animation: 'aliis-blink 0.9s steps(2) infinite' }}
+              />
+            )}
           </p>
 
-          {/* Body */}
+          {/* Body — fades in after TLDR finishes typing */}
           <div className="space-y-3.5 md:space-y-4 font-sans text-[13px] md:text-[15px] leading-[1.7] text-foreground">
-            <p>
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={bodyVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={{ duration: 0.4 }}
+            >
               Oscar, recibir otro diagnóstico encima de la diabetes y la hipertensión puede sentirse como demasiado. Pero quiero que sepas algo: esto no es una emergencia de hoy.
-            </p>
+            </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
+              animate={calloutVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={{ duration: 0.45 }}
               className="my-5 md:my-6 p-4 md:p-5 rounded-[14px] border bg-[rgba(31,138,155,.05)] border-[rgba(31,138,155,.18)]"
             >
               <p className="font-mono text-[9px] md:text-[10px] tracking-[.15em] uppercase text-primary mb-2">
@@ -456,9 +515,9 @@ function SceneChat({ userQuestion, aiText, isTyping }: { userQuestion: string; a
       exit={{ opacity: 0 }}
       transition={{ duration: 0.28 }}
     >
-      {/* Pack content behind, dimmed */}
+      {/* Pack content behind (fully read state, no typing animation) */}
       <div className="absolute inset-0 pointer-events-none">
-        <ScenePack readProgress={0.5} />
+        <ScenePack readProgress={0.5} sceneT={10} />
       </div>
       {/* Backdrop */}
       <motion.div
@@ -561,11 +620,9 @@ function SceneDiario({ chartProgress }: { chartProgress: number }) {
   const xs = (i: number) => PAD_X + (i / (BP_DATA.length - 1)) * (W - PAD_X * 2)
   const ys = (v: number) => H - PAD_Y - ((v - Y_MIN) / (Y_MAX - Y_MIN)) * (H - PAD_Y * 2)
 
-  // Number of points to reveal based on chart progress
-  const visibleCount = Math.max(1, Math.ceil(chartProgress * BP_DATA.length))
-
-  // MAP polyline path
-  const mapPath = BP_DATA.slice(0, visibleCount)
+  // Full MAP polyline path — always rendered fully; the line "draws itself"
+  // via pathLength clipping animated below.
+  const fullMapPath = BP_DATA
     .map((d, i) => {
       const map = Math.round((d.sbp + 2 * d.dbp) / 3)
       return `${i === 0 ? 'M' : 'L'} ${xs(i).toFixed(1)} ${ys(map).toFixed(1)}`
@@ -604,7 +661,16 @@ function SceneDiario({ chartProgress }: { chartProgress: number }) {
             <span className="font-mono text-[9px] md:text-[10px] tracking-[.12em] uppercase text-primary">Aliis</span>
           </div>
           <p className="font-serif italic text-[12px] md:text-[14px] leading-[1.5] text-foreground/85">
-            Hola Oscar, tu presión esta semana ha estado en 132/84 — un poco arriba de lo ideal. Vale la pena mencionarlo en tu próxima consulta.
+            Hola Oscar, tu presión esta semana ha estado en{' '}
+            <motion.span
+              initial={{ backgroundColor: 'rgba(231,76,60,0)' }}
+              animate={{ backgroundColor: ['rgba(231,76,60,0)', 'rgba(231,76,60,0.18)', 'rgba(231,76,60,0)'] }}
+              transition={{ delay: 0.6, duration: 1.4, ease: 'easeInOut' }}
+              className="not-italic font-sans font-medium text-foreground rounded px-1"
+            >
+              132/84
+            </motion.span>{' '}
+            — un poco arriba de lo ideal. Vale la pena mencionarlo en tu próxima consulta.
           </p>
         </motion.div>
 
@@ -636,9 +702,9 @@ function SceneDiario({ chartProgress }: { chartProgress: number }) {
             ))}
           </div>
 
-          {/* SVG chart with whiskers */}
+          {/* SVG chart — line draws itself, then whiskers cascade in */}
           <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-            {/* grid lines */}
+            {/* grid lines (always visible) */}
             {[80, 100, 120, 140].map(v => (
               <line
                 key={v}
@@ -651,31 +717,44 @@ function SceneDiario({ chartProgress }: { chartProgress: number }) {
                 strokeWidth={1}
               />
             ))}
-            {/* MAP line */}
+            {/* MAP line — full path rendered, but pathLength clips it
+                progressively from 0 → 1 driven by chartProgress. This is the
+                native SVG "drawing" effect: feels like a pen tracing the line. */}
             <motion.path
-              d={mapPath}
+              d={fullMapPath}
               stroke="#e74c3c"
               strokeWidth={1.8}
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              initial={false}
+              style={{ pathLength: chartProgress }}
             />
-            {/* whiskers */}
-            {BP_DATA.slice(0, visibleCount).map((d, i) => {
+            {/* Whiskers — each whisker fades+scales-in when its corresponding
+                segment of the line has been drawn. Threshold = (i / N). */}
+            {BP_DATA.map((d, i) => {
+              const threshold = i / Math.max(BP_DATA.length - 1, 1)
+              const visible = chartProgress >= threshold - 0.03
               const x = xs(i)
               const yTop = ys(d.sbp)
               const yBot = ys(d.dbp)
               const map = Math.round((d.sbp + 2 * d.dbp) / 3)
               const yMap = ys(map)
               return (
-                <g key={i} stroke="#e74c3c" strokeWidth={1.4} strokeLinecap="round">
+                <motion.g
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={visible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  style={{ transformOrigin: `${x}px ${yMap}px` }}
+                  stroke="#e74c3c"
+                  strokeWidth={1.4}
+                  strokeLinecap="round"
+                >
                   <line x1={x} x2={x} y1={yTop} y2={yBot} />
                   <line x1={x - 3.5} x2={x + 3.5} y1={yTop} y2={yTop} />
                   <line x1={x - 3.5} x2={x + 3.5} y1={yBot} y2={yBot} />
-                  {/* MAP dot */}
                   <circle cx={x} cy={yMap} r={2.6} fill="#e74c3c" stroke="none" />
-                </g>
+                </motion.g>
               )
             })}
             {/* x labels */}
@@ -724,6 +803,8 @@ function Caption({ eyebrow, title }: { eyebrow: string; title: string }) {
 
 // ─── Main component ─────────────────────────────────────────────────────────
 
+type Ripple = { id: number; x: number; y: number }
+
 export default function AliisDemo() {
   const [t, setT] = useState(0)
   const [playing, setPlaying] = useState(true)
@@ -732,6 +813,17 @@ export default function AliisDemo() {
   // adapts whether it's embedded full-width on mobile or scaled inside a
   // narrow card on desktop.
   const [isMobile, setIsMobile] = useState(false)
+  const [ripples, setRipples] = useState<Ripple[]>([])
+  const rippleIdRef = useRef(0)
+
+  function emitRipple(x: number, y: number) {
+    const id = ++rippleIdRef.current
+    setRipples(prev => [...prev, { id, x, y }])
+    // Auto-remove after the ripple animation finishes (650ms).
+    setTimeout(() => {
+      setRipples(prev => prev.filter(r => r.id !== id))
+    }, 700)
+  }
   const userPausedRef = useRef(false)
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0)
@@ -822,12 +914,37 @@ export default function AliisDemo() {
   const aiFull =
     'Buena pregunta. Tu hígado tiene receptores que atrapan el LDL. Si no funcionan bien, el colesterol se queda dando vueltas y se pega en las arterias.'
   const aiStart = 1.6
-  const aiChars = Math.min(aiFull.length, Math.floor((sceneT - aiStart) / 0.025))
-  const aiText = sceneT > aiStart ? aiFull.slice(0, Math.max(0, aiChars)) : ''
-  const isTyping = sceneT > aiStart && aiChars < aiFull.length
+  // Stream by word-chunks (mimics real LLM token streaming) instead of char
+  // by char — feels much more realistic. Average chunk size is 1-2 words,
+  // pace is ~12 tokens/sec which matches Haiku's typical streaming speed.
+  const aiWords = useMemo(() => aiFull.split(/(\s+)/), []) // keep whitespace tokens
+  const aiVisibleTokens = Math.min(aiWords.length, Math.floor((sceneT - aiStart) * 14))
+  const aiText = sceneT > aiStart ? aiWords.slice(0, Math.max(0, aiVisibleTokens)).join('') : ''
+  const isTyping = sceneT > aiStart && aiVisibleTokens < aiWords.length
   const chartProgress = Math.min(1, Math.max(0, (sceneT - 0.6) / (scene.dur - 1.5)))
 
   const cursor = interpCursor(CURSOR_TARGETS[scene.id] ?? [{ t: 0, x: 50, y: 50 }], sceneT)
+
+  // Click ripple emission. When sceneT crosses a click time defined in
+  // CLICK_TIMES, push a ripple at the cursor position; AnimatePresence
+  // handles its scale-out + fade-out animation. We track the last emitted
+  // index per scene so we don't double-fire on every frame.
+  const lastClickIdxRef = useRef<{ sceneId: SceneId; idx: number }>({ sceneId: scene.id, idx: -1 })
+  // Reset emission tracker on scene change (otherwise re-entering scene
+  // ingreso wouldn't re-emit clicks because idx is "ahead").
+  if (lastClickIdxRef.current.sceneId !== scene.id) {
+    lastClickIdxRef.current = { sceneId: scene.id, idx: -1 }
+  }
+  const clickTimes = CLICK_TIMES[scene.id] ?? []
+  for (let i = lastClickIdxRef.current.idx + 1; i < clickTimes.length; i++) {
+    if (sceneT >= clickTimes[i]) {
+      lastClickIdxRef.current.idx = i
+      // Push to ripples queue (defer so we don't setState during render)
+      queueMicrotask(() => emitRipple(cursor.x, cursor.y))
+    } else {
+      break
+    }
+  }
 
   function renderScene(id: SceneId): React.ReactNode {
     switch (id) {
@@ -836,7 +953,7 @@ export default function AliisDemo() {
       case 'historial':
         return <SceneHistorial hiliteFirst={hiliteFirst} />
       case 'pack':
-        return <ScenePack readProgress={readProg} />
+        return <ScenePack readProgress={readProg} sceneT={sceneT} />
       case 'chat':
         return <SceneChat userQuestion={userQuestion} aiText={aiText} isTyping={isTyping} />
       case 'diario':
@@ -864,11 +981,42 @@ export default function AliisDemo() {
               <AnimatePresence mode="wait" initial={false}>
                 {renderScene(scene.id)}
               </AnimatePresence>
-              {/* Cursor — hidden on mobile (touch interface, no pointer) */}
+              {/* Click ripples — fixed at the click position, scale + fade out. */}
+              {!isMobile && (
+                <AnimatePresence>
+                  {ripples.map(r => (
+                    <motion.span
+                      key={r.id}
+                      initial={{ opacity: 0.45, scale: 0 }}
+                      animate={{ opacity: 0, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.65, ease: 'easeOut' }}
+                      style={{
+                        position: 'absolute',
+                        left: `${r.x}%`,
+                        top: `${r.y}%`,
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        border: '2px solid hsl(var(--primary))',
+                        pointerEvents: 'none',
+                        zIndex: 29,
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
+              )}
+
+              {/* Cursor — hidden on mobile (touch interface, no pointer).
+                  Subtle scale-down "tap" pulse synced with click moments. */}
               {!isMobile && (
                 <motion.div
                   className="absolute pointer-events-none z-30"
                   style={{ left: `${cursor.x}%`, top: `${cursor.y}%`, translateX: '-2px', translateY: '-2px' }}
+                  animate={{ scale: ripples.length > 0 ? 0.82 : 1 }}
+                  transition={{ duration: 0.12, ease: 'easeOut' }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" className="drop-shadow-md">
                     <path d="M5 3l5 18 3-7 7-3z" fill="hsl(var(--foreground))" stroke="white" strokeWidth={1.4} strokeLinejoin="round" />
