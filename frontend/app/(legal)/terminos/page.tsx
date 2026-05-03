@@ -19,7 +19,7 @@ export default function TerminosPage() {
           ['Empresa', 'Cerebros Esponjosos'],
           ['Producto', 'Aliis (marca registrada propiedad de Oscar Trujillo Reyes, producto de Cerebros Esponjosos)'],
           ['Representante legal', 'Oscar Trujillo Reyes'],
-          ['Correo de contacto', 'trujilloreyesoscarmi@gmail.com'],
+          ['Correo de contacto', 'hola@cerebrosesponjosos.com'],
           ['Domicilio legal', 'Alemania'],
         ]} />
       </LegalSection>
@@ -74,7 +74,7 @@ export default function TerminosPage() {
         <LegalSubsection title="4.5 Derecho de desistimiento (usuarios en la UE)">
           De acuerdo con la Directiva 2011/83/UE, tienes derecho a desistir de la suscripción Pro dentro de
           los <strong>14 días naturales</strong> desde la contratación, siempre que no hayas hecho uso del
-          servicio durante ese periodo. Para ejercerlo, envía un correo a trujilloreyesoscarmi@gmail.com.
+          servicio durante ese periodo. Para ejercerlo, envía un correo a hola@cerebrosesponjosos.com.
         </LegalSubsection>
         <LegalSubsection title="4.6 Cancelación">
           Puedes cancelar tu suscripción Pro en cualquier momento desde la configuración de tu cuenta. La
@@ -142,7 +142,7 @@ export default function TerminosPage() {
 
       <LegalSection title="Contacto">
         <p>
-          <strong>Correo:</strong> trujilloreyesoscarmi@gmail.com<br />
+          <strong>Correo:</strong> hola@cerebrosesponjosos.com<br />
           <strong>Tiempo de respuesta estimado:</strong> 5 días hábiles
         </p>
       </LegalSection>

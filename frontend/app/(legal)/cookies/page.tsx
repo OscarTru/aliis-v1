@@ -136,7 +136,7 @@ export default function CookiesPage() {
 
       <LegalSection title="Contacto">
         <p>
-          <strong>Correo:</strong> trujilloreyesoscarmi@gmail.com<br />
+          <strong>Correo:</strong> hola@cerebrosesponjosos.com<br />
           <strong>Asunto sugerido:</strong> "Cookies — [tu consulta]"
         </p>
       </LegalSection>

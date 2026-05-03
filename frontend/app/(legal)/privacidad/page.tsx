@@ -35,7 +35,7 @@ export default function PrivacidadPage() {
           ['Empresa', 'Cerebros Esponjosos'],
           ['Producto', 'Aliis (marca registrada propiedad de Oscar Trujillo Reyes)'],
           ['Representante legal / Responsable LFPDPPP / Responsable Ley 1581', 'Oscar Trujillo Reyes'],
-          ['Correo', 'trujilloreyesoscarmi@gmail.com'],
+          ['Correo', 'hola@cerebrosesponjosos.com'],
           ['Domicilio legal', 'Alemania'],
         ]} />
         <p className="text-sm text-muted-foreground">
@@ -115,9 +115,11 @@ export default function PrivacidadPage() {
         <LegalTable rows={[
           ['Supabase (EE.UU.)', 'Base de datos y autenticación — SCC (Cláusulas Contractuales Estándar)'],
           ['Anthropic (EE.UU.)', 'Generación de contenido con IA — SCC. No usa datos de la API para entrenar modelos.'],
+          ['Groq (EE.UU.)', 'Clasificación de intención de consultas (modelo Llama) — SCC. Procesa el texto del diagnóstico antes de pasarlo al generador principal.'],
           ['Stripe (EE.UU.)', 'Procesamiento de pagos — PCI DSS + SCC'],
           ['Resend (EE.UU.)', 'Envío de correos transaccionales — SCC'],
           ['Vercel (EE.UU.)', 'Hosting y edge network — SCC'],
+          ['Sentry (EE.UU.)', 'Monitoreo de errores — SCC. Los eventos se someten a un proceso de scrubbing automático para eliminar datos de salud antes de su envío.'],
           ['Google Analytics (EE.UU.)', 'Analítica web anonimizada — SCC (solo con consentimiento)'],
         ]} />
         <p className="text-sm text-muted-foreground">
@@ -141,7 +143,7 @@ export default function PrivacidadPage() {
         <LegalSubsection title="8.1 Derechos GDPR (usuarios en la UE y España)">
           Tienes derecho a acceder a tus datos, rectificarlos, suprimirlos, a la portabilidad, a limitar
           u oponerte al tratamiento, y a retirar el consentimiento en cualquier momento. Para ejercer
-          cualquier derecho, escribe a trujilloreyesoscarmi@gmail.com. Responderemos en el plazo máximo
+          cualquier derecho, escribe a hola@cerebrosesponjosos.com. Responderemos en el plazo máximo
           de 30 días. Puedes presentar una reclamación ante la autoridad supervisora de tu país.
         </LegalSubsection>
         <LegalSubsection title="8.2 Derechos ARCO (usuarios en México)">
@@ -149,14 +151,14 @@ export default function PrivacidadPage() {
           de <strong>Rectificación</strong> si son inexactos, de <strong>Cancelación</strong> (supresión
           de tus datos cuando dejen de ser necesarios), y de <strong>Oposición</strong> al tratamiento
           para finalidades específicas. Para ejercer tus derechos ARCO, envía una solicitud a
-          trujilloreyesoscarmi@gmail.com. Responderemos en un plazo de 20 días hábiles conforme al Art. 32 LFPDPPP.
+          hola@cerebrosesponjosos.com. Responderemos en un plazo de 20 días hábiles conforme al Art. 32 LFPDPPP.
         </LegalSubsection>
         <LegalSubsection title="8.3 Derechos del Titular (usuarios en Colombia)">
           En términos de la Ley 1581, tienes derecho a conocer, actualizar y rectificar tus datos;
           a solicitar prueba de la autorización otorgada; a ser informado sobre el uso de tus datos;
           a presentar quejas ante la SIC; a revocar la autorización y/o solicitar la supresión de tus
           datos; y a acceder gratuitamente a los mismos. Para ejercer estos derechos, escribe a
-          trujilloreyesoscarmi@gmail.com. Responderemos en un plazo de 10 días hábiles (consultas)
+          hola@cerebrosesponjosos.com. Responderemos en un plazo de 10 días hábiles (consultas)
           o 15 días hábiles (reclamos) conforme al Art. 14 Ley 1581.
         </LegalSubsection>
         <div className="mt-4">
@@ -198,7 +200,7 @@ export default function PrivacidadPage() {
 
       <LegalSection title="Contacto">
         <p>
-          <strong>Correo:</strong> trujilloreyesoscarmi@gmail.com<br />
+          <strong>Correo:</strong> hola@cerebrosesponjosos.com<br />
           <strong>Asunto sugerido:</strong> "Privacidad — [tu consulta o derecho]"<br />
           <strong>Tiempo de respuesta:</strong> 5–10 días hábiles (hasta 30 días para solicitudes GDPR,
           20 días hábiles para ARCO México, 10–15 días hábiles para Colombia)
