@@ -246,7 +246,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             transition={{ type: 'spring', stiffness: 380, damping: 18 }}
             className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0"
           >
-            <Icon icon="solar:fire-bold-duotone" width={20} />
+            <Icon icon="solar:fire-bold-duotone" width={20} className="text-orange-500" />
           </motion.div>
           <div>
             <motion.p

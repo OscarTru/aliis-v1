@@ -1,69 +1,149 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Icon } from '@iconify/react'
+import Link from 'next/link'
+import { motion } from 'motion/react'
 import { Capsule } from '@/components/ui/Capsule'
 import { LoginModal } from '@/components/LoginModal'
-import { PRICING_TIERS } from '@/lib/mock-data'
 import { createCheckoutSession } from '@/app/actions/checkout'
 import { cn } from '@/lib/utils'
 
 type Currency = 'EUR' | 'USD' | 'MXN'
+type Cadence = 'monthly' | 'yearly'
 
-const COMPARISON_ROWS = [
-  ['Explicaciones por semana', '1', 'Ilimitadas'],
-  ['Referencias verificables', '✓', '✓ con DOI desplegable'],
-  ['Historial', '30 días', 'Permanente'],
-  ['Chat IA por capítulo', '—', '✓'],
-  ['Apuntes automáticos', '—', '✓'],
-  ['Compartir', '✓', '✓'],
-  ['Diario de síntomas', '—', '✓'],
-  ['Soporte prioritario', '—', '✓'],
+const PRICES: Record<Cadence, Record<Currency, { display: string; sub: string }>> = {
+  monthly: {
+    EUR: { display: '€9.99', sub: 'al mes' },
+    USD: { display: '$9.99', sub: 'al mes' },
+    MXN: { display: '$199', sub: 'al mes · MXN' },
+  },
+  yearly: {
+    EUR: { display: '€7.99', sub: 'al mes · facturado anual' },
+    USD: { display: '$7.99', sub: 'al mes · facturado anual' },
+    MXN: { display: '$159', sub: 'al mes · facturado anual · MXN' },
+  },
+}
+
+const FREE_FEATURES = [
+  { text: '2 explicaciones por semana', icon: 'solar:document-text-bold-duotone' },
+  { text: 'Referencias científicas verificables', icon: 'solar:link-bold-duotone' },
+  { text: 'Biblioteca de diagnósticos', icon: 'solar:library-bold-duotone' },
+  { text: 'Registro de tratamientos', icon: 'solar:pill-bold-duotone' },
+  { text: 'Racha de adherencia', icon: 'solar:fire-bold-duotone' },
+  { text: 'Leer explicaciones compartidas', icon: 'solar:share-bold-duotone' },
+]
+
+const PRO_FEATURES = [
+  { text: 'Explicaciones ilimitadas', sub: 'sin contadores, sin fricción', icon: 'solar:infinity-bold-duotone' },
+  { text: 'Asistente IA por capítulo', sub: 'pregunta lo que no quedó claro', icon: 'solar:chat-round-dots-bold-duotone' },
+  { text: 'Preparar consulta con tu médico', sub: 'resumen personalizado para llevar', icon: 'solar:stethoscope-bold-duotone' },
+  { text: 'Mi diario de síntomas', sub: 'registra y visualiza tu evolución', icon: 'solar:notebook-bold-duotone' },
+  { text: 'Análisis mensual de salud', sub: 'patrones y tendencias de tus síntomas', icon: 'solar:chart-2-bold-duotone' },
+  { text: 'Revisión IA de tratamientos', sub: 'interacciones y ajustes sugeridos', icon: 'solar:health-bold-duotone' },
+  { text: 'Historial permanente', sub: 'todos tus diagnósticos siempre disponibles', icon: 'solar:archive-bold-duotone' },
+  { text: 'Compartir tu expediente', sub: 'con familiares, pareja o médicos', icon: 'solar:users-group-two-rounded-bold-duotone' },
+  { text: 'Referencias DOI, PubMed y guías clínicas', sub: 'desplegables en cada capítulo', icon: 'solar:diploma-bold-duotone' },
+  { text: 'Soporte prioritario', sub: 'respondemos en menos de 24 h', icon: 'solar:headphones-round-sound-bold-duotone' },
+]
+
+const COMPARISON_ROWS: { label: string; free: string; pro: string }[] = [
+  { label: 'Explicaciones por semana', free: '2', pro: 'Ilimitadas' },
+  { label: 'Referencias verificables (DOI, PubMed)', free: '✓', pro: '✓ desplegables' },
+  { label: 'Historial de diagnósticos', free: '30 días', pro: 'Permanente' },
+  { label: 'Registro de tratamientos', free: '✓', pro: '✓' },
+  { label: 'Racha de adherencia', free: '✓', pro: '✓' },
+  { label: 'Asistente IA por capítulo', free: '—', pro: '✓' },
+  { label: 'Preparar consulta', free: '—', pro: '✓' },
+  { label: 'Análisis mensual', free: '—', pro: '✓' },
+  { label: 'Revisión IA de tratamientos', free: '—', pro: '✓' },
+  { label: 'Diario de síntomas', free: '—', pro: '✓' },
+  { label: 'Compartir expediente', free: '—', pro: '✓' },
+  { label: 'Soporte prioritario', free: '—', pro: '✓' },
+]
+
+const TRUST_PILLARS = [
+  {
+    icon: 'solar:shield-check-bold-duotone',
+    eyebrow: 'Evidencia',
+    title: 'Basado en ciencia revisada por pares',
+    body: 'Cada afirmación lleva su referencia desplegable — PubMed, DOI, guías clínicas. Si una fuente no existe, el sistema no la escribe.',
+  },
+  {
+    icon: 'solar:stethoscope-bold-duotone',
+    eyebrow: 'Límite claro',
+    title: 'No reemplaza a tu médico',
+    body: 'Disclaimer visible en cada pantalla. Aliis es lo que te prepara para la consulta, no lo que la sustituye.',
+  },
+  {
+    icon: 'solar:brain-bold-duotone',
+    eyebrow: 'Origen',
+    title: 'Hecho por Cerebros Esponjosos',
+    body: 'La misma voz que ya sigues. La misma obsesión por explicar medicina bien, sin condescendencia.',
+  },
 ]
 
 const FAQ = [
   {
     q: '¿Cómo sé que la IA no se inventa cosas?',
-    a: 'Cada afirmación de cada explicación va con su referencia desplegable — PubMed, DOI, guías clínicas. Si una fuente no existe o no soporta la frase, el sistema no la escribe.',
+    a: 'Cada afirmación va acompañada de su referencia desplegable. Si la fuente no existe o no soporta la frase, el sistema no la incluye.',
   },
   {
     q: '¿Qué pasa si cancelo?',
-    a: 'Tus explicaciones siguen ahí hasta 30 días. Si vuelves antes, retomas donde estabas. Después se archivan.',
+    a: 'Tus explicaciones siguen disponibles hasta 30 días. Si vuelves antes, retomas exactamente donde estabas.',
   },
   {
     q: '¿Las explicaciones gratis son peores?',
-    a: 'No. Son las mismas explicaciones, con las mismas referencias. La diferencia es cuántas puedes crear, el chat IA, los apuntes y el historial largo.',
+    a: 'No. Son la misma calidad, con las mismas referencias. La diferencia está en el volumen, el asistente IA y las herramientas avanzadas.',
   },
   {
     q: '¿Esto reemplaza a mi médico?',
-    a: 'Nunca. Es lo que te prepara para ir a tu médico con mejores preguntas. Aparece como disclaimer en cada pantalla.',
+    a: 'Nunca. Es lo que te prepara para ir con mejores preguntas. Siempre aparece como disclaimer en cada pantalla.',
   },
 ]
 
 export default function PreciosPage() {
   const [currency, setCurrency] = useState<Currency>('EUR')
+  const [cadence, setCadence] = useState<Cadence>('monthly')
   const [showLogin, setShowLogin] = useState(false)
   const [isPending, startTransition] = useTransition()
 
+  const price = PRICES[cadence][currency]
+
   return (
     <>
-      <div className="max-w-[72rem] mx-auto px-6 pt-12 pb-[120px]">
+      {/* Sticky top bar — back button only, no shell nav */}
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-[72rem] mx-auto px-4 sm:px-6 h-14 flex items-center">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 hover:text-foreground transition-colors no-underline"
+          >
+            <Icon icon="solar:arrow-left-bold-duotone" width={16} />
+            Volver
+          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-[72rem] mx-auto px-4 sm:px-6 pt-14 pb-[120px]">
 
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="flex justify-center mb-[18px]">
+          <div className="flex justify-center mb-5">
             <Capsule tone="teal">💡 14 días gratis · cancelas cuando quieras</Capsule>
           </div>
-          <h1 className="font-serif text-[clamp(2.5rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] mb-[14px]">
-            Entiende tu cerebro{' '}
-            <em className="text-muted-foreground/60">por menos que un café al mes.</em>
+          <h1 className="font-serif text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] mb-4">
+            Entiende tu salud{' '}
+            <em className="text-muted-foreground/55">por menos que un café al mes.</em>
           </h1>
-          <p className="font-sans text-[16px] text-muted-foreground max-w-[54ch] mx-auto">
+          <p className="font-sans text-[16px] text-muted-foreground max-w-[52ch] mx-auto leading-relaxed">
             Gratis funciona para un diagnóstico puntual. Pro es para quien convive con el suyo.
           </p>
         </div>
 
-        {/* Currency switcher */}
-        <div className="flex justify-center mb-9">
+        {/* Switchers row */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+          {/* Currency */}
           <div className="flex gap-[2px] p-[3px] bg-muted border border-border rounded-full">
             {(['EUR', 'USD', 'MXN'] as Currency[]).map((c) => (
               <button
@@ -80,137 +160,157 @@ export default function PreciosPage() {
               </button>
             ))}
           </div>
+
+          {/* Cadence */}
+          <div className="flex gap-[2px] p-[3px] bg-muted border border-border rounded-full">
+            {([['monthly', 'Mensual'], ['yearly', 'Anual']] as [Cadence, string][]).map(([c, label]) => (
+              <button
+                key={c}
+                onClick={() => setCadence(c)}
+                className={cn(
+                  'px-4 py-[7px] rounded-full font-mono text-[11px] tracking-[.12em] border-none cursor-pointer transition-colors flex items-center gap-1.5',
+                  cadence === c
+                    ? 'bg-foreground text-background'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {label}
+                {c === 'yearly' && (
+                  <span className={cn(
+                    'text-[9px] px-1.5 py-0.5 rounded-full font-sans font-medium transition-colors',
+                    cadence === 'yearly' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-500/15 text-emerald-500/70'
+                  )}>
+                    −20%
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Pricing cards */}
-        <div className="grid gap-6 mb-14 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-          {([PRICING_TIERS.gratis, PRICING_TIERS.pro] as const).map((tier) => (
-            <article
-              key={tier.name}
+        <div className="grid gap-6 mb-16 grid-cols-1 md:grid-cols-2">
+
+          {/* Free card */}
+          <article className="px-8 pt-8 pb-9 rounded-3xl border border-border bg-transparent flex flex-col">
+            <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-1 leading-[1.05]">Gratis</h2>
+            <p className="font-serif italic text-[15px] text-muted-foreground mb-6">Para entender un diagnóstico puntual.</p>
+
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="font-serif text-[48px] tracking-[-0.03em] leading-none">€0</span>
+              <span className="font-sans text-[13px] text-muted-foreground">para siempre</span>
+            </div>
+
+            <div className="my-6 h-px bg-border" />
+
+            <ul className="list-none p-0 mb-8 flex flex-col gap-[13px] flex-1">
+              {FREE_FEATURES.map((f, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <Icon icon={f.icon} width={15} className="text-muted-foreground/60" />
+                  </div>
+                  <span className="font-sans text-[14px] text-foreground">{f.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => setShowLogin(true)}
+              className="px-5 py-[13px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 border border-border bg-transparent text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              Empezar gratis
+              <Icon icon="solar:arrow-right-bold-duotone" width={16} />
+            </button>
+          </article>
+
+          {/* Pro card */}
+          <article className="relative px-8 pt-8 pb-9 rounded-3xl border border-foreground bg-muted flex flex-col">
+            <div className="absolute -top-3 left-8 px-3 py-1 bg-foreground text-background rounded-full font-mono text-[10px] tracking-[.2em] uppercase">
+              Más popular
+            </div>
+
+            <h2 className="font-serif text-[28px] tracking-[-0.02em] mb-1 leading-[1.05]">Pro</h2>
+            <p className="font-serif italic text-[15px] text-muted-foreground mb-6">Para quien convive con su diagnóstico.</p>
+
+            <motion.div
+              key={`${cadence}-${currency}`}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-baseline gap-2 mb-1"
+            >
+              <span className="font-serif text-[48px] tracking-[-0.03em] leading-none">{price.display}</span>
+              <span className="font-sans text-[13px] text-muted-foreground">{price.sub}</span>
+            </motion.div>
+
+            <div className="my-6 h-px bg-border" />
+
+            <ul className="list-none p-0 mb-8 flex flex-col gap-[13px] flex-1">
+              {PRO_FEATURES.map((f, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon icon={f.icon} width={15} className="text-primary/70" />
+                  </div>
+                  <div>
+                    <div className="font-sans text-[14px] text-foreground leading-tight">{f.text}</div>
+                    {f.sub && (
+                      <div className="font-serif italic text-[12px] text-muted-foreground/60 mt-[2px]">{f.sub}</div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => startTransition(() => createCheckoutSession(currency.toLowerCase(), cadence))}
+              disabled={isPending}
               className={cn(
-                'relative px-9 pt-9 pb-10 rounded-3xl border flex flex-col',
-                tier.highlight
-                  ? 'bg-muted border-foreground'
-                  : 'bg-transparent border-border'
+                'px-5 py-[13px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 border border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-opacity cursor-pointer',
+                isPending && 'opacity-70 cursor-default'
               )}
             >
-              {tier.highlight && (
-                <div className="absolute -top-3 left-8 px-3 py-1 bg-foreground text-background rounded-full font-mono text-[10px] tracking-[.2em] uppercase">
-                  Nuestra recomendación
-                </div>
-              )}
-
-              <div className="mb-5">
-                <Capsule tone={tier.highlight ? 'teal' : 'ghost'}>
-                  {tier.highlight ? 'Referencias verificables' : 'Basado en evidencia'}
-                </Capsule>
-              </div>
-
-              <h2 className="font-serif text-[32px] tracking-[-0.02em] mb-2 leading-[1.05]">
-                {tier.name}
-              </h2>
-              <p className="font-serif italic text-[17px] text-muted-foreground mb-6">
-                {tier.pitch}
-              </p>
-
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-serif text-[52px] tracking-[-0.03em] leading-none">
-                  {tier.prices[currency]}
-                </span>
-                <span className="font-sans text-[14px] text-muted-foreground">
-                  {tier.cadence}
-                </span>
-              </div>
-
-              <div className="my-6 h-px bg-border" />
-
-              <ul className="list-none p-0 mb-8 flex flex-col gap-[14px] flex-1">
-                {tier.features.map((f, i) => (
-                  <li key={i} className={cn('flex gap-3 items-start', !f.included && 'opacity-40')}>
-                    <span className="shrink-0 mt-1 w-[14px] h-[14px] flex items-center justify-center">
-                      {f.included ? (
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--c-brand-teal-deep)" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
-                          <path d="M3 7.5L6 10.5 11.5 4.5" />
-                        </svg>
-                      ) : (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-                          <path d="M2 2l6 6M8 2l-6 6" />
-                        </svg>
-                      )}
-                    </span>
-                    <div>
-                      <div className="font-sans text-[15px] leading-[1.4]">{f.text}</div>
-                      {f.sub && (
-                        <div className="font-serif italic text-[13px] text-muted-foreground/60 mt-[2px]">
-                          {f.sub}
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => {
-                  if (tier.highlight) {
-                    startTransition(() => createCheckoutSession(currency.toLowerCase(), 'monthly'))
-                  } else {
-                    setShowLogin(true)
-                  }
-                }}
-                disabled={tier.highlight && isPending}
-                className={cn(
-                  'px-5 py-[13px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 border transition-opacity',
-                  tier.highlight
-                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 border-secondary'
-                    : 'bg-transparent text-foreground border-border hover:bg-muted',
-                  tier.highlight && isPending && 'opacity-70 cursor-default'
-                )}
-              >
-                {tier.highlight && isPending ? 'Redirigiendo…' : tier.cta}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </button>
-            </article>
-          ))}
+              {isPending ? 'Redirigiendo…' : 'Empezar 14 días gratis'}
+              {!isPending && <Icon icon="solar:arrow-right-bold-duotone" width={16} />}
+            </button>
+          </article>
         </div>
 
         {/* Comparison table */}
-        <div className="border border-border rounded-[20px] overflow-hidden bg-muted mb-14">
-          <div className="px-6 py-[18px] border-b border-border">
+        <div className="border border-border rounded-[20px] overflow-hidden bg-muted mb-16">
+          <div className="px-6 py-5 border-b border-border">
             <h3 className="font-serif text-[22px] m-0">Compara todo, sin trampas.</h3>
           </div>
-          <table className="w-full border-collapse font-sans text-[14px]">
-            <thead>
-              <tr className="bg-background">
-                <th className="text-left px-6 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Funcionalidad</th>
-                <th className="text-center px-4 py-[14px] font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Gratis</th>
-                <th className="text-center px-4 py-[14px] font-medium font-mono text-[10px] tracking-[.2em] uppercase text-foreground">Pro</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON_ROWS.map((r, i) => (
-                <tr key={i} className="border-t border-border">
-                  <td className="px-6 py-[14px]">{r[0]}</td>
-                  <td className="px-4 py-[14px] text-center text-muted-foreground">{r[1]}</td>
-                  <td className="px-4 py-[14px] text-center font-medium">{r[2]}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse font-sans text-[14px] min-w-[480px]">
+              <thead>
+                <tr className="bg-background">
+                  <th className="text-left px-6 py-4 font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Funcionalidad</th>
+                  <th className="text-center px-4 py-4 font-normal font-mono text-[10px] tracking-[.2em] uppercase text-muted-foreground/60">Gratis</th>
+                  <th className="text-center px-4 py-4 font-medium font-mono text-[10px] tracking-[.2em] uppercase text-foreground">Pro</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((r, i) => (
+                  <tr key={i} className="border-t border-border">
+                    <td className="px-6 py-[13px]">{r.label}</td>
+                    <td className={cn('px-4 py-[13px] text-center', r.free === '—' ? 'text-muted-foreground/30' : 'text-muted-foreground')}>{r.free}</td>
+                    <td className={cn('px-4 py-[13px] text-center font-medium', r.pro === '—' ? 'text-muted-foreground/30' : 'text-foreground')}>{r.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Trust pillars */}
-        <div className="grid gap-6 p-10 bg-muted border border-border rounded-[20px] mb-14 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-          {[
-            { eyebrow: 'Evidencia', title: 'Basado en evidencia científica', body: 'Cada afirmación con su referencia. Desplegables para comprobar.' },
-            { eyebrow: 'Límite', title: 'No reemplaza a tu médico', body: 'Disclaimer visible siempre. Es preparación, no diagnóstico.' },
-            { eyebrow: 'Origen', title: 'Por Cerebros Esponjosos', body: 'La misma voz que ya sigues. La misma obsesión por explicar bien.' },
-          ].map((p, i) => (
+        <div className="grid gap-8 p-10 bg-muted border border-border rounded-[20px] mb-16 grid-cols-1 sm:grid-cols-3">
+          {TRUST_PILLARS.map((p, i) => (
             <div key={i}>
-              <div className="font-mono text-[10px] tracking-[.22em] uppercase text-primary/70 mb-[14px]">· {p.eyebrow} ·</div>
-              <h4 className="font-serif text-[20px] leading-[1.25] tracking-[-0.01em] mb-[10px] mt-0">{p.title}</h4>
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Icon icon={p.icon} width={20} className="text-primary/70" />
+              </div>
+              <div className="font-mono text-[10px] tracking-[.22em] uppercase text-primary/60 mb-2">· {p.eyebrow} ·</div>
+              <h4 className="font-serif text-[18px] leading-[1.25] tracking-[-0.01em] mb-2 mt-0">{p.title}</h4>
               <p className="font-sans text-[13.5px] leading-[1.65] text-muted-foreground m-0">{p.body}</p>
             </div>
           ))}
@@ -218,16 +318,17 @@ export default function PreciosPage() {
 
         {/* FAQ */}
         <div>
-          <h3 className="font-serif text-[28px] text-center mb-8">Preguntas frecuentes</h3>
-          <div className="grid gap-7 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+          <h3 className="font-serif text-[28px] text-center mb-8 mt-0">Preguntas frecuentes</h3>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             {FAQ.map((f, i) => (
-              <div key={i}>
+              <div key={i} className="p-6 rounded-[16px] border border-border bg-muted">
                 <div className="font-serif text-[17px] mb-2 leading-[1.35]">{f.q}</div>
                 <div className="font-sans text-[14px] text-muted-foreground leading-[1.65]">{f.a}</div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}

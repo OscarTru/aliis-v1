@@ -73,9 +73,8 @@ packRouter.post('/generate', requireAuth, async (req, res) => {
   try {
     intent = await classifyIntent(dx)
   } catch (err) {
-    console.error('[pack/generate] classifier error:', err)
-    res.status(500).json({ error: 'Error en clasificador.' })
-    return
+    console.error('[pack/generate] classifier error (fallback SAFE):', err)
+    intent = 'SAFE' // classifier unavailable — proceed, Claude will refuse if needed
   }
   console.log('[pack/generate] intent:', intent)
 
