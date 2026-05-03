@@ -179,7 +179,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
               <div className="min-w-0 flex items-center min-h-[38px]">
                 <div>
                   <p className="font-sans text-[13px] font-medium text-foreground leading-tight truncate">
-                    {t.name}
+                    {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
                   </p>
                   {t.dose
                     ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
@@ -267,7 +267,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             <div className="flex-1 min-w-0">
               <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">
                 {missingDose.length === 1
-                  ? `¿Cuánto de ${missingDose[0].name} tomas?`
+                  ? `¿Cuánto de ${missingDose[0].name.charAt(0).toUpperCase() + missingDose[0].name.slice(1)} tomas?`
                   : `${missingDose.length} medicamentos sin dosis registrada`}
               </p>
               <p className="font-sans text-[11px] text-muted-foreground/70 leading-relaxed">

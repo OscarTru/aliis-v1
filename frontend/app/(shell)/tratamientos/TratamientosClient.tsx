@@ -74,7 +74,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-sans text-[14px] font-medium text-foreground leading-tight truncate">
-                  {t.name}
+                  {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
                   {t.dose && (
                     <span className="font-normal text-muted-foreground ml-1.5 text-[13px]">{t.dose}</span>
                   )}

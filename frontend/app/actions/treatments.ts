@@ -27,15 +27,17 @@ Nombre: <nombre>${safeName}</nombre>
 Dosis: <dosis>${safeDose}</dosis>
 
 Responde SOLO con JSON válido, sin markdown:
-{"nameNormalized":"nombre genérico correcto en español","doseNormalized":"número y unidad, ej: 20 mg. Vacío si no hay dosis"}`,
+{"nameNormalized":"Nombre genérico correcto en español, primera letra mayúscula. Ej: Metformina, Enalapril, Ácido acetilsalicílico. NUNCA en minúsculas.","doseNormalized":"Solo número y unidad estándar, ej: 850 mg, 5 mg. Vacío si no hay dosis."}`,
     maxOutputTokens: 80,
   })
 
   const cleaned = text.trim().replace(/```json|```/g, '').trim()
   const parsed = JSON.parse(cleaned)
+  const name = (parsed.nameNormalized || safeName).trim()
   return {
-    nameNormalized: parsed.nameNormalized || safeName,
-    doseNormalized: parsed.doseNormalized || safeDose,
+    // Guarantee first letter is uppercase regardless of AI output
+    nameNormalized: name.charAt(0).toUpperCase() + name.slice(1),
+    doseNormalized: (parsed.doseNormalized || safeDose).trim(),
   }
 }
 
@@ -83,7 +85,8 @@ export async function syncOnboardingMedications(medicamentos: string[]): Promise
       normalizedName = result.nameNormalized
       normalizedDose = result.doseNormalized
     } catch {
-      // AI call failed — use raw strings
+      // AI call failed — capitalize the raw string as minimum normalization
+      normalizedName = nameRaw.charAt(0).toUpperCase() + nameRaw.slice(1)
     }
 
     // Skip if this medication already exists (by normalized name)
