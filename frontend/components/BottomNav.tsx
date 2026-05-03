@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Plus, LayoutList, BookHeart, Pill, UserCircle } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/ingreso',     label: 'Nuevo',        icon: Plus },
-  { href: '/historial',   label: 'Expediente',   icon: LayoutList },
-  { href: '/diario',       label: 'Diario',        icon: BookHeart },
-  { href: '/tratamientos', label: 'Tratamientos',  icon: Pill },
-  { href: '/cuenta',      label: 'Cuenta',       icon: UserCircle },
+  { href: '/ingreso',      label: 'Nuevo',        iconActive: 'solar:add-circle-bold-duotone',          iconIdle: 'solar:add-circle-linear' },
+  { href: '/historial',    label: 'Expediente',   iconActive: 'solar:folder-with-files-bold-duotone',   iconIdle: 'solar:folder-with-files-linear' },
+  { href: '/diario',       label: 'Diario',        iconActive: 'solar:notebook-bold-duotone',            iconIdle: 'solar:notebook-linear' },
+  { href: '/tratamientos', label: 'Tratamientos',  iconActive: 'solar:pills-bold-duotone',               iconIdle: 'solar:pills-linear' },
+  { href: '/cuenta',       label: 'Cuenta',        iconActive: 'solar:user-circle-bold-duotone',         iconIdle: 'solar:user-circle-linear' },
 ]
 
 export function BottomNav() {
@@ -21,7 +21,7 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t border-border bg-background/95 backdrop-blur-xl"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      {NAV_ITEMS.map(({ href, label, iconActive, iconIdle }) => {
         const isActive = pathname === href || pathname.startsWith(href + '/')
         return (
           <Link
@@ -32,7 +32,7 @@ export function BottomNav() {
               isActive ? 'text-primary' : 'text-muted-foreground'
             )}
           >
-            <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
+            <Icon icon={isActive ? iconActive : iconIdle} width={24} />
             <span className="text-[10px] font-medium leading-none">{label}</span>
           </Link>
         )

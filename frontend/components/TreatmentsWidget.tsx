@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useTransition, useEffect } from 'react'
-import { Check, AlertTriangle, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
-import { FireDuotone } from './icons/FireDuotone'
 import type { Treatment, AdherenceLog } from '@/lib/types'
 
 // Fixed 4-column grid: col1=Mañana, col2=Mediodía, col3=Tarde, col4=Noche
@@ -194,12 +194,12 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
                     {t.dose
                       ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
                       : <p className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1">
-                          <AlertTriangle className="w-2.5 h-2.5" /> falta dosis
+                          <Icon icon="solar:danger-triangle-bold-duotone" width={11} /> falta dosis
                         </p>
                     }
                     {t.frequency === 'other' && !t.frequency_label?.trim() && (
                       <Link href="/tratamientos" className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1 no-underline hover:text-amber-500 transition-colors">
-                        <AlertTriangle className="w-2.5 h-2.5" /> definir frecuencia →
+                        <Icon icon="solar:danger-triangle-bold-duotone" width={11} /> definir frecuencia →
                       </Link>
                     )}
                   </div>
@@ -246,7 +246,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             transition={{ type: 'spring', stiffness: 380, damping: 18 }}
             className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0"
           >
-            <FireDuotone className="w-5 h-5 text-amber-500" />
+            <Icon icon="solar:fire-bold-duotone" width={20} />
           </motion.div>
           <div>
             <motion.p
@@ -279,7 +279,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
           >
             <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <Icon icon="solar:danger-triangle-bold-duotone" width={14} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">
@@ -312,7 +312,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
           >
             <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <Icon icon="solar:danger-triangle-bold-duotone" width={14} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">

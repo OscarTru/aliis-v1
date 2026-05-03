@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X, Pill, AlertTriangle } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { createTreatment, updateTreatment } from '@/app/actions/treatments'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
@@ -174,7 +175,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
         <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0 border-b border-border/40">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Pill className="w-4 h-4 text-primary" />
+              <Icon icon="solar:pills-bold-duotone" width={16} className="text-primary" />
             </div>
             <h2 className="font-serif text-[18px] text-foreground leading-none truncate">
               {isEdit ? 'Editar ' : 'Agregar '}<em>tratamiento</em>
@@ -196,7 +197,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
         {checkStep === 'name' ? (
           <div className="flex flex-col gap-4">
             <div className="flex gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <Icon icon="solar:danger-triangle-bold-duotone" width={20} className="text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="font-sans text-[13px] font-medium text-foreground mb-1">
                   ¿Puedes revisar el nombre?
@@ -240,9 +241,11 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
                 ? 'bg-destructive/10 border-destructive/20'
                 : 'bg-amber-500/10 border-amber-500/20'
             }`}>
-              <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                doseCheck?.warningLevel === 'danger' ? 'text-destructive' : 'text-amber-500'
-              }`} />
+              <Icon
+                icon="solar:danger-triangle-bold-duotone"
+                width={20}
+                className={`shrink-0 mt-0.5 ${doseCheck?.warningLevel === 'danger' ? 'text-destructive' : 'text-amber-500'}`}
+              />
               <div>
                 <p className="font-sans text-[13px] font-medium text-foreground mb-1">
                   {doseCheck?.warningLevel === 'danger' ? 'Quiero asegurarme de que estés bien' : 'Esto no cuadra del todo'}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ClipboardList, Copy, Check, ExternalLink, X } from 'lucide-react'
+import { Copy, Check, ExternalLink, X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const LOADING_PHRASES = [
@@ -103,7 +104,7 @@ export function PreConsultButton({ packId, iconOnly }: Props) {
       className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground disabled:opacity-80 cursor-pointer relative overflow-visible"
     >
       <span className="shrink-0 flex">
-        <ClipboardList className="w-[13px] h-[13px]" />
+        <Icon icon="solar:clipboard-check-bold-duotone" width={14} />
       </span>
       <span className={iconOnly === 'mobile' ? 'hidden md:inline-flex' : 'inline-flex'}>
         {loading ? (
@@ -128,7 +129,7 @@ export function PreConsultButton({ packId, iconOnly }: Props) {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-primary shrink-0" />
+                <Icon icon="solar:clipboard-check-bold-duotone" width={16} className="text-primary shrink-0" />
                 <p className="font-sans text-[13px] font-medium text-foreground">Resumen listo</p>
               </div>
               <button

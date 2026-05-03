@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pill, Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { deleteTreatment } from '@/app/actions/treatments'
 import { FREQUENCY_LABELS } from '@/lib/types'
 import { AddTreatmentModal } from '@/components/AddTreatmentModal'
@@ -39,7 +39,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
     return (
       <div className="text-center pt-12">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Pill className="w-7 h-7 text-primary/60" />
+          <Icon icon="solar:pills-bold-duotone" width={28} className="text-primary/60" />
         </div>
         <p className="font-serif italic text-[17px] text-muted-foreground mb-6 leading-relaxed">
           No tienes tratamientos registrados.
@@ -48,7 +48,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
           onClick={() => setShowAddModal(true)}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-sans text-[14px] font-medium cursor-pointer"
         >
-          <Plus size={16} />
+          <Icon icon="solar:add-circle-bold-duotone" width={17} />
           Agregar mi primer tratamiento
         </button>
       </div>
@@ -71,7 +71,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
             <div key={t.id} className={`flex items-center gap-3 px-4 py-3 ${freqUnconfirmed || !t.dose ? 'bg-amber-500/5' : ''}`}>
               {/* Icon */}
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${freqUnconfirmed || !t.dose ? 'bg-amber-500/15' : 'bg-primary/10'}`}>
-                <Pill className={`w-3.5 h-3.5 ${freqUnconfirmed || !t.dose ? 'text-amber-500' : 'text-primary'}`} />
+                <Icon icon="solar:pills-bold-duotone" width={14} className={freqUnconfirmed || !t.dose ? 'text-amber-500' : 'text-primary'} />
               </div>
 
               {/* Info */}
@@ -80,7 +80,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
                   {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
                   {t.dose
                     ? <span className="font-normal text-muted-foreground ml-1.5 text-[13px]">{t.dose}</span>
-                    : <span className="font-normal text-amber-500/80 ml-1.5 text-[12px] inline-flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" /> sin dosis</span>
+                    : <span className="font-normal text-amber-500/80 ml-1.5 text-[12px] inline-flex items-center gap-0.5"><Icon icon="solar:danger-triangle-bold-duotone" width={12} /> sin dosis</span>
                   }
                 </p>
                 {freqUnconfirmed ? (
@@ -88,7 +88,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
                     onClick={() => setEditingTreatment(t)}
                     className="font-sans text-[11px] text-amber-500/80 hover:text-amber-500 leading-tight mt-0.5 flex items-center gap-1 bg-transparent border-none cursor-pointer p-0"
                   >
-                    <AlertTriangle className="w-3 h-3" />
+                    <Icon icon="solar:danger-triangle-bold-duotone" width={12} />
                     Frecuencia sin definir — toca para completar
                   </button>
                 ) : (
@@ -110,13 +110,13 @@ export function TratamientosClient({ initialTreatments }: Props) {
                   onClick={() => setEditingTreatment(t)}
                   className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer"
                 >
-                  <Pencil size={13} />
+                  <Icon icon="solar:pen-bold-duotone" width={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(t.id)}
                   className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors border-none bg-transparent cursor-pointer"
                 >
-                  <Trash2 size={13} />
+                  <Icon icon="solar:trash-bin-trash-bold-duotone" width={14} />
                 </button>
               </div>
             </div>
@@ -129,7 +129,7 @@ export function TratamientosClient({ initialTreatments }: Props) {
         onClick={() => setShowAddModal(true)}
         className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 font-sans text-[13px] cursor-pointer bg-transparent transition-colors"
       >
-        <Plus size={14} />
+        <Icon icon="solar:add-circle-bold-duotone" width={15} />
         Agregar tratamiento
       </button>
 

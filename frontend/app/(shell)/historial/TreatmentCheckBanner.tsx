@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Plus, ArrowRight, Sparkles } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import { UpgradeModal } from '@/components/UpgradeModal'
@@ -61,7 +61,7 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Icon icon="solar:stars-bold-duotone" width={16} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-sans text-[13px] font-medium text-foreground leading-tight">
@@ -138,7 +138,7 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
                 key={i}
                 className="flex items-start gap-3 px-4 py-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl"
               >
-                <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                <Icon icon="solar:danger-triangle-bold-duotone" width={14} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="font-sans text-[13px] text-foreground leading-snug mb-3">
                     {item.mensaje}
@@ -152,14 +152,14 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
                         href="/tratamientos"
                         className="shrink-0 flex items-center gap-1 font-sans text-[11px] font-medium text-amber-600 dark:text-amber-400 no-underline hover:opacity-70 transition-opacity"
                       >
-                        <Plus size={10} /> Agregar tratamiento
+                        <Icon icon="solar:add-circle-bold-duotone" width={11} /> Agregar tratamiento
                       </Link>
                     ) : (
                       <Link
                         href={`/ingreso?dx=${encodeURIComponent(item.tratamiento ?? '')}`}
                         className="shrink-0 flex items-center gap-1 font-sans text-[11px] font-medium text-amber-600 dark:text-amber-400 no-underline hover:opacity-70 transition-opacity"
                       >
-                        <ArrowRight size={10} /> Agregar al historial
+                        <Icon icon="solar:arrow-right-bold-duotone" width={11} /> Agregar al historial
                       </Link>
                     )}
                   </div>

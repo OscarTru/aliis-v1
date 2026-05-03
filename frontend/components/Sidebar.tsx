@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, LayoutList, Zap, UserCircle, ChevronLeft, BookOpen, Settings2, CalendarDays, MessageCircle, AlertTriangle, BookMarked, Share2, Stethoscope, Pill, Heart, Library, Wrench, BookHeart } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { motion } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -14,23 +15,24 @@ import { useConditionContext } from '@/lib/condition-context'
 import { cn } from '@/lib/utils'
 
 const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
-  'que-es': <BookOpen size={14} />,
-  'como-funciona': <Settings2 size={14} />,
-  'que-esperar': <CalendarDays size={14} />,
-  'diagnostico': <Stethoscope size={14} />,
-  'tratamiento': <Pill size={14} />,
-  'vivir-con': <Heart size={14} />,
-  'preguntas': <MessageCircle size={14} />,
-  'senales': <AlertTriangle size={14} />,
-  'referencias': <BookMarked size={14} />,
+  'que-es':       <Icon icon="solar:book-2-bold-duotone" width={15} />,
+  'como-funciona':<Icon icon="solar:atom-bold-duotone" width={15} />,
+  'que-esperar':  <Icon icon="solar:calendar-bold-duotone" width={15} />,
+  'diagnostico':  <Icon icon="solar:stethoscope-bold-duotone" width={15} />,
+  'tratamiento':  <Icon icon="solar:pills-bold-duotone" width={15} />,
+  'vivir-con':    <Icon icon="solar:heart-pulse-bold-duotone" width={15} />,
+  'preguntas':    <Icon icon="solar:chat-round-dots-bold-duotone" width={15} />,
+  'senales':      <Icon icon="solar:danger-triangle-bold-duotone" width={15} />,
+  'referencias':  <Icon icon="solar:bookmark-bold-duotone" width={15} />,
 }
 
 const CHAPTER_ICON_MAP: Record<string, React.ReactNode> = {
-  'que-es': <BookOpen size={14} />,
-  'como-funciona': <Settings2 size={14} />,
-  'que-esperar': <CalendarDays size={14} />,
-  'preguntas': <MessageCircle size={14} />,
-  'senales': <AlertTriangle size={14} />,
+  'que-es':       <Icon icon="solar:book-2-bold-duotone" width={15} />,
+  'como-funciona':<Icon icon="solar:atom-bold-duotone" width={15} />,
+  'que-esperar':  <Icon icon="solar:calendar-bold-duotone" width={15} />,
+  'preguntas':    <Icon icon="solar:chat-round-dots-bold-duotone" width={15} />,
+  'senales':      <Icon icon="solar:danger-triangle-bold-duotone" width={15} />,
+  'herramientas': <Icon icon="solar:toolbox-bold-duotone" width={15} />,
 }
 
 type NavItem = {
@@ -41,11 +43,11 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/ingreso',     label: 'Nuevo diagnóstico', icon: <Plus size={18} /> },
-  { href: '/historial',   label: 'Mi expediente',     icon: <LayoutList size={18} /> },
-  { href: '/diario',       label: 'Mi diario',         icon: <BookHeart size={18} /> },
-  { href: '/tratamientos', label: 'Mis tratamientos',  icon: <Pill size={18} /> },
-  { href: '/condiciones',  label: 'Diagnósticos',      icon: <Library size={18} /> },
+  { href: '/ingreso',     label: 'Nuevo diagnóstico', icon: <Icon icon="solar:add-circle-bold-duotone" width={20} /> },
+  { href: '/historial',   label: 'Mi expediente',     icon: <Icon icon="solar:folder-with-files-bold-duotone" width={20} /> },
+  { href: '/diario',      label: 'Mi diario',         icon: <Icon icon="solar:notebook-bold-duotone" width={20} /> },
+  { href: '/tratamientos',label: 'Mis tratamientos',  icon: <Icon icon="solar:pills-bold-duotone" width={20} /> },
+  { href: '/condiciones', label: 'Diagnósticos',      icon: <Icon icon="solar:stethoscope-bold-duotone" width={20} /> },
 ]
 
 const BOTTOM_ITEMS: NavItem[] = []
@@ -151,7 +153,7 @@ export function Sidebar({
     return () => subscription.unsubscribe()
   }, [])
 
-  const upgradeItem: NavItem = { href: '/precios', label: 'Actualizar a Pro', icon: <Zap size={18} />, upgrade: true }
+  const upgradeItem: NavItem = { href: '/precios', label: 'Actualizar a Pro', icon: <Icon icon="solar:crown-bold-duotone" width={20} />, upgrade: true }
   const bottomNav = plan === 'free'
     ? [...BOTTOM_ITEMS, upgradeItem]
     : BOTTOM_ITEMS
@@ -289,7 +291,7 @@ export function Sidebar({
                   )}
                 >
                   <span className={cn('inline-flex', activeIdx === pack.chapters.length ? 'text-primary' : 'text-muted-foreground/50')}>
-                    <Wrench size={14} />
+                    <Icon icon="solar:toolbox-bold-duotone" width={15} />
                   </span>
                   <span className={cn('font-sans text-[12px]', activeIdx === pack.chapters.length ? 'text-primary font-medium' : 'text-muted-foreground')}>
                     Herramientas
@@ -307,7 +309,7 @@ export function Sidebar({
                     )}
                   >
                     <span className={cn('inline-flex', activeIdx === refsIdx ? 'text-primary' : 'text-muted-foreground/50')}>
-                      <BookMarked size={14} />
+                      <Icon icon="solar:bookmark-bold-duotone" width={15} />
                     </span>
                     <span className={cn('font-sans text-[12px]', activeIdx === refsIdx ? 'text-primary font-medium' : 'text-muted-foreground')}>
                       Referencias
@@ -319,7 +321,7 @@ export function Sidebar({
                 href={`/compartir/${pack.id}`}
                 className="flex items-center gap-2 px-2.5 py-[7px] rounded-[9px] no-underline font-sans text-[12px] text-muted-foreground hover:bg-muted transition-colors"
               >
-                <span className="flex text-muted-foreground/50"><Share2 size={14} /></span>
+                <span className="flex text-muted-foreground/50"><Icon icon="solar:share-circle-bold-duotone" width={15} /></span>
                 Compartir
               </Link>
             </nav>

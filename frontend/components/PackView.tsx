@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { HelpCircle, MessageCircle, BookOpen, ClipboardList } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { motion, AnimatePresence } from 'motion/react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
@@ -22,7 +22,7 @@ function AskAliisButton({ onClick }: { onClick: () => void }) {
       whileTap={{ scale: 0.94 }}
       className="shrink-0 flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
     >
-      <MessageCircle size={13} className="shrink-0" />
+      <Icon icon="solar:chat-round-bold-duotone" width={14} className="shrink-0" />
       {/* Desktop: hover-expand label. Hidden on mobile — touch has no hover */}
       <AnimatePresence initial={false}>
         {hovered && (
@@ -82,8 +82,8 @@ function ChapterCard({
   }, [chapter.id, packId, userId, onRead])
 
   return (
-    <div className="h-full overflow-y-auto px-5 md:px-12 py-8 md:py-10 pb-28 md:pb-8">
-      <div className="flex items-center justify-between gap-4 mb-2.5">
+    <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
+      <div className="flex items-center justify-between gap-4 mb-2.5 pr-12">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 shrink-0">
           {chapter.n} · {chapter.readTime}
         </div>
@@ -96,7 +96,7 @@ function ChapterCard({
                 whileTap={{ scale: 0.96 }}
                 className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground cursor-pointer relative overflow-visible"
               >
-                <ClipboardList className="w-[13px] h-[13px] shrink-0" />
+                <Icon icon="solar:clipboard-check-bold-duotone" width={14} className="shrink-0" />
                 <span className="hidden md:inline">Preparar consulta</span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none">
                   Pro
@@ -128,7 +128,7 @@ function ChapterCard({
             href={`/condiciones/${conditionSlug}`}
             className="shrink-0 inline-flex items-center gap-1.5 font-sans text-[12px] text-primary/50 no-underline hover:text-primary transition-colors whitespace-nowrap"
           >
-            <BookOpen size={12} />
+            <Icon icon="solar:book-2-bold-duotone" width={13} />
             Leer a profundidad →
           </Link>
         )}
@@ -163,7 +163,7 @@ function ChapterCard({
         <ul className="list-none p-0 mt-2 flex flex-col gap-2.5">
           {chapter.questions.map((q, i) => (
             <li key={i} className="flex gap-3.5 items-start px-[18px] py-3.5 bg-muted rounded-xl">
-              <span className="text-primary shrink-0 flex pt-0.5"><HelpCircle size={16} /></span>
+              <span className="text-primary shrink-0 flex pt-0.5"><Icon icon="solar:question-circle-bold-duotone" width={17} /></span>
               <span className="font-sans text-[15px] text-foreground leading-[1.5]">{q}</span>
             </li>
           ))}
@@ -222,63 +222,48 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
 
   return (
     <div className="flex flex-col h-full">
-      {/* Mobile chapter tabs — animated pill that expands the active item, dots for the rest */}
-      {(() => {
-        const verifiedRefs = pack.references.filter((r) => r.verified !== false)
-        type Tab = { key: string; label: string; idx: number }
-
-        // Tabs show the kicker (e.g. "¿Qué es") which omits the closing "?".
-        // Close the question mark for clarity. If the kicker is too short to be
-        // meaningful on its own (e.g. "¿Qué" → ambiguous), include the italic
-        // continuation so the full question reads, e.g. "¿Qué esperar?".
-        function tabLabel(kicker: string, kickerItalic: string): string {
-          const k = kicker.trim()
-          const ki = kickerItalic.trim()
-          // First word after "¿" is the only word → kicker is too short, fold in italic
-          const wordsAfterMark = k.replace(/^¿/, '').trim().split(/\s+/)
-          const tooShort = k.startsWith('¿') && wordsAfterMark.length <= 1 && ki
-          const combined = tooShort ? `${k} ${ki}` : k
-          if (!combined.startsWith('¿')) return combined
-          if (combined.endsWith('?')) return combined
-          return `${combined}?`
-        }
-
-        const tabs: Tab[] = [
-          ...pack.chapters.map((ch, i) => ({ key: ch.id, label: tabLabel(ch.kicker, ch.kickerItalic), idx: i })),
-          ...(pack.tools.length > 0 ? [{ key: 'tools', label: 'Herramientas', idx: pack.chapters.length }] : []),
-          ...(verifiedRefs.length > 0
-            ? [{ key: 'refs', label: 'Referencias', idx: pack.chapters.length + (pack.tools.length > 0 ? 1 : 0) }]
-            : []),
-        ]
-        return (
-          <div className="flex md:hidden items-center justify-center gap-2 px-5 h-14 border-b border-border bg-background sticky top-0 z-10">
-            {tabs.map((t) => {
-              const isActive = activeIdx === t.idx
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveIdx(t.idx)}
-                  aria-label={t.label}
-                  aria-current={isActive ? 'page' : undefined}
-                  className="shrink-0 h-8 inline-flex items-center justify-center bg-transparent border-none cursor-pointer p-0"
-                >
-                  <span
-                    className={cn(
-                      'inline-flex items-center justify-center font-sans font-medium whitespace-nowrap overflow-hidden',
-                      'transition-all duration-300 ease-out',
-                      isActive
-                        ? 'h-8 px-4 rounded-full bg-secondary text-secondary-foreground text-xs'
-                        : 'h-2 w-2 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/60 text-transparent text-[0px]'
-                    )}
-                  >
-                    {t.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        )
-      })()}
+      {/* Mobile chapter tabs */}
+      <div className="flex md:hidden overflow-x-auto gap-1 px-4 py-2 border-b border-border bg-background sticky top-0 z-10" style={{ scrollbarWidth: 'none' }}>
+        {pack.chapters.map((ch, i) => (
+          <button
+            key={ch.id}
+            onClick={() => setActiveIdx(i)}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+              i === activeIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {ch.kicker}
+          </button>
+        ))}
+        {pack.tools.length > 0 && (
+          <button
+            onClick={() => setActiveIdx(pack.chapters.length)}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+              activeIdx === pack.chapters.length ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            Herramientas
+          </button>
+        )}
+        {(() => {
+          const verifiedRefs = pack.references.filter((r) => r.verified !== false)
+          if (verifiedRefs.length === 0) return null
+          const refsIdx = pack.chapters.length + (pack.tools.length > 0 ? 1 : 0)
+          return (
+            <button
+              onClick={() => setActiveIdx(refsIdx)}
+              className={cn(
+                'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
+                activeIdx === refsIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+              )}
+            >
+              Referencias
+            </button>
+          )
+        })()}
+      </div>
 
       <ChatDrawer
         dx={pack.dx}

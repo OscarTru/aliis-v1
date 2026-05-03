@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { UpgradeModal } from '@/components/UpgradeModal'
 
 interface Props {
@@ -72,7 +73,7 @@ export function CorrelationAnalysis({ userId, userPlan }: Props) {
           className="w-full flex items-center gap-3 px-4 md:px-6 py-4 text-left hover:bg-muted/30 transition-colors"
         >
           <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Icon icon="solar:stars-bold-duotone" width={16} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50">
