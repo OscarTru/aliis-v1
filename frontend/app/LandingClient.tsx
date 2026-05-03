@@ -891,7 +891,7 @@ function ProPowerTools() {
     },
   ]
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', position: 'relative', overflow: 'hidden' }}>
+    <section id="pro" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', position: 'relative', overflow: 'hidden' }}>
       {/* Subtle Pro accent */}
       <div aria-hidden style={{
         position: 'absolute', top: '-20%', right: '-10%', width: 600, height: 600, borderRadius: 999,

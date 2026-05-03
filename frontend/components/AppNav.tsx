@@ -55,10 +55,12 @@ export function AppNav({ initialInitial = null }: { initialInitial?: string | nu
     return () => subscription.unsubscribe()
   }, [])
 
+  // Order matches the landing page's vertical scroll order.
   const NAV_LINKS = [
-    { label: 'Qué es', id: 'que-hace' },
+    { label: 'Demo', id: 'demo' },
+    { label: 'Qué incluye', id: 'que-hace' },
     { label: 'Cómo funciona', id: 'como-funciona' },
-    { label: 'Demo', id: 'ejemplo' },
+    { label: 'Pro', id: 'pro' },
   ]
 
   function scrollTo(id: string) {
