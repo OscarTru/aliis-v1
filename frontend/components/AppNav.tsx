@@ -8,7 +8,7 @@ import { Menu, X } from 'lucide-react'
 import { LoginModal } from './LoginModal'
 import { createClient } from '@/lib/supabase'
 
-export function AppNav() {
+export function AppNav({ initialInitial = null }: { initialInitial?: string | null }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -16,7 +16,7 @@ export function AppNav() {
   const [showLogin, setShowLogin] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginInviteCode, setLoginInviteCode] = useState<string | undefined>(undefined)
-  const [initial, setInitial] = useState<string | null>(null)
+  const [initial, setInitial] = useState<string | null>(initialInitial)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -35,15 +35,20 @@ export function AppNav() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error || !user) {
-        supabase.auth.signOut()
-        setInitial(null)
+    console.log('[AppNav] effect mounting, calling getSession + getUser')
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[AppNav] getSession →', { hasSession: !!session, email: session?.user?.email, err: error?.message })
+      if (session?.user?.email) {
+        setInitial(session.user.email[0].toUpperCase())
         return
       }
-      if (user?.email) setInitial(user.email[0].toUpperCase())
+      supabase.auth.getUser().then(({ data: { user }, error: uErr }) => {
+        console.log('[AppNav] getUser →', { hasUser: !!user, email: user?.email, err: uErr?.message })
+        if (user?.email) setInitial(user.email[0].toUpperCase())
+      })
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[AppNav] onAuthStateChange →', event, session?.user?.email)
       if (event === 'SIGNED_OUT') { setInitial(null); return }
       if (session?.user?.email) setInitial(session.user.email[0].toUpperCase())
     })
