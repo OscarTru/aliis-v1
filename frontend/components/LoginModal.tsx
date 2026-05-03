@@ -145,18 +145,20 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       if (!firstName.trim()) { setError('El nombre es obligatorio.'); setLoading(false); return }
       if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); setLoading(false); return }
 
-      // Validate invite code server-side
+      // Atomically claim the invite code before creating the account.
+      // claim=true marks used=true in the same request, so the code is
+      // consumed even before email confirmation — no session required.
       const codeToUse = inviteCode.trim().toUpperCase()
       if (!codeToUse) { setError('El código de invitación es obligatorio.'); setLoading(false); return }
 
-      const validateRes = await fetch('/api/invite/validate', {
+      const claimRes = await fetch('/api/invite/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToUse }),
+        body: JSON.stringify({ code: codeToUse, claim: true }),
       })
-      const validateData = await validateRes.json()
-      if (!validateData.valid) {
-        setError(validateData.error ?? 'Código de invitación no válido.')
+      const claimData = await claimRes.json()
+      if (!claimData.valid) {
+        setError(claimData.error ?? 'Código de invitación no válido.')
         setLoading(false)
         return
       }
@@ -169,8 +171,6 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
         options: {
           data: {
             name: fullName,
-            // Consent record carried to backend for replay into consents table
-            // after email confirmation (auth/callback/route.ts).
             consents_pending: {
               terms: { granted: acceptedTerms, at: consentTimestamp },
               medical_data: { granted: acceptedMedicalData, at: consentTimestamp },
@@ -181,13 +181,6 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       })
       setLoading(false)
       if (signUpErr) { setError(err(signUpErr.message)); return }
-
-      // Mark code as used (best-effort, non-blocking — user is now created)
-      fetch('/api/invite/consume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToUse }),
-      }).catch(() => {})
 
       setInviteValidated(true)
       setView('verify-email')
