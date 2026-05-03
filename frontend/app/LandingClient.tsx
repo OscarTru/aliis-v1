@@ -10,6 +10,7 @@ import { LoginModal } from '../components/LoginModal'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Capsule } from '../components/ui/Capsule'
 import { Glow } from '../components/ui/Glow'
+import { Icon } from '@iconify/react'
 import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
 
@@ -85,7 +86,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
             <em style={{ color: 'var(--c-text-faint)' }}>Aliis no te deja solo.</em>
           </h1>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.75, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 0 32px' }}>
-            Aliis te acompaña de la consulta a lo que sigue. Tu expediente médico explicado capítulo a capítulo, con fuentes verificables, un diario de síntomas, Asistente IA por capítulo y más de 60 diagnósticos revisados por especialistas.
+            Aliis te acompaña de la consulta a lo que sigue. Tu expediente capítulo a capítulo con fuentes verificables, diario de síntomas, control de tratamientos y asistente IA por capítulo — todo en el mismo lugar.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
             <button onClick={onCTA}
@@ -127,9 +128,9 @@ function WhatAliisDoes() {
   const items = [
     { n: '01', t: 'Explica tu diagnóstico', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma, preguntas para tu médico. Todo en el lenguaje que necesitas, con la fuente detrás.' },
     { n: '02', t: 'Cada afirmación', i: 'viene con su fuente', d: 'PubMed, DOI, guías clínicas. Si no hay evidencia que soporte algo, Aliis te lo dice. Sin inventar nada.' },
-    { n: '03', t: 'Pregúntale', i: 'lo que no quedó claro', d: 'Cada capítulo tiene su propio Asistente IA. Pregunta con tus palabras y Aliis responde en contexto — sin empezar de cero cada vez.' },
-    { n: '04', t: 'Lleva tu diario', i: 'de síntomas y apuntes', d: 'Registra cómo te sientes día a día. Agrega apuntes a cada diagnóstico. Llega a tu próxima cita con todo ordenado.' },
-    { n: '05', t: 'Explora la biblioteca', i: 'de diagnósticos', d: 'Más de 60 condiciones revisadas por especialistas. Neurología, cardiología, digestivo y más — organizadas para que encuentres lo que necesitas.' },
+    { n: '03', t: 'Lleva el control', i: 'de tus medicamentos', d: 'Añade tus tratamientos con dosis y horario. Marca las tomas del día y lleva tu racha de adherencia sin depender de tu memoria.' },
+    { n: '04', t: 'Registra cómo', i: 'te sientes cada día', d: 'Escribe en tu diario con tus palabras. Aliis extrae los síntomas automáticamente y construye tu historial para que llegues a la consulta con todo ordenado.' },
+    { n: '05', t: 'Pregúntale', i: 'lo que no quedó claro', d: 'Cada capítulo tiene su propio Asistente IA. Pregunta con tus palabras y Aliis responde en contexto — sin empezar de cero cada vez.' },
   ]
   return (
     <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
@@ -163,7 +164,7 @@ function HowItWorks() {
   const steps = [
     { n: 'Describes', t: 'tu diagnóstico', d: 'Pega el texto de la consulta, escribe el nombre, o busca entre más de 60 condiciones. Aliis lo identifica.' },
     { n: 'Recibes', t: 'tu expediente completo', d: 'Capítulos estructurados: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico. Cada dato con su fuente.' },
-    { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario, el Asistente IA por capítulo, la biblioteca. Todo en el mismo lugar, siempre disponible.' },
+    { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario de síntomas, el control de tratamientos, el Asistente IA por capítulo. Todo en el mismo lugar, siempre disponible.' },
   ]
   return (
     <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
@@ -798,6 +799,59 @@ function LiveExample() {
   )
 }
 
+// ─── Lo que llevas contigo ────────────────────────────────────
+
+function CompanionTools() {
+  const tools = [
+    {
+      icon: 'solar:pills-bold-duotone',
+      title: 'Control de medicamentos',
+      body: 'Registra tus dosis, horarios y racha de adherencia. Sin depender de tu memoria.',
+    },
+    {
+      icon: 'solar:notebook-bold-duotone',
+      title: 'Diario de síntomas',
+      body: 'Escribe cómo te sientes. Aliis extrae síntomas automáticamente y construye tu historial.',
+    },
+    {
+      icon: 'solar:stethoscope-bold-duotone',
+      title: 'Prepara tu consulta',
+      body: 'Genera un resumen de tus expedientes para llevar a tu médico. Llega con las preguntas correctas.',
+    },
+    {
+      icon: 'solar:fire-bold-duotone',
+      title: 'Racha de adherencia',
+      body: 'Marca tus tomas del día. El sistema lleva la cuenta y celebra cuando no fallas.',
+    },
+  ]
+  return (
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
+      <div className="max-w-[72rem] mx-auto">
+        <div className="mb-14 max-w-[44rem]">
+          <Eyebrow style={{ marginBottom: 18 }}>· Lo que llevas contigo ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
+            Aliis no termina{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>cuando sales de la consulta.</em>
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {tools.map((tool, i) => (
+            <article key={i} className="flex gap-5 p-8 rounded-2xl border" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+              <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)' }}>
+                <Icon icon={tool.icon} width={24} height={24} style={{ color: 'var(--c-brand-teal-deep)' }} />
+              </div>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.2, letterSpacing: '-.012em', margin: '0 0 8px' }}>{tool.title}</h3>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{tool.body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Founders ─────────────────────────────────────────────────
 
 function Founders() {
@@ -932,17 +986,10 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
           ))}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', paddingTop: 32, borderTop: '1px solid var(--c-border)' }}>
-          {[
-            { k: 'Cancelas cuando quieras', v: 'un click. Sin fricción.' },
-            { k: '14 días gratis', v: 'si no convence, lo pagado vuelve.' },
-            { k: 'Sin anuncios, nunca', v: 'tu diagnóstico no se vende.' },
-          ].map((item, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-subtle)', marginBottom: 4 }}>{item.k}</div>
-              <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-muted)' }}>{item.v}</div>
-            </div>
-          ))}
+        <div style={{ textAlign: 'center', paddingTop: 32, borderTop: '1px solid var(--c-border)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-subtle)' }}>
+            Cancelas cuando quieras · 14 días gratis · Sin anuncios, nunca
+          </span>
         </div>
       </div>
     </section>
@@ -994,6 +1041,7 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
       <HowItWorks />
       <TrustSection />
       <LiveExample />
+      <CompanionTools />
       <Founders />
       <PricingSection onCTA={() => setShowLogin(true)} />
       <Footer />
