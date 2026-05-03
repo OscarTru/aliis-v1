@@ -120,7 +120,7 @@ export function PreConsultButton({ packId, iconOnly }: Props) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute top-[calc(100%+10px)] right-0 w-[300px] rounded-2xl border border-border bg-card shadow-xl p-4 space-y-3 z-50"
+            className="fixed sm:absolute top-auto sm:top-[calc(100%+10px)] left-3 right-3 sm:left-auto sm:right-0 sm:w-[300px] bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] sm:bottom-auto rounded-2xl border border-border bg-card shadow-xl p-4 space-y-3 z-50"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
