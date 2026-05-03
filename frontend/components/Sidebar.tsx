@@ -153,7 +153,7 @@ export function Sidebar({
     return () => subscription.unsubscribe()
   }, [])
 
-  const upgradeItem: NavItem = { href: '/precios', label: 'Actualizar a Pro', icon: <Icon icon="solar:crown-bold-duotone" width={20} />, upgrade: true }
+  const upgradeItem: NavItem = { href: '/checkout?plan=eur_monthly', label: 'Actualizar a Pro', icon: <Icon icon="solar:crown-bold-duotone" width={20} />, upgrade: true }
   const bottomNav = plan === 'free'
     ? [...BOTTOM_ITEMS, upgradeItem]
     : BOTTOM_ITEMS
