@@ -211,11 +211,11 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-10 border border-border bg-background shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-8 border border-border bg-background shadow-2xl max-h-[92vh] overflow-y-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
         {/* Logo — siempre visible */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <Image
             src="/assets/aliis-original.png"
             alt="Aliis"
@@ -379,9 +379,11 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                     className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
                   />
                   <span className="font-sans text-[13px] text-muted-foreground leading-snug">
-                    Doy mi consentimiento explícito para que Aliis procese mi diagnóstico
-                    y datos de salud que comparta, conforme al Art. 9 GDPR y la LFPDPPP.
-                    Puedo retirarlo en cualquier momento desde mi cuenta.
+                    Acepto el{' '}
+                    <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                      tratamiento de mis datos de salud
+                    </a>
+                    {' '}(Art. 9 GDPR · LFPDPPP)
                   </span>
                 </label>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
@@ -430,8 +432,8 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
 /* ─── helpers ─── */
 
-const inputCls = 'h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]'
-const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
+const inputCls = 'h-11 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[14px]'
+const submitCls = 'h-11 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
 const linkCls   = 'font-sans text-[13px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors'
 
 function Divider() {
