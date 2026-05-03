@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { Icon } from '@iconify/react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
 import { Capsule } from '@/components/ui/Capsule'
 import { LoginModal } from '@/components/LoginModal'
@@ -114,6 +114,7 @@ const FAQ = [
 ]
 
 export default function PreciosPage() {
+  const router = useRouter()
   const [currency, setCurrency] = useState<Currency>('EUR')
   const [cadence, setCadence] = useState<Cadence>('monthly')
   const [showLogin, setShowLogin] = useState(false)
@@ -121,18 +122,29 @@ export default function PreciosPage() {
 
   const price = PRICES[cadence][currency]
 
+  function handleBack() {
+    // Prefer browser history when available so the user returns exactly
+    // where they came from. Fall back to landing if there is none.
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/')
+    }
+  }
+
   return (
     <>
       {/* Sticky top bar — back button only, no shell nav */}
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="max-w-[72rem] mx-auto px-4 sm:px-6 h-14 flex items-center">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 hover:text-foreground transition-colors no-underline"
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-1.5 font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0"
           >
             <Icon icon="solar:arrow-left-bold-duotone" width={16} />
             Volver
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -237,31 +249,25 @@ export default function PreciosPage() {
             </button>
           </article>
 
-          {/* Pro card — visually richer */}
+          {/* Pro card — clean and contained, no overflow tricks */}
           <article
-            className="relative px-8 pt-9 pb-9 rounded-3xl flex flex-col overflow-hidden"
+            className="relative px-8 pt-9 pb-9 rounded-3xl flex flex-col"
             style={{
-              background: 'linear-gradient(160deg, hsl(var(--secondary) / 0.08) 0%, hsl(var(--background)) 50%)',
-              border: '1px solid hsl(var(--secondary) / 0.5)',
-              boxShadow: '0 1px 0 hsl(var(--secondary) / 0.18) inset, 0 20px 60px -25px hsl(var(--secondary) / 0.4)',
+              background: 'hsl(var(--secondary) / 0.04)',
+              border: '1.5px solid hsl(var(--secondary) / 0.4)',
+              boxShadow: '0 1px 0 hsl(var(--secondary) / 0.15) inset, 0 12px 40px -18px hsl(var(--secondary) / 0.35)',
             }}
           >
-            {/* Glow accent */}
-            <div
-              aria-hidden
-              className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none"
-              style={{ background: 'radial-gradient(circle, hsl(var(--secondary) / 0.18) 0%, transparent 65%)' }}
-            />
-
-            <div className="absolute -top-3 left-8 px-3 py-1 bg-secondary text-secondary-foreground rounded-full font-mono text-[10px] tracking-[.2em] uppercase shadow-md">
+            {/* Recomendado badge */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-secondary text-secondary-foreground rounded-full font-mono text-[10px] tracking-[.2em] uppercase whitespace-nowrap shadow-[0_4px_12px_rgba(31,138,155,.3)]">
               Recomendado
             </div>
 
-            <div className="relative flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <h2 className="font-serif text-[30px] tracking-[-0.02em] leading-[1.05] m-0">Pro</h2>
               <Icon icon="solar:crown-bold-duotone" width={22} className="text-secondary" />
             </div>
-            <p className="relative font-serif italic text-[15px] text-muted-foreground mb-6 leading-snug">
+            <p className="font-serif italic text-[15px] text-muted-foreground mb-6 leading-snug">
               Acompañamiento completo para quien convive con su diagnóstico cada día.
             </p>
 
@@ -270,24 +276,24 @@ export default function PreciosPage() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="relative flex items-baseline gap-2 mb-1"
+              className="flex items-baseline gap-2 mb-1"
             >
               <span className="font-serif text-[52px] tracking-[-0.03em] leading-none">{price.display}</span>
               <span className="font-sans text-[13px] text-muted-foreground">{price.sub}</span>
             </motion.div>
             {cadence === 'yearly' && (
-              <div className="relative font-mono text-[10px] tracking-[.15em] uppercase text-emerald-500 mt-1">
+              <div className="font-mono text-[10px] tracking-[.15em] uppercase text-emerald-500 mt-1">
                 Ahorras 20% con plan anual
               </div>
             )}
 
-            <div className="relative my-6 h-px bg-border" />
+            <div className="my-6 h-px bg-secondary/15" />
 
-            <div className="relative font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/55 mb-4">
+            <div className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/55 mb-4">
               Todo lo de Gratis, más:
             </div>
 
-            <ul className="relative list-none p-0 mb-8 flex flex-col gap-[14px] flex-1">
+            <ul className="list-none p-0 mb-8 flex flex-col gap-[14px] flex-1">
               {PRO_FEATURES.map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-full bg-secondary/15 flex items-center justify-center shrink-0 mt-0.5 ring-1 ring-secondary/25">
@@ -307,7 +313,7 @@ export default function PreciosPage() {
               onClick={() => startTransition(() => createCheckoutSession(currency.toLowerCase(), cadence))}
               disabled={isPending}
               className={cn(
-                'relative px-5 py-[14px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all cursor-pointer',
+                'px-5 py-[14px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all cursor-pointer',
                 isPending && 'opacity-70 cursor-default'
               )}
               style={{ boxShadow: '0 0 0 1px hsl(var(--secondary) / .35), 0 8px 24px -8px hsl(var(--secondary) / .5)' }}
@@ -315,7 +321,7 @@ export default function PreciosPage() {
               {isPending ? 'Redirigiendo…' : 'Empezar 14 días gratis'}
               {!isPending && <Icon icon="solar:arrow-right-bold-duotone" width={16} />}
             </button>
-            <div className="relative text-center font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mt-3">
+            <div className="text-center font-mono text-[10px] tracking-[.15em] uppercase text-muted-foreground/50 mt-3">
               No te cobramos hasta que decidas seguir
             </div>
           </article>
