@@ -94,7 +94,7 @@ export async function syncOnboardingMedications(medicamentos: string[]): Promise
         user_id: user.id,
         name: normalizedName.trim(),
         dose: normalizedDose?.trim() || null,
-        frequency: 'diario',       // safe default; user can edit later
+        frequency: 'once_daily',   // safe default; user can edit later
         frequency_label: null,
         indefinite: true,
         started_at: null,
