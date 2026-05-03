@@ -58,22 +58,61 @@ const BOTTOM_NAV: { id: NavId; label: string; bold: string; linear: string }[] =
 ]
 
 // ─── Cursor path (subtle pointer hint) ──────────────────────────────────────
+//
+// Coords are percentages of the MAIN PANE (the area to the right of the
+// sidebar on desktop, full width on mobile). They're hand-tuned to land on
+// real interactive elements in each scene — keep them in sync with the
+// scene layouts above.
 
 type CursorTarget = { t: number; x: number; y: number }
 const CURSOR_TARGETS: Record<SceneId, CursorTarget[]> = {
-  ingreso:   [{ t: 0, x: 32, y: 30 }, { t: 0.6, x: 50, y: 50 }, { t: 2.6, x: 50, y: 50 }, { t: 3.6, x: 50, y: 78 }, { t: 5.0, x: 50, y: 78 }],
-  historial: [{ t: 0, x: 70, y: 28 }, { t: 1.0, x: 50, y: 38 }, { t: 2.5, x: 60, y: 48 }, { t: 4.5, x: 60, y: 48 }],
-  pack:      [{ t: 0, x: 55, y: 30 }, { t: 1.5, x: 52, y: 50 }, { t: 3.5, x: 60, y: 65 }, { t: 5.0, x: 80, y: 22 }],
-  chat:      [{ t: 0, x: 70, y: 55 }, { t: 0.8, x: 88, y: 88 }, { t: 2.5, x: 95, y: 90 }, { t: 5.5, x: 78, y: 50 }],
-  diario:    [{ t: 0, x: 50, y: 30 }, { t: 1.5, x: 60, y: 18 }, { t: 3.0, x: 50, y: 55 }, { t: 5.0, x: 40, y: 70 }],
+  // Ingreso: form is centered (max-w-[420px] mx-auto) inside main pane.
+  // - Input pill sits around y=48% (middle of vertically-centered card)
+  // - CTA "Continuar" sits around y=58% (just below input)
+  ingreso: [
+    { t: 0,   x: 30, y: 30 },  // off to the side, settling in
+    { t: 0.6, x: 50, y: 48 },  // click on input
+    { t: 2.8, x: 50, y: 48 },  // stay there while typing
+    { t: 3.8, x: 50, y: 58 },  // move down to CTA
+    { t: 5.0, x: 50, y: 58 },
+  ],
+  // Historial: header at top, chips, then 3 cards. First card is around y=42%.
+  historial: [
+    { t: 0,   x: 70, y: 26 },
+    { t: 1.2, x: 50, y: 38 },  // hover near first card title
+    { t: 2.5, x: 50, y: 42 },  // click first card
+    { t: 4.5, x: 50, y: 42 },
+  ],
+  // Pack desktop: "Pregúntale a Aliis" pill is in the top-right of the
+  // content area, around y=12%, x=88%.
+  pack: [
+    { t: 0,   x: 50, y: 35 },
+    { t: 1.5, x: 50, y: 50 },  // reading body
+    { t: 3.5, x: 55, y: 60 },  // reading callout
+    { t: 4.8, x: 88, y: 12 },  // arrive at "Pregúntale" pill
+    { t: 5.0, x: 88, y: 12 },  // click
+  ],
+  // Chat: drawer takes right ~65% of main pane on desktop. Input is at
+  // bottom of drawer, around y=92%. Drawer center is around x=82%.
+  chat: [
+    { t: 0,   x: 70, y: 55 },
+    { t: 0.8, x: 82, y: 92 },  // click chat input
+    { t: 2.5, x: 82, y: 92 },
+    { t: 5.5, x: 82, y: 50 },  // drift to read AI reply
+  ],
+  // Diario: just observation. Hover the chart area.
+  diario: [
+    { t: 0,   x: 50, y: 30 },
+    { t: 1.5, x: 55, y: 28 },  // insight highlight
+    { t: 3.0, x: 50, y: 60 },  // chart area
+    { t: 5.0, x: 60, y: 60 },
+  ],
 }
 
-// Moments in each scene where the cursor "clicks". Used to emit a ripple
-// effect at the cursor position. The implementation is offset-based: when
-// sceneT crosses one of these times, a fresh ripple key is generated and
-// AnimatePresence plays its enter/exit.
+// Moments in each scene where the cursor "clicks". The cursor must be
+// AT the click target at this exact time — see CURSOR_TARGETS above.
 const CLICK_TIMES: Record<SceneId, number[]> = {
-  ingreso:   [0.6, 3.6],   // tap on input, tap on continue button
+  ingreso:   [0.6, 3.8],   // tap on input, tap on continue button
   historial: [2.5],        // click first card
   pack:      [5.0],        // click "Pregúntale a Aliis"
   chat:      [0.8],        // click chat input
