@@ -846,12 +846,6 @@ export default function AliisDemo() {
 
   return (
     <div ref={rootRef} className="relative w-full">
-      {/* CACHE-BUSTER MARKER — temporary, remove after confirming new code loads.
-          If you don't see this red banner above the demo, the dev server is
-          serving stale cache and a hard rebuild (rm -rf .next) is needed. */}
-      <div className="mx-auto max-w-[960px] mb-3 px-3 py-1.5 rounded-md bg-red-500 text-white font-mono text-[11px] font-bold text-center">
-        DEMO V2 · {isMobile ? 'MOBILE' : 'DESKTOP'} · {new Date().getFullYear()}
-      </div>
       {/* Browser frame holds the whole thing. Aspect ratio shifts to taller
           (4/3) on narrow containers to give mobile content room to breathe. */}
       <div
