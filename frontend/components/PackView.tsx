@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { HelpCircle, MessageCircle, BookOpen } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { motion, AnimatePresence } from 'motion/react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
 import { ChatDrawer } from '@/components/ChatDrawer'
 import { PreConsultButton } from '@/components/PreConsultButton'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
 
@@ -21,7 +22,7 @@ function AskAliisButton({ onClick }: { onClick: () => void }) {
       whileTap={{ scale: 0.94 }}
       className="shrink-0 flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-foreground text-background border-none font-sans text-[12px] font-medium cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
     >
-      <MessageCircle size={13} className="shrink-0" />
+      <Icon icon="solar:chat-round-bold-duotone" width={14} className="shrink-0" />
       {/* Desktop: hover-expand label. Hidden on mobile — touch has no hover */}
       <AnimatePresence initial={false}>
         {hovered && (
@@ -63,6 +64,7 @@ function ChapterCard({
   chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void; chatOpen: boolean; userPlan?: string
 }) {
   const markedRef = useRef(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     markedRef.current = false
@@ -86,7 +88,31 @@ function ChapterCard({
           {chapter.n} · {chapter.readTime}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {userPlan === 'pro' && <PreConsultButton packId={packId} iconOnly="mobile" />}
+          {userPlan === 'pro'
+            ? <PreConsultButton packId={packId} iconOnly="mobile" />
+            : (
+              <motion.button
+                onClick={() => setShowUpgrade(true)}
+                whileTap={{ scale: 0.96 }}
+                className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground cursor-pointer relative overflow-visible"
+              >
+                <Icon icon="solar:clipboard-check-bold-duotone" width={14} className="shrink-0" />
+                <span className="hidden md:inline">Preparar consulta</span>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none">
+                  Pro
+                </span>
+              </motion.button>
+            )
+          }
+          {showUpgrade && (
+            <UpgradeModal
+              onClose={() => setShowUpgrade(false)}
+              feature={{
+                title: 'Prepara tu próxima consulta',
+                description: 'Con Aliis Pro genera un resumen listo para compartir con tu médico, con tus diagnósticos y preguntas clave.',
+              }}
+            />
+          )}
           {!chatOpen && <AskAliisButton onClick={onOpenChat} />}
         </div>
       </div>
@@ -102,7 +128,7 @@ function ChapterCard({
             href={`/condiciones/${conditionSlug}`}
             className="shrink-0 inline-flex items-center gap-1.5 font-sans text-[12px] text-primary/50 no-underline hover:text-primary transition-colors whitespace-nowrap"
           >
-            <BookOpen size={12} />
+            <Icon icon="solar:book-2-bold-duotone" width={13} />
             Leer a profundidad →
           </Link>
         )}
@@ -137,7 +163,7 @@ function ChapterCard({
         <ul className="list-none p-0 mt-2 flex flex-col gap-2.5">
           {chapter.questions.map((q, i) => (
             <li key={i} className="flex gap-3.5 items-start px-[18px] py-3.5 bg-muted rounded-xl">
-              <span className="text-primary shrink-0 flex pt-0.5"><HelpCircle size={16} /></span>
+              <span className="text-primary shrink-0 flex pt-0.5"><Icon icon="solar:question-circle-bold-duotone" width={17} /></span>
               <span className="font-sans text-[15px] text-foreground leading-[1.5]">{q}</span>
             </li>
           ))}

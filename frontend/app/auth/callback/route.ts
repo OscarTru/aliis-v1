@@ -11,8 +11,10 @@ export async function GET(request: NextRequest) {
 
   if (!code) return NextResponse.redirect(`${origin}/`)
 
-  // We need a mutable response to carry cookies — redirect URL set at the end
-  const cookieResponse = NextResponse.redirect(`${origin}/`)
+  // Use a single mutable response so session cookies are never lost between
+  // two NextResponse objects. We start with a placeholder URL and update it
+  // at the end once we know the correct destination.
+  const response = NextResponse.redirect(`${origin}/`)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,8 +23,9 @@ export async function GET(request: NextRequest) {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
+          // Write cookies onto the single response object
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options)
           )
         },
       },
@@ -53,8 +56,9 @@ export async function GET(request: NextRequest) {
     if (!profile) {
       // New user without invite — delete and block
       await admin.auth.admin.deleteUser(user.id)
+      // Clear session cookies before redirecting
       const blockResponse = NextResponse.redirect(`${origin}/?error=no-invite`)
-      cookieResponse.cookies.getAll().forEach(({ name }) => {
+      response.cookies.getAll().forEach(({ name }) => {
         if (name.startsWith('sb-')) blockResponse.cookies.set(name, '', { maxAge: 0, path: '/' })
       })
       return blockResponse
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Atomic invite consume: UPDATE only succeeds if used=false right now.
-  // Two concurrent signups with same code: only one UPDATE returns a row.
+  // Two concurrent signups with same code: only one UPDATE touches a row.
   if (inviteCode) {
     const normalized = inviteCode.trim().toUpperCase()
     const { data: claimed } = await admin
@@ -78,8 +82,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Replay any pending consent records collected at signup form into consents table.
-  // Idempotent: we look up existing consents first to avoid duplicates on reconfirm.
+  // Replay pending consent records into consents table (idempotent).
   const pending = (user.user_metadata?.consents_pending ?? null) as null | {
     terms?: { granted: boolean; at: string }
     medical_data?: { granted: boolean; at: string }
@@ -93,36 +96,19 @@ export async function GET(request: NextRequest) {
       .in('kind', ['terms', 'medical_data_processing'])
     const have = new Set((existing ?? []).map((r) => r.kind))
     const rows: Array<{
-      user_id: string
-      kind: string
-      granted: boolean
-      policy_version: string | null
-      created_at: string
+      user_id: string; kind: string; granted: boolean
+      policy_version: string | null; created_at: string
     }> = []
     if (pending.terms && !have.has('terms')) {
-      rows.push({
-        user_id: user.id,
-        kind: 'terms',
-        granted: pending.terms.granted,
-        policy_version: pending.policy_version ?? null,
-        created_at: pending.terms.at,
-      })
+      rows.push({ user_id: user.id, kind: 'terms', granted: pending.terms.granted, policy_version: pending.policy_version ?? null, created_at: pending.terms.at })
     }
     if (pending.medical_data && !have.has('medical_data_processing')) {
-      rows.push({
-        user_id: user.id,
-        kind: 'medical_data_processing',
-        granted: pending.medical_data.granted,
-        policy_version: pending.policy_version ?? null,
-        created_at: pending.medical_data.at,
-      })
+      rows.push({ user_id: user.id, kind: 'medical_data_processing', granted: pending.medical_data.granted, policy_version: pending.policy_version ?? null, created_at: pending.medical_data.at })
     }
-    if (rows.length > 0) {
-      await admin.from('consents').insert(rows)
-    }
+    if (rows.length > 0) await admin.from('consents').insert(rows)
   }
 
-  // Determine redirect: new users → onboarding, returning → historial
+  // Determine destination: new users → /onboarding, returning → /historial
   const { data: profile } = await admin
     .from('profiles')
     .select('onboarding_done')
@@ -130,9 +116,8 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   const destination = profile?.onboarding_done ? '/historial' : '/onboarding'
-  const finalResponse = NextResponse.redirect(`${origin}${destination}`)
-  cookieResponse.cookies.getAll().forEach(({ name, value }) => {
-    finalResponse.cookies.set(name, value)
-  })
-  return finalResponse
+
+  // Mutate the redirect URL on the same response object that holds the cookies
+  response.headers.set('location', `${origin}${destination}`)
+  return response
 }

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, BellOff, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -152,7 +153,10 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
             : 'border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted'
         )}
       >
-        {pushStatus === 'denied' ? <BellOff size={14} /> : <Bell size={14} />}
+        {pushStatus === 'denied'
+          ? <Icon icon="solar:bell-off-bold-duotone" width={16} />
+          : <Icon icon="solar:bell-bold-duotone" width={16} />
+        }
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 border border-background flex items-center justify-center font-mono text-[9px] text-white font-bold">
             {unreadCount > 9 ? '9+' : unreadCount}

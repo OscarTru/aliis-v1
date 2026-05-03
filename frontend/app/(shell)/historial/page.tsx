@@ -50,17 +50,25 @@ export default async function HistorialPage({
   const userPlan: Profile['plan'] = (profileResult.data?.plan as Profile['plan']) ?? 'free'
   const userWho = (profileResult.data?.who as Profile['who']) ?? null
 
-  // Condiciones previas del perfil médico que NO tienen pack generado todavía
+  // Shared set for deduplication between widgets
   const packDxSet = new Set(packs.map(p => p.dx.toLowerCase().trim()))
+
+  // "Sin explicación aún" — condiciones del perfil que todavía no tienen pack
   const condicionesSinPack = (medicalProfile?.condiciones_previas ?? []).filter(
     c => !packDxSet.has(c.toLowerCase().trim())
   )
 
-  // Condiciones previas = diagnósticos generados (packs)
-  const condicionesFromPacks = packs.map(p => p.dx)
-  // Medicamentos = tabla treatments
+  // Historial médico widget — packs generados + condiciones_previas sin duplicar
+  const condicionesFromPacks = [
+    ...packs.map(p => p.dx),
+    ...(medicalProfile?.condiciones_previas ?? []).filter(
+      c => !packDxSet.has(c.toLowerCase().trim())
+    ),
+  ]
+  // Medicamentos = tabla treatments (capitalize name for display consistency)
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
   const medicamentosFromTreatments = (treatmentsResult.data ?? []).map(t =>
-    t.dose ? `${t.name} ${t.dose}` : t.name
+    t.dose ? `${cap(t.name)} ${t.dose}` : cap(t.name)
   )
 
   const readsByPack = reads.reduce<Record<string, Set<string>>>((acc, r) => {

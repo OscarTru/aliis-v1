@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Plus, ArrowRight } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import type { Profile } from '@/lib/types'
 
 interface Item {
@@ -21,9 +22,12 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const isPro = userPlan === 'pro'
 
   async function load(force = false) {
-    if (userPlan !== 'pro') return
+    if (!isPro) return
     setLoading(true)
     try {
       const url = force ? '/api/aliis/treatment-check?refresh=1' : '/api/aliis/treatment-check'
@@ -41,7 +45,53 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
 
   useEffect(() => { load() }, [userPlan])
 
-  if (userPlan !== 'pro') return null
+  // Free users: show upsell card
+  if (!isPro) {
+    return (
+      <>
+        <div className="mb-6">
+          <div className="mb-2">
+            <p className="font-mono text-[10px] tracking-[.16em] uppercase text-muted-foreground/50">
+              Revisión de tratamientos
+            </p>
+          </div>
+          <button
+            onClick={() => setShowUpgrade(true)}
+            className="w-full text-left px-4 py-3.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon icon="solar:stars-bold-duotone" width={16} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[13px] font-medium text-foreground leading-tight">
+                  Detectar inconsistencias en mis tratamientos
+                </p>
+                <p className="font-sans text-[11px] text-muted-foreground/60 mt-0.5">
+                  Aliis revisa que tus diagnósticos y medicamentos cuadren
+                </p>
+              </div>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none shrink-0">
+                Pro
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {showUpgrade && (
+          <UpgradeModal
+            onClose={() => setShowUpgrade(false)}
+            feature={{
+              title: 'Revisión inteligente de tratamientos',
+              description: 'Con Aliis Pro detecta si algún diagnóstico no tiene tratamiento registrado o viceversa, y recibe sugerencias concretas.',
+            }}
+          />
+        )}
+      </>
+    )
+  }
+
+  // Pro users: normal behavior
   if (!loading && !loaded) return null
 
   return (
@@ -88,7 +138,7 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
                 key={i}
                 className="flex items-start gap-3 px-4 py-3.5 bg-amber-500/5 border border-amber-500/20 rounded-xl"
               >
-                <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                <Icon icon="solar:danger-triangle-bold-duotone" width={14} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="font-sans text-[13px] text-foreground leading-snug mb-3">
                     {item.mensaje}
@@ -102,14 +152,14 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
                         href="/tratamientos"
                         className="shrink-0 flex items-center gap-1 font-sans text-[11px] font-medium text-amber-600 dark:text-amber-400 no-underline hover:opacity-70 transition-opacity"
                       >
-                        <Plus size={10} /> Agregar tratamiento
+                        <Icon icon="solar:add-circle-bold-duotone" width={11} /> Agregar tratamiento
                       </Link>
                     ) : (
                       <Link
                         href={`/ingreso?dx=${encodeURIComponent(item.tratamiento ?? '')}`}
                         className="shrink-0 flex items-center gap-1 font-sans text-[11px] font-medium text-amber-600 dark:text-amber-400 no-underline hover:opacity-70 transition-opacity"
                       >
-                        <ArrowRight size={10} /> Agregar al historial
+                        <Icon icon="solar:arrow-right-bold-duotone" width={11} /> Agregar al historial
                       </Link>
                     )}
                   </div>

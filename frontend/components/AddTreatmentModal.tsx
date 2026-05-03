@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X, Pill, AlertTriangle } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { createTreatment, updateTreatment } from '@/app/actions/treatments'
+import { DatePicker } from '@/components/ui/date-picker'
+import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
 import type { Treatment, TreatmentFrequency } from '@/lib/types'
 
 const SCHEDULE_OPTIONS: { label: string; value: TreatmentFrequency }[] = [
@@ -160,30 +163,41 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
   const isBusy = isPending || isValidating
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-[480px] bg-background rounded-t-2xl sm:rounded-2xl border border-border shadow-xl p-6 z-10">
+    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogPortal>
+        <DialogOverlay />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(64px+env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div
+          className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] pointer-events-auto"
+        >
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Pill className="w-4 h-4 text-primary" />
+        {/* Header — fixed at top, doesn't scroll */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0 border-b border-border/40">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Icon icon="solar:pills-bold-duotone" width={16} className="text-primary" />
             </div>
-            <h2 className="font-serif text-[18px] text-foreground leading-none">
+            <h2 className="font-serif text-[18px] text-foreground leading-none truncate">
               {isEdit ? 'Editar ' : 'Agregar '}<em>tratamiento</em>
             </h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer">
-            <X size={16} />
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="w-11 h-11 -mr-2 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-none bg-transparent cursor-pointer shrink-0"
+          >
+            <X size={18} />
           </button>
         </div>
+
+        {/* Scrollable body — content lives here, footer below stays sticky */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
 
         {/* Name confirmation — AI is unsure about medication name */}
         {checkStep === 'name' ? (
           <div className="flex flex-col gap-4">
             <div className="flex gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <Icon icon="solar:danger-triangle-bold-duotone" width={20} className="text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="font-sans text-[13px] font-medium text-foreground mb-1">
                   ¿Puedes revisar el nombre?
@@ -227,9 +241,11 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
                 ? 'bg-destructive/10 border-destructive/20'
                 : 'bg-amber-500/10 border-amber-500/20'
             }`}>
-              <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                doseCheck?.warningLevel === 'danger' ? 'text-destructive' : 'text-amber-500'
-              }`} />
+              <Icon
+                icon="solar:danger-triangle-bold-duotone"
+                width={20}
+                className={`shrink-0 mt-0.5 ${doseCheck?.warningLevel === 'danger' ? 'text-destructive' : 'text-amber-500'}`}
+              />
               <div>
                 <p className="font-sans text-[13px] font-medium text-foreground mb-1">
                   {doseCheck?.warningLevel === 'danger' ? 'Quiero asegurarme de que estés bien' : 'Esto no cuadra del todo'}
@@ -314,11 +330,11 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
             <div className="flex gap-4 items-end">
               <div className="flex-1">
                 <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">Fecha de inicio</label>
-                <input
-                  type="date"
-                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[13px] focus:outline-none focus:border-primary/50 text-foreground"
+                <DatePicker
                   value={startedAt}
-                  onChange={e => setStartedAt(e.target.value)}
+                  onChange={setStartedAt}
+                  disabled={indefinite}
+                  placeholder="Selecciona fecha"
                 />
               </div>
               <label className="flex items-center gap-2 font-sans text-[13px] text-muted-foreground cursor-pointer pb-2.5">
@@ -351,7 +367,10 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+        </div>
+        </div>
+        </div>
+      </DialogPortal>
+    </Dialog>
   )
 }

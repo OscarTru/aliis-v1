@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Icon } from '@iconify/react'
+import { UpgradeModal } from '@/components/UpgradeModal'
 
 interface Props {
   userId: string
+  userPlan?: string
 }
 
 const CACHE_KEY = (userId: string) => {
@@ -13,20 +16,24 @@ const CACHE_KEY = (userId: string) => {
   return `aliis_correlation_${userId}_${month}`
 }
 
-export function CorrelationAnalysis({ userId }: Props) {
+export function CorrelationAnalysis({ userId, userPlan }: Props) {
   const [content, setContent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [fromCache, setFromCache] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const isPro = userPlan === 'pro'
 
   useEffect(() => {
+    if (!isPro) return
     const cached = localStorage.getItem(CACHE_KEY(userId))
     if (cached) {
       setContent(cached)
       setFromCache(true)
     }
-  }, [userId])
+  }, [userId, isPro])
 
   async function analyze() {
     setLoading(true)
@@ -51,69 +58,88 @@ export function CorrelationAnalysis({ userId }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      {/* Header / trigger */}
-      <button
-        onClick={() => {
-          if (!content && !loading) {
-            analyze()
-          } else {
-            setExpanded(e => !e)
-          }
-        }}
-        className="w-full flex items-center gap-3 px-4 md:px-6 py-4 text-left hover:bg-muted/30 transition-colors"
-      >
-        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <Sparkles className="w-4 h-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50">
-            Pro · Análisis mensual
-          </p>
-          <p className="font-serif text-[16px] text-foreground leading-tight">
-            {content ? 'Tu análisis de este mes' : 'Analizar mi mes'}
-          </p>
-        </div>
-        {loading ? (
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin shrink-0" />
-        ) : content ? (
-          expanded
-            ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
-            : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-        ) : null}
-      </button>
-
-      {/* Content */}
-      {expanded && (
-        <div className="px-4 md:px-6 pb-5 pt-1 border-t border-border">
-          {loading && (
-            <p className="font-sans text-[14px] text-muted-foreground animate-pulse">
-              Aliis está analizando tus registros...
+    <>
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        {/* Header / trigger */}
+        <button
+          onClick={() => {
+            if (!isPro) { setShowUpgrade(true); return }
+            if (!content && !loading) {
+              analyze()
+            } else {
+              setExpanded(e => !e)
+            }
+          }}
+          className="w-full flex items-center gap-3 px-4 md:px-6 py-4 text-left hover:bg-muted/30 transition-colors"
+        >
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Icon icon="solar:stars-bold-duotone" width={16} className="text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50">
+              Análisis mensual
             </p>
-          )}
-          {error && (
-            <p className="font-sans text-[14px] text-muted-foreground">{error}</p>
-          )}
-          {content && !loading && (
-            <>
-              <p className="font-sans text-[14px] text-foreground leading-relaxed">{content}</p>
-              {fromCache && (
-                <div className="flex items-center justify-between mt-3">
-                  <p className="font-mono text-[10px] text-muted-foreground/50">
-                    Análisis de este mes
-                  </p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); analyze() }}
-                    className="font-mono text-[10px] text-primary/70 hover:text-primary transition-colors"
-                  >
-                    Actualizar
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            <p className="font-serif text-[16px] text-foreground leading-tight">
+              {isPro && content ? 'Tu análisis de este mes' : 'Analizar mi mes'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {!isPro && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none">
+                Pro
+              </span>
+            )}
+            {isPro && loading && <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />}
+            {isPro && !loading && content && (
+              expanded
+                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
+        </button>
+
+        {/* Content — only for pro */}
+        {isPro && expanded && (
+          <div className="px-4 md:px-6 pb-5 pt-1 border-t border-border">
+            {loading && (
+              <p className="font-sans text-[14px] text-muted-foreground animate-pulse">
+                Aliis está analizando tus registros...
+              </p>
+            )}
+            {error && (
+              <p className="font-sans text-[14px] text-muted-foreground">{error}</p>
+            )}
+            {content && !loading && (
+              <>
+                <p className="font-sans text-[14px] text-foreground leading-relaxed">{content}</p>
+                {fromCache && (
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="font-mono text-[10px] text-muted-foreground/50">
+                      Análisis de este mes
+                    </p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); analyze() }}
+                      className="font-mono text-[10px] text-primary/70 hover:text-primary transition-colors"
+                    >
+                      Actualizar
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showUpgrade && (
+        <UpgradeModal
+          onClose={() => setShowUpgrade(false)}
+          feature={{
+            title: 'Analiza tu mes completo',
+            description: 'Con Aliis Pro detecta patrones entre tus síntomas, medicamentos y estado de ánimo con análisis mensual de IA.',
+          }}
+        />
       )}
-    </div>
+    </>
   )
 }

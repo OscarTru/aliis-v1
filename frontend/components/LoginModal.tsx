@@ -32,6 +32,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidated, setInviteValidated] = useState(false)
   const [inviteChecking, setInviteChecking] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedMedicalData, setAcceptedMedicalData] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
@@ -50,9 +51,10 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
   useEffect(() => {
     if (view !== 'signup') return
     const code = inviteCode.trim().toUpperCase()
-    if (code.length < 6) { setInviteValidated(false); return }
+    if (code.length < 6) { setInviteValidated(false); setInviteError(null); return }
     setInviteChecking(true)
     setInviteValidated(false)
+    setInviteError(null)
     const timer = setTimeout(async () => {
       const res = await fetch('/api/invite/validate', {
         method: 'POST',
@@ -61,6 +63,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       }).catch(() => null)
       const data = res ? await res.json().catch(() => ({})) : {}
       setInviteValidated(!!data.valid)
+      setInviteError(data.valid ? null : (data.error ?? 'Código no válido'))
       setInviteChecking(false)
     }, 500)
     return () => clearTimeout(timer)
@@ -92,6 +95,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
     setFirstName('')
     setLastName('')
     setInviteValidated(false)
+    setInviteError(null)
     setAcceptedTerms(false)
     setAcceptedMedicalData(false)
   }
@@ -145,18 +149,20 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       if (!firstName.trim()) { setError('El nombre es obligatorio.'); setLoading(false); return }
       if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); setLoading(false); return }
 
-      // Validate invite code server-side
+      // Atomically claim the invite code before creating the account.
+      // claim=true marks used=true in the same request, so the code is
+      // consumed even before email confirmation — no session required.
       const codeToUse = inviteCode.trim().toUpperCase()
       if (!codeToUse) { setError('El código de invitación es obligatorio.'); setLoading(false); return }
 
-      const validateRes = await fetch('/api/invite/validate', {
+      const claimRes = await fetch('/api/invite/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToUse }),
+        body: JSON.stringify({ code: codeToUse, claim: true }),
       })
-      const validateData = await validateRes.json()
-      if (!validateData.valid) {
-        setError(validateData.error ?? 'Código de invitación no válido.')
+      const claimData = await claimRes.json()
+      if (!claimData.valid) {
+        setError(claimData.error ?? 'Código de invitación no válido.')
         setLoading(false)
         return
       }
@@ -167,10 +173,9 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: fullName,
-            // Consent record carried to backend for replay into consents table
-            // after email confirmation (auth/callback/route.ts).
             consents_pending: {
               terms: { granted: acceptedTerms, at: consentTimestamp },
               medical_data: { granted: acceptedMedicalData, at: consentTimestamp },
@@ -181,13 +186,6 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       })
       setLoading(false)
       if (signUpErr) { setError(err(signUpErr.message)); return }
-
-      // Mark code as used (best-effort, non-blocking — user is now created)
-      fetch('/api/invite/consume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToUse }),
-      }).catch(() => {})
 
       setInviteValidated(true)
       setView('verify-email')
@@ -211,11 +209,11 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[400px] rounded-3xl p-10 border border-border bg-background shadow-2xl overflow-hidden">
+      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-8 border border-border bg-background shadow-2xl max-h-[92vh] overflow-y-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
         {/* Logo — siempre visible */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <Image
             src="/assets/aliis-original.png"
             alt="Aliis"
@@ -328,11 +326,15 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                     autoComplete="off"
                   />
                   {inviteCode.trim().length >= 6 && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px]">
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-mono font-medium ${inviteChecking ? 'text-muted-foreground/50' : inviteValidated ? 'text-emerald-500' : 'text-destructive'}`}>
                       {inviteChecking ? '…' : inviteValidated ? '✓' : '✗'}
                     </span>
                   )}
                 </div>
+
+                {inviteError && inviteCode.trim().length >= 6 && !inviteChecking && (
+                  <p className="font-sans text-[12px] text-destructive -mt-1">{inviteError}</p>
+                )}
 
                 {/* Google — only active when invite is valid */}
                 <button
@@ -353,37 +355,41 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
-                <label className="flex items-start gap-2.5 cursor-pointer select-none mt-0.5">
-                  <input
-                    type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
-                    Acepto los{' '}
-                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
-                      términos y condiciones
-                    </a>
-                    {' '}y la{' '}
-                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
-                      política de privacidad
-                    </a>
-                  </span>
-                </label>
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={acceptedMedicalData}
-                    onChange={(e) => setAcceptedMedicalData(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
-                    Doy mi consentimiento explícito para que Aliis procese mi diagnóstico
-                    y datos de salud que comparta, conforme al Art. 9 GDPR y la LFPDPPP.
-                    Puedo retirarlo en cualquier momento desde mi cuenta.
-                  </span>
-                </label>
+                <div className="flex flex-col gap-1.5 mt-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
+                    <span className="font-sans text-[11px] text-muted-foreground/80 leading-none">
+                      Acepto los{' '}
+                      <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        términos
+                      </a>
+                      {' '}y la{' '}
+                      <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        política de privacidad
+                      </a>
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedMedicalData}
+                      onChange={(e) => setAcceptedMedicalData(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
+                    <span className="font-sans text-[11px] text-muted-foreground/80 leading-none">
+                      Acepto el{' '}
+                      <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        tratamiento de mis datos de salud
+                      </a>
+                      {' '}(Art. 9 GDPR · LFPDPPP)
+                    </span>
+                  </label>
+                </div>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button
                   type="submit"
@@ -430,8 +436,8 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
 /* ─── helpers ─── */
 
-const inputCls = 'h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]'
-const submitCls = 'h-12 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
+const inputCls = 'h-11 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[14px]'
+const submitCls = 'h-11 rounded-xl mt-1 bg-secondary text-secondary-foreground font-sans font-medium text-[15px] hover:bg-secondary/90 shadow-[var(--c-btn-primary-shadow)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-secondary transition-opacity duration-150'
 const linkCls   = 'font-sans text-[13px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors'
 
 function Divider() {

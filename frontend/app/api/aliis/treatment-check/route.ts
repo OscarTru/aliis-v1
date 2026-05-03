@@ -1,11 +1,20 @@
 import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { models } from '@/lib/ai-providers'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+
+  const rl = await rateLimit(`user:${user.id}:treatment-check`, 10, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   const { searchParams } = new URL(request.url)
   const forceRefresh = searchParams.get('refresh') === '1'

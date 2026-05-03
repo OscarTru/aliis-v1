@@ -56,7 +56,8 @@ const DUDAS_OPTIONS = [
   { value: 'Hablar con médico', label: 'Cómo hablar con mi médico', sub: 'Preguntas que llevar' },
 ]
 
-// Inline chip component — avoids prop drilling
+// Inline chip component — avoids prop drilling.
+// Compact layout fit for grids: label + sub stacked, equal-height tiles.
 function Chip({
   label,
   sub,
@@ -72,16 +73,14 @@ function Chip({
     <button
       onClick={onClick}
       className={cn(
-        'px-5 py-4 rounded-[14px] cursor-pointer text-left border-2 flex items-center justify-between gap-3 transition-[border-color,background] duration-150',
+        'relative px-4 py-3 rounded-[14px] cursor-pointer text-left border-2 flex flex-col gap-0.5 transition-[border-color,background] duration-150 min-h-[68px]',
         selected ? 'border-primary bg-primary/5' : 'border-border bg-muted'
       )}
     >
-      <div>
-        <div className="font-sans text-[15px] font-medium text-foreground mb-[2px]">{label}</div>
-        <div className="font-sans text-[13px] text-muted-foreground">{sub}</div>
-      </div>
+      <div className="font-sans text-[14px] font-medium text-foreground leading-tight pr-6">{label}</div>
+      <div className="font-sans text-[12px] text-muted-foreground leading-snug">{sub}</div>
       {selected && (
-        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
           <Check size={10} color="#fff" strokeWidth={3} />
         </div>
       )}
@@ -312,7 +311,14 @@ function IngresoPageInner() {
   return (
     <>
       <>
-        <div className={cn(step === 'generating' ? 'flex items-center justify-center min-h-screen' : 'max-w-[560px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-28 md:pb-20')}>
+        <div
+          className={cn(
+            step === 'generating'
+              ? 'flex items-center justify-center min-h-screen'
+              : 'min-h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:min-h-screen flex items-center justify-center px-4 md:px-8 py-8'
+          )}
+        >
+          <div className={cn(step !== 'generating' && 'w-full max-w-[640px] mx-auto')}>
 
           {/* ── Step 1: diagnóstico (combobox) ── */}
           {step === 'dx' && (
@@ -361,11 +367,11 @@ function IngresoPageInner() {
               <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Para quién es este pack?
               </h2>
-              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+              <p className="font-sans text-[15px] text-muted-foreground mb-6 leading-relaxed">
                 Adaptamos la explicación según quién va a leerla.
               </p>
 
-              <div className="flex flex-col gap-[10px] mb-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
                 {PARA_OPTIONS.map((opt) => (
                   <Chip
                     key={opt.value}
@@ -408,11 +414,11 @@ function IngresoPageInner() {
               <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Cómo te sientes con este diagnóstico?
               </h2>
-              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+              <p className="font-sans text-[15px] text-muted-foreground mb-6 leading-relaxed">
                 Nos ayuda a adaptar el tono de la explicación.
               </p>
 
-              <div className="flex flex-col gap-[10px] mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
                 {EMOCION_OPTIONS.map((opt) => (
                   <Chip
                     key={opt.value}
@@ -422,12 +428,14 @@ function IngresoPageInner() {
                     onClick={() => { setEmocion(opt.value); setEmocionCustom('') }}
                   />
                 ))}
+              </div>
 
-                {/* Opción libre */}
+              {/* Opción libre — ancho completo bajo el grid */}
+              <div className="flex flex-col gap-2.5 mb-5">
                 <button
                   onClick={() => setEmocion('__custom')}
                   className={cn(
-                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
+                    'px-5 py-3 rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
                     emocion === '__custom'
                       ? 'border-primary bg-primary/5'
                       : 'border-border bg-muted'
@@ -477,11 +485,11 @@ function IngresoPageInner() {
               <h2 className="font-serif leading-[1.2] tracking-[-0.02em] mb-2 text-[clamp(22px,4vw,32px)]">
                 ¿Qué te gustaría entender mejor?
               </h2>
-              <p className="font-sans text-[15px] text-muted-foreground mb-7 leading-relaxed">
+              <p className="font-sans text-[15px] text-muted-foreground mb-6 leading-relaxed">
                 Aliis enfocará la explicación en lo que más te importa.
               </p>
 
-              <div className="flex flex-col gap-[10px] mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
                 {DUDAS_OPTIONS.map((opt) => (
                   <Chip
                     key={opt.value}
@@ -491,12 +499,14 @@ function IngresoPageInner() {
                     onClick={() => { setDudas(opt.value); setDudasCustom('') }}
                   />
                 ))}
+              </div>
 
-                {/* Opción libre */}
+              {/* Opción libre — ancho completo bajo el grid */}
+              <div className="flex flex-col gap-2.5 mb-5">
                 <button
                   onClick={() => setDudas('__custom')}
                   className={cn(
-                    'px-5 py-[14px] rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
+                    'px-5 py-3 rounded-[14px] cursor-pointer text-left border-2 font-sans text-[14px] text-muted-foreground transition-[border-color,background] duration-150',
                     dudas === '__custom'
                       ? 'border-primary bg-primary/5'
                       : 'border-border bg-muted'
@@ -590,6 +600,7 @@ function IngresoPageInner() {
             </div>
           )}
 
+          </div>
         </div>
       </>
 

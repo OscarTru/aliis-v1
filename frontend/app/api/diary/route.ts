@@ -66,6 +66,13 @@ export async function POST(req: Request) {
       ? (body.symptoms as ExtractedSymptom[]).filter(s => typeof s.name === 'string')
       : []
 
+    const MAX_SYMPTOMS = 50
+    if (confirmedSymptoms.length > MAX_SYMPTOMS) {
+      return Response.json({ error: 'Demasiados síntomas en una sola petición' }, { status: 400 })
+    }
+
+    const validSymptoms = confirmedSymptoms.filter(s => s.name.length <= 200)
+
     const { data: log, error: logError } = await supabase
       .from('symptom_logs')
       .insert({
@@ -85,7 +92,7 @@ export async function POST(req: Request) {
     if (logError) return Response.json({ error: 'Error al guardar' }, { status: 500 })
 
     const now = new Date().toISOString()
-    for (const symptom of confirmedSymptoms) {
+    for (const symptom of validSymptoms) {
       const { data: existing } = await supabase
         .from('tracked_symptoms')
         .select('id, occurrences')

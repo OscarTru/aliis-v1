@@ -10,16 +10,36 @@ export default function CompartirPage() {
   const [url, setUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [denied, setDenied] = useState(false)
 
   useEffect(() => {
     async function generate() {
       const supabase = createClient()
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+
+      // Verify ownership before updating
+      const { data: pack } = await supabase
+        .from('packs')
+        .select('id')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (!pack) {
+        setDenied(true)
+        setLoading(false)
+        return
+      }
+
       const token = crypto.randomUUID()
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       await supabase
         .from('packs')
         .update({ shared_token: token, shared_expires_at: expiresAt })
         .eq('id', id)
+        .eq('user_id', user.id)  // double-filter for defense in depth
       setUrl(`${window.location.origin}/p/${token}`)
       setLoading(false)
     }
@@ -44,6 +64,10 @@ export default function CompartirPage() {
       {loading ? (
         <div className="font-sans text-muted-foreground/60 animate-pulse">
           Generando enlace…
+        </div>
+      ) : denied ? (
+        <div className="font-sans text-[15px] text-destructive">
+          No tienes permiso para compartir esta explicación.
         </div>
       ) : (
         <div className="flex gap-2.5">

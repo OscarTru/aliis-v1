@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { motion } from 'motion/react'
 
 interface Props {
@@ -40,7 +40,7 @@ export function CondicionSugerida({ condiciones, who }: Props) {
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-1.5 font-sans text-[11px] font-medium text-primary group-hover:opacity-80 transition-opacity">
-              <Sparkles size={11} />
+              <Icon icon="solar:stars-bold-duotone" width={12} />
               Generar explicación
             </div>
           </Link>

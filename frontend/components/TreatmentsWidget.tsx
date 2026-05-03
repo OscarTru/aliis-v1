@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useTransition, useEffect } from 'react'
-import { Check, Flame, AlertTriangle, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import type { Treatment, AdherenceLog } from '@/lib/types'
@@ -31,26 +32,47 @@ const SCHEDULE_SLOTS: Record<string, string[]> = {
   other:       [],
 }
 
+// Frequencies that have a fixed schedule and count toward the adherence streak.
+// PRN, as_needed and "other" are excluded from streak math by design.
+const FIXED_FREQS = new Set(['once_daily', 'twice_daily', 'three_daily', 'four_daily'])
+
 function slotKey(t: Treatment, slot: string): string {
   const base = t.dose ? `${t.name} ${t.dose}` : t.name
   return `${base} (${slot})`
 }
 
+/**
+ * Computes the current adherence streak. Always reflects committed days
+ * (yesterday and earlier). Today only adds +1 if every fixed-schedule
+ * dose is already marked taken — so the counter is stable through the
+ * day and grows the moment the user completes today's last dose.
+ */
 function calcStreak(logs: AdherenceLog[], treatments: Treatment[], todayDate: string): number {
-  if (treatments.length === 0) return 0
-  let streak = 0
-  const date = new Date(todayDate + 'T12:00:00')
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(date)
+  const fixed = treatments.filter(t => FIXED_FREQS.has(t.frequency))
+  if (fixed.length === 0) return 0
+
+  const takenLogs = logs.filter(l => l.status !== 'missed')
+
+  function dayIsComplete(dateStr: string): boolean {
+    const dayLogs = new Set(
+      takenLogs.filter(l => l.taken_date === dateStr).map(l => l.medication)
+    )
+    return fixed.every(t =>
+      (SCHEDULE_SLOTS[t.frequency] ?? []).every(slot => dayLogs.has(slotKey(t, slot)))
+    )
+  }
+
+  // Today: only contributes when fully complete; otherwise the streak still
+  // reflects yesterday's run without resetting to 0.
+  const todayComplete = dayIsComplete(todayDate)
+
+  let streak = todayComplete ? 1 : 0
+  const cursor = new Date(todayDate + 'T12:00:00')
+  for (let i = 1; i < 365; i++) {
+    const d = new Date(cursor)
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().slice(0, 10)
-    const dayLogs = new Set(logs.filter(l => l.taken_date === dateStr).map(l => l.medication))
-    const allTaken = treatments.every(t => {
-      const slots = SCHEDULE_SLOTS[t.frequency] ?? []
-      if (slots.length === 0) return true
-      return slots.every(slot => dayLogs.has(slotKey(t, slot)))
-    })
-    if (!allTaken) break
+    if (!dayIsComplete(dateStr)) break
     streak++
   }
   return streak
@@ -67,7 +89,9 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
   const [, startTransition] = useTransition()
 
   const missingDose = treatments.filter(t => !t.dose?.trim())
+  const missingFreq = treatments.filter(t => t.frequency === 'other' && !t.frequency_label?.trim())
   const [showDoseToast, setShowDoseToast] = useState(false)
+  const [showFreqToast, setShowFreqToast] = useState(false)
 
   useEffect(() => {
     if (missingDose.length > 0) {
@@ -75,6 +99,13 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
       return () => clearTimeout(t)
     }
   }, [missingDose.length])
+
+  useEffect(() => {
+    if (missingFreq.length > 0) {
+      const t = setTimeout(() => setShowFreqToast(true), 1400)
+      return () => clearTimeout(t)
+    }
+  }, [missingFreq.length])
 
   if (treatments.length === 0) return null
 
@@ -85,13 +116,17 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
   treatments.forEach(t => (SLOT_COLS[t.frequency] ?? []).forEach(s => usedCols.add(s.col)))
   const activeCols = [1, 2, 3, 4].filter(c => usedCols.has(c))
 
-  // Check if all scheduled doses for today are taken
-  const allDoneTodayTreatments = treatments.filter(t => (SCHEDULE_SLOTS[t.frequency] ?? []).length > 0)
-  const allDoneToday = allDoneTodayTreatments.length > 0 && allDoneTodayTreatments.every(t =>
+  // Streak only triggers when EVERY fixed-schedule medication is fully taken today.
+  // PRN/as-needed/other don't gate the streak — they have no fixed obligation.
+  const fixedTreatments = treatments.filter(t => FIXED_FREQS.has(t.frequency))
+  const allDoneToday = fixedTreatments.length > 0 && fixedTreatments.every(t =>
     (SCHEDULE_SLOTS[t.frequency] ?? []).every(slot => takenToday.has(slotKey(t, slot)))
   )
 
-  const streak = allDoneToday ? calcStreak(logs, treatments, todayDate) : 0
+  // Streak is computed from history regardless of whether today is fully
+  // complete — so the counter is visible the whole day and updates the
+  // moment the last dose is checked.
+  const streak = calcStreak(logs, treatments, todayDate)
 
   function toggleSlot(t: Treatment, slot: string) {
     const key = slotKey(t, slot)
@@ -113,13 +148,19 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
     })
   }
 
+  // Narrative date — "Hoy · martes 5 de mayo"
+  const todayLabel = (() => {
+    const d = new Date(todayDate + 'T12:00:00')
+    return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  })()
+
   return (
     <div className={`rounded-2xl border bg-card p-4 transition-all duration-300 ${allDoneToday ? 'border-emerald-500/30' : 'border-border'}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-0.5">
-            Tratamientos
+            Hoy · {todayLabel}
           </p>
           <h3 className="font-serif text-[15px] text-foreground leading-none">
             Mis <em>medicamentos</em>
@@ -147,14 +188,21 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
               <div className="min-w-0 flex items-center min-h-[38px]">
                 <div>
                   <p className="font-sans text-[13px] font-medium text-foreground leading-tight truncate">
-                    {t.name}
+                    {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
                   </p>
-                  {t.dose
-                    ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
-                    : <p className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1">
-                        <AlertTriangle className="w-2.5 h-2.5" /> falta la dosis
-                      </p>
-                  }
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {t.dose
+                      ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
+                      : <p className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1">
+                          <Icon icon="solar:danger-triangle-bold-duotone" width={11} /> falta dosis
+                        </p>
+                    }
+                    {t.frequency === 'other' && !t.frequency_label?.trim() && (
+                      <Link href="/tratamientos" className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1 no-underline hover:text-amber-500 transition-colors">
+                        <Icon icon="solar:danger-triangle-bold-duotone" width={11} /> definir frecuencia →
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -186,27 +234,44 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
         })}
       </div>
 
-      {/* Streak banner — shown when all taken today */}
-      {allDoneToday && (
-        <div className="mt-3 pt-3 border-t border-emerald-500/20 flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
-            <Flame className="w-4 h-4 text-amber-500" />
-          </div>
+      {/* Streak banner — visible whenever the streak is alive, not just when
+          today is fully complete. The subtitle adapts to remind the user
+          there's still doses pending today. */}
+      {streak > 0 && (
+        <div className={`mt-3 pt-3 border-t flex items-center gap-2 ${allDoneToday ? 'border-emerald-500/20' : 'border-border'}`}>
+          <motion.div
+            key={streak}
+            initial={{ scale: 0.7, opacity: 0.6 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+            className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0"
+          >
+            <Icon icon="solar:fire-bold-duotone" width={20} />
+          </motion.div>
           <div>
-            <p className="font-sans text-[12px] font-medium text-foreground leading-tight">
+            <motion.p
+              key={`streak-${streak}`}
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="font-sans text-[12px] font-medium text-foreground leading-tight"
+            >
               {streak} {streak === 1 ? 'día' : 'días'} seguidos
-            </p>
+            </motion.p>
             <p className="font-mono text-[10px] text-muted-foreground/50">
-              Todo al día — ¡así se hace!
+              {allDoneToday
+                ? 'Todo al día — ¡así se hace!'
+                : 'Termina las tomas de hoy para sumar uno más'}
             </p>
           </div>
         </div>
       )}
 
-      {/* Toast — missing dose warning */}
-      <AnimatePresence>
+      {/* Toasts — missing info warnings */}
+      <AnimatePresence mode="sync">
         {showDoseToast && (
           <motion.div
+            key="dose-toast"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -214,12 +279,12 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
           >
             <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <Icon icon="solar:danger-triangle-bold-duotone" width={14} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">
                 {missingDose.length === 1
-                  ? `¿Cuánto de ${missingDose[0].name} tomas?`
+                  ? `¿Cuánto de ${missingDose[0].name.charAt(0).toUpperCase() + missingDose[0].name.slice(1)} tomas?`
                   : `${missingDose.length} medicamentos sin dosis registrada`}
               </p>
               <p className="font-sans text-[11px] text-muted-foreground/70 leading-relaxed">
@@ -231,6 +296,39 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             </div>
             <button
               onClick={() => setShowDoseToast(false)}
+              className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors border-none bg-transparent cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          </motion.div>
+        )}
+        {showFreqToast && (
+          <motion.div
+            key="freq-toast"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+            className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
+          >
+            <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <Icon icon="solar:danger-triangle-bold-duotone" width={14} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">
+                {missingFreq.length === 1
+                  ? `¿Con qué frecuencia tomas ${missingFreq[0].name.charAt(0).toUpperCase() + missingFreq[0].name.slice(1)}?`
+                  : `${missingFreq.length} medicamentos sin frecuencia definida`}
+              </p>
+              <p className="font-sans text-[11px] text-muted-foreground/70 leading-relaxed">
+                Define la frecuencia en{' '}
+                <Link href="/tratamientos" className="text-amber-500 underline-offset-2 underline">
+                  tus tratamientos
+                </Link>{' '}para llevar el seguimiento correcto.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowFreqToast(false)}
               className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors border-none bg-transparent cursor-pointer"
             >
               <X size={13} />

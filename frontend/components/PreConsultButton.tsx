@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ClipboardList, Copy, Check, ExternalLink, X } from 'lucide-react'
+import { Copy, Check, ExternalLink, X } from 'lucide-react'
+import { Icon } from '@iconify/react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const LOADING_PHRASES = [
   'Preparando consulta',
@@ -92,39 +94,42 @@ export function PreConsultButton({ packId, iconOnly }: Props) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // If no token yet, the click triggers generate(). If token exists, click opens the popover.
+  // Radix Popover handles open state when there's a token; otherwise the button generates first.
+  const triggerButton = (
+    <motion.button
+      onClick={token ? undefined : generate}
+      disabled={loading}
+      whileTap={{ scale: 0.96 }}
+      className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground disabled:opacity-80 cursor-pointer relative overflow-visible"
+    >
+      <span className="shrink-0 flex">
+        <Icon icon="solar:clipboard-check-bold-duotone" width={14} />
+      </span>
+      <span className={iconOnly === 'mobile' ? 'hidden md:inline-flex' : 'inline-flex'}>
+        {loading ? (
+          <CyclingText />
+        ) : (
+          <span>{token ? 'Ver resumen' : 'Preparar consulta'}</span>
+        )}
+      </span>
+    </motion.button>
+  )
+
   return (
-    <div className="relative">
-      <motion.button
-        onClick={token ? () => setShowPanel(p => !p) : generate}
-        disabled={loading}
-        whileTap={{ scale: 0.96 }}
-        className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground disabled:opacity-80 cursor-pointer relative overflow-visible"
-      >
-        <span className="shrink-0 flex">
-          <ClipboardList className="w-[13px] h-[13px]" />
-        </span>
-
-        <span className={iconOnly === 'mobile' ? 'hidden md:inline-flex' : 'inline-flex'}>
-          {loading ? (
-            <CyclingText />
-          ) : (
-            <span>{token ? 'Ver resumen' : 'Preparar consulta'}</span>
-          )}
-        </span>
-      </motion.button>
-
-      <AnimatePresence>
-        {showPanel && shareUrl && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute top-[calc(100%+10px)] right-0 w-[300px] rounded-2xl border border-border bg-card shadow-xl p-4 space-y-3 z-50"
+    <div className="relative inline-flex">
+      {token && shareUrl ? (
+        <Popover open={showPanel} onOpenChange={setShowPanel}>
+          <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={10}
+            collisionPadding={12}
+            className="w-[min(320px,calc(100vw-1.5rem))] p-4 space-y-3"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-primary shrink-0" />
+                <Icon icon="solar:clipboard-check-bold-duotone" width={16} className="text-primary shrink-0" />
                 <p className="font-sans text-[13px] font-medium text-foreground">Resumen listo</p>
               </div>
               <button
@@ -159,9 +164,11 @@ export function PreConsultButton({ packId, iconOnly }: Props) {
             </div>
 
             <p className="font-mono text-[10px] text-muted-foreground/40 text-center">Válido 7 días</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </PopoverContent>
+        </Popover>
+      ) : (
+        triggerButton
+      )}
 
       {error && (
         <p className="absolute top-[calc(100%+8px)] left-0 font-sans text-[11px] text-destructive bg-background border border-border px-2 py-1 rounded-lg whitespace-nowrap z-50">

@@ -2,6 +2,7 @@ import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { logLlmUsage } from '@/lib/llm-usage'
 import { logger } from '@/lib/logger'
+import { rateLimit } from '@/lib/rate-limit'
 import { HAIKU_4_5 } from '@/lib/ai-models'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
@@ -54,6 +55,14 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const rl = await rateLimit(`user:${user.id}:notes-generate`, 20, 3600)
+  if (!rl.ok) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes — intenta más tarde' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
     })
   }
 

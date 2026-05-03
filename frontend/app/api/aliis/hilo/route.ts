@@ -1,12 +1,21 @@
 import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { models } from '@/lib/ai-providers'
+import { rateLimit } from '@/lib/rate-limit'
 import type { SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export async function POST(req: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+
+  const rl = await rateLimit(`user:${user.id}:hilo`, 5, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   // Check monthly cache
   const thisMonth = new Date().toISOString().slice(0, 7)
@@ -25,7 +34,7 @@ export async function POST(req: Request) {
   const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
   const [profileRes, packsRes, logsRes, trackedRes, medRes, treatmentsRes] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     supabase.from('packs').select('dx, created_at').eq('user_id', user.id).order('created_at', { ascending: true }),
     supabase.from('symptom_logs').select('*').eq('user_id', user.id).gte('logged_at', since90).order('logged_at', { ascending: true }),
     supabase.from('tracked_symptoms').select('name, occurrences, resolved, needs_medical_attention').eq('user_id', user.id).order('first_seen_at', { ascending: true }),
@@ -91,6 +100,8 @@ Reglas:
 - Habla en segunda persona (tú, has, tienes)
 - Primera persona para lo que observas ("he seguido", "noto que", "lo que me llama la atención")
 - 4-6 oraciones. No más.
+- Empieza directo con la narrativa. NO uses títulos, encabezados con "#", ni etiquetas tipo "El Hilo de [nombre]" ni "Querido [nombre]"
+- NO repitas el nombre del usuario. Solo úsalo si es absolutamente necesario y como máximo una sola vez en todo el texto
 - Menciona diagnósticos específicos si los hay — no generalices
 - Si hay síntomas resueltos: celébralo
 - Si hay síntomas activos con atención médica: menciónalo con cuidado
@@ -124,21 +135,35 @@ ${vitalsLines.join('\n') || 'Sin registros'}
 
 Genera El Hilo para este usuario.`
 
-  const { text } = await generateText({
-    model: models.insight,
-    system: systemPrompt,
-    prompt: userMessage,
-    maxOutputTokens: 250,
-  })
+  try {
+    const { text } = await generateText({
+      model: models.insight,
+      system: systemPrompt,
+      prompt: userMessage,
+      maxOutputTokens: 250,
+    })
 
-  const content = text.trim()
+    const content = text.trim()
+    if (!content) {
+      return Response.json({ error: 'Sin contenido' }, { status: 502 })
+    }
 
-  await supabase.from('aliis_insights').insert({
-    user_id: user.id,
-    content,
-    type: 'hilo',
-    data_window: { packs: packs.length, logs: logs.length, tracked: tracked.length },
-  })
+    await supabase.from('aliis_insights').insert({
+      user_id: user.id,
+      content,
+      type: 'hilo',
+      data_window: { packs: packs.length, logs: logs.length, tracked: tracked.length },
+    })
 
-  return Response.json({ content, generatedAt: new Date().toISOString(), cached: false })
+    return Response.json({ content, generatedAt: new Date().toISOString(), cached: false })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    const stack = err instanceof Error ? err.stack : undefined
+    console.error('[aliis/hilo] generation failed:', message, stack)
+    const isDev = process.env.NODE_ENV === 'development'
+    return Response.json(
+      { error: 'No se pudo generar El Hilo', ...(isDev && { detail: message }) },
+      { status: 502 }
+    )
+  }
 }

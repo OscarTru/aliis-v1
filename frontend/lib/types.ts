@@ -205,6 +205,9 @@ export interface AdherenceLog {
   medication: string
   taken_date: string
   taken_at: string
+  // Added 2026-05-03: explicit status so the daily-close cron can mark
+  // missed doses. Pre-migration rows default to 'taken'.
+  status?: 'taken' | 'missed'
 }
 
 export interface AppNotification {

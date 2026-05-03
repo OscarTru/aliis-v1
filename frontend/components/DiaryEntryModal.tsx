@@ -93,7 +93,7 @@ export function DiaryEntryModal({ open, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-[20px]">
             {step === 'write' ? 'Diario libre' : 'Síntomas detectados'}

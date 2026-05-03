@@ -1,7 +1,10 @@
 'use client'
 
-import { motion, AnimatePresence } from 'motion/react'
 import { AlertTriangle } from 'lucide-react'
+import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -25,27 +28,19 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-            onClick={onCancel}
-          />
-          <div className="fixed inset-0 z-[61] flex items-center justify-center px-4 pointer-events-none">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
+      <DialogPortal>
+        <DialogOverlay />
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none">
+          <DialogPrimitive.Content asChild>
             <motion.div
-              key="dialog"
               initial={{ opacity: 0, scale: 0.94, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 8 }}
               transition={{ duration: 0.16, ease: 'easeOut' }}
               className="w-full max-w-[340px] bg-background border border-border rounded-2xl shadow-xl p-6 pointer-events-auto"
             >
+              <VisuallyHidden><DialogPrimitive.Title>{title}</DialogPrimitive.Title></VisuallyHidden>
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
                   variant === 'danger' ? 'bg-destructive/10' : 'bg-amber-500/10'
@@ -86,9 +81,9 @@ export function ConfirmDialog({
                 </div>
               </div>
             </motion.div>
-          </div>
-        </>
-      )}
-    </AnimatePresence>
+          </DialogPrimitive.Content>
+        </div>
+      </DialogPortal>
+    </Dialog>
   )
 }

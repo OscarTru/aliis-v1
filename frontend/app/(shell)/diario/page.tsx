@@ -148,10 +148,8 @@ export default async function DiarioPage() {
           {/* El Hilo */}
           <ElHilo userId={uid} />
 
-          {/* Correlation analysis — Pro only */}
-          {userPlan === 'pro' && (
-            <CorrelationAnalysis userId={uid} />
-          )}
+          {/* Correlation analysis — Pro feature, upsell for free */}
+          <CorrelationAnalysis userId={uid} userPlan={userPlan} />
         </div>
 
       </div>

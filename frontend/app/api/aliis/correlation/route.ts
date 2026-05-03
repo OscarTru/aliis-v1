@@ -1,12 +1,21 @@
 import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { models } from '@/lib/ai-providers'
+import { rateLimit } from '@/lib/rate-limit'
 import type { SymptomLog, AdherenceLog } from '@/lib/types'
 
 export async function GET(request: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+
+  const rl = await rateLimit(`user:${user.id}:correlation`, 20, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   // Pro only
   const { data: profile } = await supabase

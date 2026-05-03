@@ -216,7 +216,7 @@ export function ChatDrawer({
       <div
         onClick={() => setChatOpen(false)}
         className={cn(
-          'fixed inset-0 z-30 bg-foreground/20 transition-opacity duration-300 md:hidden',
+          'fixed inset-x-0 top-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 bg-foreground/20 transition-opacity duration-300 md:hidden',
           chatOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
       />
@@ -224,7 +224,8 @@ export function ChatDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-40 h-[100dvh] w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
+          'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
+          'h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:h-[100dvh]',
           chatOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
       >
@@ -329,7 +330,7 @@ export function ChatDrawer({
             </div>
 
             {/* Input */}
-            <div className="px-4 pb-4 pt-3 border-t border-border shrink-0">
+            <div className="px-4 pt-3 pb-4 border-t border-border shrink-0">
               <div className="flex gap-2 items-center bg-background border border-border rounded-2xl px-4 py-2.5 focus-within:border-foreground/30 transition-colors">
                 <textarea
                   ref={textareaRef}
