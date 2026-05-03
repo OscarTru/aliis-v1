@@ -26,38 +26,33 @@ const PRICES: Record<Cadence, Record<Currency, { display: string; sub: string }>
 }
 
 const FREE_FEATURES = [
-  { text: '2 explicaciones por semana', icon: 'solar:document-text-bold-duotone' },
+  { text: '2 expedientes por semana', icon: 'solar:document-text-bold-duotone' },
   { text: 'Referencias científicas verificables', icon: 'solar:link-bold-duotone' },
   { text: 'Biblioteca de diagnósticos', icon: 'solar:library-bold-duotone' },
-  { text: 'Registro de tratamientos', icon: 'solar:pill-bold-duotone' },
-  { text: 'Racha de adherencia', icon: 'solar:fire-bold-duotone' },
-  { text: 'Leer explicaciones compartidas', icon: 'solar:share-bold-duotone' },
+  { text: 'Diario de síntomas', icon: 'solar:notebook-bold-duotone' },
+  { text: 'Registro de tratamientos + racha', icon: 'solar:pill-bold-duotone' },
+  { text: 'Asistente IA (5 preguntas/día)', icon: 'solar:chat-round-dots-bold-duotone' },
 ]
 
 const PRO_FEATURES = [
-  { text: 'Explicaciones ilimitadas', sub: 'sin contadores, sin fricción', icon: 'solar:infinity-bold-duotone' },
-  { text: 'Asistente IA por capítulo', sub: 'pregunta lo que no quedó claro', icon: 'solar:chat-round-dots-bold-duotone' },
+  { text: 'Expedientes ilimitados', sub: 'sin contadores, sin fricción', icon: 'solar:infinity-bold-duotone' },
+  { text: 'Asistente IA ilimitado', sub: 'pregunta cuanto quieras, sin tope diario', icon: 'solar:chat-round-dots-bold-duotone' },
   { text: 'Preparar consulta con tu médico', sub: 'resumen personalizado para llevar', icon: 'solar:stethoscope-bold-duotone' },
-  { text: 'Mi diario de síntomas', sub: 'registra y visualiza tu evolución', icon: 'solar:notebook-bold-duotone' },
-  { text: 'Análisis mensual de salud', sub: 'patrones y tendencias de tus síntomas', icon: 'solar:chart-2-bold-duotone' },
-  { text: 'Revisión IA de tratamientos', sub: 'interacciones y ajustes sugeridos', icon: 'solar:health-bold-duotone' },
-  { text: 'Historial permanente', sub: 'todos tus diagnósticos siempre disponibles', icon: 'solar:archive-bold-duotone' },
+  { text: 'Diario de síntomas y tratamientos', sub: 'igual que en Gratis, siempre incluido', icon: 'solar:notebook-bold-duotone' },
+  { text: 'Historial permanente', sub: 'todos tus expedientes siempre disponibles', icon: 'solar:archive-bold-duotone' },
   { text: 'Compartir tu expediente', sub: 'con familiares, pareja o médicos', icon: 'solar:users-group-two-rounded-bold-duotone' },
   { text: 'Referencias DOI, PubMed y guías clínicas', sub: 'desplegables en cada capítulo', icon: 'solar:diploma-bold-duotone' },
   { text: 'Soporte prioritario', sub: 'respondemos en menos de 24 h', icon: 'solar:headphones-round-sound-bold-duotone' },
 ]
 
 const COMPARISON_ROWS: { label: string; free: string; pro: string }[] = [
-  { label: 'Explicaciones por semana', free: '2', pro: 'Ilimitadas' },
+  { label: 'Expedientes por semana', free: '2', pro: 'Ilimitados' },
   { label: 'Referencias verificables (DOI, PubMed)', free: '✓', pro: '✓ desplegables' },
   { label: 'Historial de diagnósticos', free: '30 días', pro: 'Permanente' },
-  { label: 'Registro de tratamientos', free: '✓', pro: '✓' },
-  { label: 'Racha de adherencia', free: '✓', pro: '✓' },
-  { label: 'Asistente IA por capítulo', free: '—', pro: '✓' },
+  { label: 'Diario de síntomas', free: '✓', pro: '✓' },
+  { label: 'Control de tratamientos + racha', free: '✓', pro: '✓' },
+  { label: 'Asistente IA por capítulo', free: '5 preguntas/día', pro: 'Ilimitado' },
   { label: 'Preparar consulta', free: '—', pro: '✓' },
-  { label: 'Análisis mensual', free: '—', pro: '✓' },
-  { label: 'Revisión IA de tratamientos', free: '—', pro: '✓' },
-  { label: 'Diario de síntomas', free: '—', pro: '✓' },
   { label: 'Compartir expediente', free: '—', pro: '✓' },
   { label: 'Soporte prioritario', free: '—', pro: '✓' },
 ]
