@@ -174,6 +174,37 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'invoice.payment_failed': {
+        // A scheduled charge failed (expired card, insufficient funds, 3DS).
+        // Stripe will retry on its smart retry schedule; meanwhile, mirror the
+        // subscription status to the profile so we don't keep a Pro on the app
+        // while their billing is broken.
+        const invoice = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null }
+        const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
+        if (!customerId) break
+
+        let subscriptionStatus: string | null = null
+        const subRef = invoice.subscription
+        const subId = typeof subRef === 'string' ? subRef : subRef?.id ?? null
+        if (subId) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(subId)
+            subscriptionStatus = sub.status
+          } catch (err) {
+            logger.error({ err, subId }, '[stripe webhook] failed to retrieve subscription on payment_failed')
+          }
+        }
+
+        // Don't downgrade unilaterally — `subscription.updated` will handle that
+        // when Stripe transitions to past_due/unpaid/canceled. We just record
+        // the status for visibility in the user's account page.
+        await admin
+          .from('profiles')
+          .update({ subscription_status: subscriptionStatus ?? 'past_due' })
+          .eq('stripe_customer_id', customerId)
+        break
+      }
+
       default:
         // Unhandled event type — ignore
         break

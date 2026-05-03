@@ -113,12 +113,24 @@ ${adherenceLines || 'Sin registros de adherencia'}
 
 Analiza si hay patrones entre la adherencia a medicamentos y los valores de signos vitales. Sé específico con fechas o tendencias si las ves.`
 
-  const { text } = await generateText({
-    model: models.insight,
-    system: systemPrompt,
-    prompt: userMessage,
-    maxOutputTokens: 200,
-  })
+  // 30s timeout — Haiku with 200 tokens normally finishes in 3-6s.
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+  let text: string
+  try {
+    const result = await generateText({
+      model: models.insight,
+      system: systemPrompt,
+      prompt: userMessage,
+      maxOutputTokens: 200,
+      abortSignal: controller.signal,
+    })
+    text = result.text
+  } catch {
+    return Response.json({ error: 'No pudimos generar el análisis ahora. Intenta en un momento.' }, { status: 504 })
+  } finally {
+    clearTimeout(timeout)
+  }
 
   return Response.json({ content: text.trim(), days, dataPoints: logs.length + adherenceLogs.length })
 }

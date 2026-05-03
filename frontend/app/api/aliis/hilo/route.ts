@@ -2,6 +2,7 @@ import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { models } from '@/lib/ai-providers'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 import type { SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export async function POST(req: Request) {
@@ -157,13 +158,10 @@ Genera El Hilo para este usuario.`
 
     return Response.json({ content, generatedAt: new Date().toISOString(), cached: false })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    const stack = err instanceof Error ? err.stack : undefined
-    console.error('[aliis/hilo] generation failed:', message, stack)
-    const isDev = process.env.NODE_ENV === 'development'
-    return Response.json(
-      { error: 'No se pudo generar El Hilo', ...(isDev && { detail: message }) },
-      { status: 502 }
-    )
+    // Log server-side (Sentry will pick it up); never echo internal details
+    // back to the client. Even in dev, leaking through the API hides bugs
+    // and trains us to ignore the real (server) logs.
+    logger.error({ err }, '[aliis/hilo] generation failed')
+    return Response.json({ error: 'No se pudo generar El Hilo' }, { status: 502 })
   }
 }

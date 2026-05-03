@@ -100,17 +100,35 @@ REGLAS:
     })
 
     const cleaned = text.trim().replace(/```json|```/g, '').trim()
-    const parsed = JSON.parse(cleaned)
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(cleaned)
+    } catch {
+      // Fail-closed: if the LLM returns non-JSON, we cannot trust silence.
+      // Surface a soft warning so the user knows we couldn't validate.
+      return Response.json({
+        nameNormalized: safeName,
+        nameConfidence: 'low',
+        unit: '',
+        doseNormalized: safeDose,
+        warning: true,
+        warningLevel: 'caution',
+        warningMessage:
+          'No pudimos validar esta dosis automáticamente. Revísala con tu médico o farmacéutico antes de tomarla.',
+      })
+    }
     return Response.json(parsed)
   } catch {
+    // Same fail-closed posture for any other error (network, model timeout, etc.).
     return Response.json({
       nameNormalized: safeName,
-      nameConfidence: 'high',
+      nameConfidence: 'low',
       unit: '',
       doseNormalized: safeDose,
-      warning: false,
-      warningLevel: 'none',
-      warningMessage: '',
+      warning: true,
+      warningLevel: 'caution',
+      warningMessage:
+        'No pudimos validar esta dosis automáticamente. Revísala con tu médico o farmacéutico antes de tomarla.',
     })
   }
 }

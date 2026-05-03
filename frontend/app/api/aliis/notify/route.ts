@@ -132,10 +132,17 @@ export async function GET(req: Request) {
     url: string
   }> = []
   const expiredEndpoints: string[] = []
+  const pushPayloads: Array<{ endpoint: string; p256dh: string; auth: string; body: string }> = []
 
-  for (const userId of shardedUserIds) {
-    if (alreadyNotified.has(userId)) { skipped++; continue }
+  // ---- Phase 1: generate insights with bounded concurrency ----
+  // Each Anthropic call takes 1-3s. Running them sequentially for 200 users
+  // would push the cron beyond Vercel's function timeout (60s on Pro). With
+  // concurrency 6 we finish 200 generations in ~30-90s.
+  const CONCURRENCY = 6
+  const usersToProcess = shardedUserIds.filter(id => !alreadyNotified.has(id))
+  skipped = shardedUserIds.length - usersToProcess.length
 
+  async function processUser(userId: string): Promise<void> {
     let content = cacheByUser.get(userId) ?? null
 
     if (!content) {
@@ -160,7 +167,7 @@ export async function GET(req: Request) {
         content = (message.content[0] as { type: string; text: string }).text.trim()
       } catch {
         skipped++
-        continue
+        return
       }
 
       insightsToInsert.push({
@@ -186,21 +193,38 @@ export async function GET(req: Request) {
         url: '/diario?registrar=1',
       }
     )
-
     sent++
 
     const sub = subsByUser.get(userId)
-    if (sub) {
-      const result = await sendPushNotification(sub, {
-        title: 'Aliis',
-        body: content.slice(0, 120),
-        url: '/diario',
-      })
-      if (!result.ok && result.expired) {
-        expiredEndpoints.push(sub.endpoint)
-      }
-    }
+    if (sub) pushPayloads.push({ ...sub, body: content.slice(0, 120) })
   }
+
+  // Pool runner — keeps CONCURRENCY workers active until queue drains.
+  let cursor = 0
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, usersToProcess.length) }, async () => {
+      while (cursor < usersToProcess.length) {
+        const idx = cursor++
+        await processUser(usersToProcess[idx])
+      }
+    })
+  )
+
+  // ---- Phase 2: fan out push notifications in parallel ----
+  // Web push is network-bound; allSettled lets us tolerate partial failures.
+  const pushResults = await Promise.allSettled(
+    pushPayloads.map(p =>
+      sendPushNotification(
+        { endpoint: p.endpoint, p256dh: p.p256dh, auth: p.auth },
+        { title: 'Aliis', body: p.body, url: '/diario' }
+      )
+    )
+  )
+  pushResults.forEach((r, i) => {
+    if (r.status === 'fulfilled' && !r.value.ok && r.value.expired) {
+      expiredEndpoints.push(pushPayloads[i].endpoint)
+    }
+  })
 
   // Single round trip per write category
   if (insightsToInsert.length > 0) {
