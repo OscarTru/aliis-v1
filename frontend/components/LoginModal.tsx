@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
 import Image from 'next/image'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -209,7 +209,10 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-8 border border-border bg-background shadow-2xl max-h-[92vh] overflow-y-auto">
+      <DialogPortal>
+        <DialogOverlay />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div className="relative w-full sm:max-w-[400px] bg-background rounded-2xl border border-border shadow-2xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 pointer-events-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
         {/* Logo — siempre visible */}
@@ -429,7 +432,9 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
           )}
 
         </AnimatePresence>
-      </DialogContent>
+        </div>
+        </div>
+      </DialogPortal>
     </Dialog>
   )
 }

@@ -166,7 +166,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogPortal>
         <DialogOverlay />
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(64px+env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
         <div
           className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] pointer-events-auto"
         >
@@ -289,17 +289,17 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
               <div className="flex-1">
                 <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">Medicamento *</label>
                 <input
-                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
                   placeholder="Ej: Metformina"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  autoFocus={!isEdit}
+                  autoFocus={false}
                 />
               </div>
               <div className="w-28">
                 <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">Dosis</label>
                 <input
-                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
                   placeholder="500 mg"
                   value={dose}
                   onChange={e => { setDose(e.target.value); setConfirmedDose(false) }}
@@ -310,7 +310,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
             <div>
               <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">¿Cuándo lo toma?</label>
               <select
-                className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
                 value={frequency}
                 onChange={e => setFrequency(e.target.value as TreatmentFrequency)}
               >
@@ -320,7 +320,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
 
             {frequency === 'other' && (
               <input
-                className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[14px] focus:outline-none focus:border-primary/50 text-foreground"
+                className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
                 placeholder="Describe la frecuencia"
                 value={frequencyLabel}
                 onChange={e => setFrequencyLabel(e.target.value)}
