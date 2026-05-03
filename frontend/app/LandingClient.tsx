@@ -80,15 +80,15 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
       <Glow />
       <div className="relative max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[1.1fr_.9fr] gap-8 md:gap-14 items-center">
         <div className="ce-fade">
-          <Eyebrow style={{ marginBottom: 22 }}>· AI Assistant · Salud cerebral ·</Eyebrow>
+          <Eyebrow style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
             Saliste de la consulta sin entender nada.{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>Aliis no te deja solo.</em>
+            <em style={{ color: 'var(--c-text-faint)' }}>Aliis te lo explica.</em>
           </h1>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.75, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 0 32px' }}>
-            Aliis te acompaña de la consulta a lo que sigue. Tu expediente capítulo a capítulo con fuentes verificables, diario de síntomas, control de tratamientos y asistente IA por capítulo — todo en el mismo lugar.
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '40ch', margin: '0 0 28px' }}>
+            Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
             <button onClick={onCTA}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -100,7 +100,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              Entender mi diagnóstico →
+              Crear mi cuenta gratis →
             </button>
             <button onClick={onVerEjemplo}
               style={{
@@ -112,8 +112,14 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
               Ver un ejemplo real
             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <Capsule tone="teal">✓ Basado en evidencia · PubMed, DOI, guías clínicas</Capsule>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 8 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: '#10b981' }} />
+              Sin tarjeta · Cancelas cuando quieras
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)' }}>
+              · 575k personas en Cerebros Esponjosos
+            </span>
           </div>
         </div>
         <InputPreview onCTA={onCTA} />
@@ -126,27 +132,31 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
 
 function WhatAliisDoes() {
   const items = [
-    { n: '01', t: 'Explica tu diagnóstico', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma, preguntas para tu médico. Todo en el lenguaje que necesitas, con la fuente detrás.' },
-    { n: '02', t: 'Cada afirmación', i: 'viene con su fuente', d: 'PubMed, DOI, guías clínicas. Si no hay evidencia que soporte algo, Aliis te lo dice. Sin inventar nada.' },
-    { n: '03', t: 'Lleva el control', i: 'de tus medicamentos', d: 'Añade tus tratamientos con dosis y horario. Marca las tomas del día y lleva tu racha de adherencia sin depender de tu memoria.' },
-    { n: '04', t: 'Registra cómo', i: 'te sientes cada día', d: 'Escribe en tu diario con tus palabras. Aliis extrae los síntomas automáticamente y construye tu historial para que llegues a la consulta con todo ordenado.' },
-    { n: '05', t: 'Pregúntale', i: 'lo que no quedó claro', d: 'Cada capítulo tiene su propio Asistente IA. Pregunta con tus palabras y Aliis responde en contexto — sin empezar de cero cada vez.' },
+    { n: '01', t: 'Explicaciones claras', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma y preguntas para tu médico. Estructurado, sin paja, en lenguaje que entiendes.' },
+    { n: '02', t: 'Cada afirmación', i: 'con su referencia', d: 'PubMed, DOI, guías clínicas. Antes de responder, un verificador comprueba que la fuente exista. Si no la encuentra, no escribe la frase.' },
+    { n: '03', t: 'Asistente IA', i: 'al lado de cada capítulo', d: 'Pregunta lo que no quedó claro con tus palabras. Responde en contexto del capítulo que estás leyendo, sin volver a explicar todo de cero.' },
+    { n: '04', t: 'Tus tratamientos', i: 'siempre a mano', d: 'Añade dosis y horario. Aliis valida la dosis con IA al añadirla y marca tus tomas del día con racha de adherencia.' },
+    { n: '05', t: 'Diario de síntomas', i: 'y signos vitales', d: 'Escribe cómo te sientes y registra glucosa, presión, FC o peso. Aliis extrae los síntomas automáticamente y los ordena para tu próxima consulta.' },
+    { n: '06', t: 'Biblioteca con', i: '60+ condiciones', d: 'Diagnósticos revisados por residentes de neurología. Si tu médico te mencionó algo y quieres explorarlo antes, está aquí.' },
   ]
   return (
     <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
-          <Eyebrow style={{ marginBottom: 18 }}>· Qué hace Aliis ·</Eyebrow>
+          <Eyebrow style={{ marginBottom: 18 }}>· Lo que viene gratis ·</Eyebrow>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
-            Cinco cosas que necesitas{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>antes de tu próxima cita.</em>
+            Todo esto, sin pagar nada{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>desde el primer día.</em>
           </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', marginTop: 18 }}>
+            Crea tu cuenta y empieza con una explicación esta semana. Tu diario, tus tratamientos y tu asistente IA están incluidos para siempre.
+          </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', borderTop: '1px solid var(--c-border)' }}>
           {items.map((it, i) => (
-            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: i < items.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
+            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: (i + 1) % 3 !== 0 ? '1px solid var(--c-border)' : 'none' }}>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', marginBottom: 18 }}>{it.n}</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
                 {it.t} <em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
               </h3>
               <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
@@ -162,9 +172,9 @@ function WhatAliisDoes() {
 
 function HowItWorks() {
   const steps = [
-    { n: 'Describes', t: 'tu diagnóstico', d: 'Pega el texto de la consulta, escribe el nombre, o busca entre más de 60 condiciones. Aliis lo identifica.' },
-    { n: 'Recibes', t: 'tu expediente completo', d: 'Capítulos estructurados: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico. Cada dato con su fuente.' },
-    { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario de síntomas, el control de tratamientos, el Asistente IA por capítulo. Todo en el mismo lugar, siempre disponible.' },
+    { n: 'Describes', t: 'tu diagnóstico', d: 'Pega lo que te dijo el médico, escribe el nombre o busca en la biblioteca. Aliis lo identifica y prepara tu explicación.' },
+    { n: 'Recibes', t: 'tu explicación', d: 'Seis capítulos con referencias verificables: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico y un mito frecuente.' },
+    { n: 'Sigues desde ahí', t: 'cada día', d: 'Tu diario, tus tratamientos y tu asistente IA por capítulo. Aliis aprende contigo y te prepara para tu próxima consulta.' },
   ]
   return (
     <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
@@ -548,7 +558,7 @@ function LiveExample() {
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 500, lineHeight: 1.2 }}>Migraña con aura</div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', color: 'var(--c-brand-teal-deep)', marginTop: 3 }}>· EXPEDIENTE ALIIS ·</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', color: 'var(--c-brand-teal-deep)', marginTop: 3 }}>· EXPLICACIÓN ALIIS ·</div>
                   </div>
                   <div style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: 999, background: 'rgba(31,138,155,0.08)', border: '1px solid rgba(31,138,155,0.2)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.12em', color: 'var(--c-brand-teal-deep)' }}>
                     3 fuentes · PubMed
@@ -799,53 +809,102 @@ function LiveExample() {
   )
 }
 
-// ─── Lo que llevas contigo ────────────────────────────────────
+// ─── Pro power tools ─────────────────────────────────────────
 
-function CompanionTools() {
+function ProPowerTools({ onCTA }: { onCTA: () => void }) {
   const tools = [
     {
-      icon: 'solar:pills-bold-duotone',
-      title: 'Control de medicamentos',
-      body: 'Registra tus dosis, horarios y racha de adherencia. Sin depender de tu memoria.',
+      icon: 'solar:user-id-bold-duotone',
+      title: 'Personalizadas con tu perfil',
+      body: 'Tus explicaciones consideran tus medicamentos, alergias, condiciones previas, edad y sexo. Aliis no te explica un libro de texto: te explica tu caso.',
     },
     {
-      icon: 'solar:notebook-bold-duotone',
-      title: 'Diario de síntomas',
-      body: 'Escribe cómo te sientes. Aliis extrae síntomas automáticamente y construye tu historial.',
+      icon: 'solar:danger-triangle-bold-duotone',
+      title: 'Detector de inconsistencias',
+      body: 'Si tienes un diagnóstico sin tratamiento, o un tratamiento sin diagnóstico que lo justifique, Aliis te avisa. Una segunda mirada antes de tu próxima consulta.',
+    },
+    {
+      icon: 'solar:graph-new-bold-duotone',
+      title: 'Análisis de correlación',
+      body: 'Cruza tu diario con tus signos vitales (presión, glucosa, FC, peso) y encuentra patrones reales. ¿La cefalea correlaciona con tu presión? Aliis lo ve.',
+    },
+    {
+      icon: 'solar:book-2-bold-duotone',
+      title: 'El Hilo: tu mes en una página',
+      body: 'Tu diario convertido en un resumen narrativo mensual. Lo que cambió, lo que mejoró, lo que sigue ahí. Listo para llevarlo al médico o solo para verte con perspectiva.',
+    },
+    {
+      icon: 'solar:calendar-mark-bold-duotone',
+      title: 'Cápsula del tiempo',
+      body: 'Cada mes, automático y por notificación: cómo van tus vitales comparados con el mes anterior. Datos que importan, sin que tengas que mirarlos tú.',
     },
     {
       icon: 'solar:stethoscope-bold-duotone',
-      title: 'Prepara tu consulta',
-      body: 'Genera un resumen de tus expedientes para llevar a tu médico. Llega con las preguntas correctas.',
-    },
-    {
-      icon: 'solar:fire-bold-duotone',
-      title: 'Racha de adherencia',
-      body: 'Marca tus tomas del día. El sistema lleva la cuenta y celebra cuando no fallas.',
+      title: 'Preparar consulta',
+      body: 'Resumen impreso para llevar al médico: tus síntomas, vitales, tratamientos y dudas pendientes. Que cada cita valga lo que cuesta.',
     },
   ]
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
-      <div className="max-w-[72rem] mx-auto">
-        <div className="mb-14 max-w-[44rem]">
-          <Eyebrow style={{ marginBottom: 18 }}>· Lo que llevas contigo ·</Eyebrow>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', position: 'relative', overflow: 'hidden' }}>
+      {/* Subtle Pro accent */}
+      <div aria-hidden style={{
+        position: 'absolute', top: '-20%', right: '-10%', width: 600, height: 600, borderRadius: 999,
+        background: 'radial-gradient(circle, rgba(31,138,155,.08) 0%, transparent 60%)', pointerEvents: 'none',
+      }} />
+
+      <div className="relative max-w-[72rem] mx-auto">
+        <div className="mb-14 max-w-[48rem]">
+          <Eyebrow style={{ marginBottom: 18 }}>· Pro · Acompañamiento real ·</Eyebrow>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
-            Aliis no termina{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>cuando sales de la consulta.</em>
+            Para quien convive con su diagnóstico,{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>no solo para quien lo entiende.</em>
           </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '54ch', marginTop: 18 }}>
+            Pro convierte Aliis en un acompañante longitudinal: aprende de tu perfil, cruza tus datos, detecta lo que no cuadra y te prepara la próxima visita. Lo que te daría un médico que tuviera tiempo para ti.
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {tools.map((tool, i) => (
-            <article key={i} className="flex gap-5 p-8 rounded-2xl border" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
-              <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)' }}>
-                <Icon icon={tool.icon} width={24} height={24} style={{ color: 'var(--c-brand-teal-deep)' }} />
+            <article
+              key={i}
+              className="p-6 rounded-2xl border transition-colors"
+              style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                style={{ background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)' }}
+              >
+                <Icon icon={tool.icon} width={22} height={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
               </div>
-              <div>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, lineHeight: 1.2, letterSpacing: '-.012em', margin: '0 0 8px' }}>{tool.title}</h3>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{tool.body}</p>
-              </div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 19, lineHeight: 1.2, letterSpacing: '-.012em', margin: '0 0 8px' }}>{tool.title}</h3>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.65, color: 'var(--c-text-muted)', margin: 0 }}>{tool.body}</p>
             </article>
           ))}
+        </div>
+
+        {/* Inline CTA */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 p-8 rounded-2xl border" style={{ background: 'var(--c-surface)', borderColor: 'rgba(31,138,155,0.3)' }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 8 }}>14 días gratis · sin tarjeta</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, lineHeight: 1.25, letterSpacing: '-.015em' }}>
+              Pruébalo gratis dos semanas. Si no es para ti, lo dejas y no pasa nada.
+            </div>
+          </div>
+          <button onClick={onCTA}
+            style={{
+              flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 28px', background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))',
+              boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
+              border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15, cursor: 'pointer',
+              transition: 'opacity .15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            Empezar 14 días gratis →
+          </button>
         </div>
       </div>
     </section>
@@ -1041,7 +1100,7 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
       <HowItWorks />
       <TrustSection />
       <LiveExample />
-      <CompanionTools />
+      <ProPowerTools onCTA={handleMainCTA} />
       <Founders />
       <PricingSection onCTA={() => setShowLogin(true)} />
       <Footer />
