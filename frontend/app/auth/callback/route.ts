@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const inviteCode = searchParams.get('invite')
+  // Optional next destination (e.g. /checkout?plan=eur_monthly). Must be a
+  // same-origin path to prevent open-redirect.
+  const rawNext = searchParams.get('next')
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
 
   if (!code) return NextResponse.redirect(`${origin}/`)
 
@@ -108,14 +112,20 @@ export async function GET(request: NextRequest) {
     if (rows.length > 0) await admin.from('consents').insert(rows)
   }
 
-  // Determine destination: new users → /onboarding, returning → /historial
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('onboarding_done')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  const destination = profile?.onboarding_done ? '/historial' : '/onboarding'
+  // Determine destination
+  // 1) `?next=` wins (used by checkout flow)
+  // 2) New users → /onboarding, returning → /historial
+  let destination: string
+  if (next) {
+    destination = next
+  } else {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('onboarding_done')
+      .eq('id', user.id)
+      .maybeSingle()
+    destination = profile?.onboarding_done ? '/historial' : '/onboarding'
+  }
 
   // Mutate the redirect URL on the same response object that holds the cookies
   response.headers.set('location', `${origin}${destination}`)

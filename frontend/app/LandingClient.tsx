@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppNav } from '../components/AppNav'
 import { Footer } from '../components/Footer'
@@ -856,7 +857,7 @@ function LiveExample() {
 
 // ─── Pro power tools ─────────────────────────────────────────
 
-function ProPowerTools({ onCTA }: { onCTA: () => void }) {
+function ProPowerTools() {
   const tools = [
     {
       icon: 'solar:user-id-bold-duotone',
@@ -936,7 +937,7 @@ function ProPowerTools({ onCTA }: { onCTA: () => void }) {
               Pruébalo gratis dos semanas. Si no es para ti, lo dejas y no pasa nada.
             </div>
           </div>
-          <button onClick={onCTA}
+          <Link href="/checkout/empezar?plan=eur_monthly"
             style={{
               flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -944,12 +945,13 @@ function ProPowerTools({ onCTA }: { onCTA: () => void }) {
               boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
               border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15, cursor: 'pointer',
               transition: 'opacity .15s ease',
+              textDecoration: 'none',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
             Empezar 14 días gratis →
-          </button>
+          </Link>
         </div>
       </div>
     </section>
@@ -1069,23 +1071,44 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
                   </li>
                 ))}
               </ul>
-              <button onClick={onCTA}
-                style={{
-                  padding: '13px 20px', borderRadius: 12,
-                  background: tier.highlight ? 'hsl(var(--secondary))' : 'transparent',
-                  color: tier.highlight ? 'hsl(var(--secondary-foreground))' : 'var(--c-text)',
-                  boxShadow: tier.highlight ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
-                  border: `1px solid ${tier.highlight ? 'transparent' : 'rgba(31,138,155,.35)'}`,
-                  fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-                  transition: 'opacity .15s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-              >
-                {tier.cta}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-              </button>
+              {tier.highlight ? (
+                <Link
+                  href={`/checkout/empezar?plan=${currency.toLowerCase()}_monthly`}
+                  style={{
+                    padding: '13px 20px', borderRadius: 12,
+                    background: 'hsl(var(--secondary))',
+                    color: 'hsl(var(--secondary-foreground))',
+                    boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
+                    border: '1px solid transparent',
+                    fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                    transition: 'opacity .15s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  {tier.cta}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </Link>
+              ) : (
+                <button onClick={onCTA}
+                  style={{
+                    padding: '13px 20px', borderRadius: 12,
+                    background: 'transparent',
+                    color: 'var(--c-text)',
+                    border: '1px solid rgba(31,138,155,.35)',
+                    fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                    transition: 'opacity .15s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  {tier.cta}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </button>
+              )}
             </article>
           ))}
         </div>
@@ -1145,7 +1168,7 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
       <WhatAliisDoes />
       <HowItWorks />
       <TrustSection />
-      <ProPowerTools onCTA={handleMainCTA} />
+      <ProPowerTools />
       <Founders />
       <PricingSection onCTA={() => setShowLogin(true)} />
       <Footer />
