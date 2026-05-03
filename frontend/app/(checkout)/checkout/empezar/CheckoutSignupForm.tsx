@@ -108,22 +108,25 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
     const codeToUse = inviteCode.trim().toUpperCase()
     if (!codeToUse) { setError('El código de invitación es obligatorio.'); setLoading(false); return }
 
-    const claimRes = await fetch('/api/invite/validate', {
+    // Read-only validation. The atomic claim happens in /auth/callback once
+    // we have user.id — that way, if signup fails, the code is NOT consumed.
+    const validateRes = await fetch('/api/invite/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: codeToUse, claim: true }),
+      body: JSON.stringify({ code: codeToUse }),
     })
-    const claimData = await claimRes.json()
-    if (!claimData.valid) {
-      setError(claimData.error ?? 'Código de invitación no válido.')
+    const validateData = await validateRes.json()
+    if (!validateData.valid) {
+      setError(validateData.error ?? 'Código de invitación no válido.')
       setLoading(false)
       return
     }
 
     const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
     const consentTimestamp = new Date().toISOString()
-    // After verification email click, redirect to /checkout?plan=xxx
-    const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/checkout?plan=${priceKey}`)}`
+    // After verification email click, redirect to /checkout?plan=xxx.
+    // We forward the invite code so the callback can claim it atomically.
+    const emailRedirectTo = `${window.location.origin}/auth/callback?invite=${encodeURIComponent(codeToUse)}&next=${encodeURIComponent(`/checkout?plan=${priceKey}`)}`
     const { error: signUpErr } = await supabase.auth.signUp({
       email,
       password,

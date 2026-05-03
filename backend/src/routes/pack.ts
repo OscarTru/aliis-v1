@@ -25,14 +25,12 @@ function isValidRequest(body: unknown): body is GeneratePackRequest {
 }
 
 packRouter.post('/generate', requireAuth, async (req, res) => {
-  console.log('[pack/generate] body:', JSON.stringify(req.body))
   if (!isValidRequest(req.body)) {
-    console.log('[pack/generate] invalid request body')
     res.status(400).json({ error: 'diagnostico y userPlan son requeridos' })
     return
   }
 
-  const { diagnostico, conditionSlug: rawConditionSlug, contexto, userPlan } = req.body
+  const { diagnostico, conditionSlug: rawConditionSlug, contexto } = req.body
   const userId = res.locals.userId
   const dx = diagnostico.trim()
   const conditionSlug = typeof rawConditionSlug === 'string' && rawConditionSlug.trim().length <= 100
@@ -47,6 +45,22 @@ packRouter.post('/generate', requireAuth, async (req, res) => {
     res.status(400).json({ error: 'El diagnóstico no puede superar 500 caracteres' })
     return
   }
+
+  // Always read the plan from the database — never trust the client.
+  // Previous version used `userPlan` from the request body, which let any
+  // free user send `userPlan: "pro"` and bypass the 1-pack/7-days limit.
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', userId)
+    .single()
+
+  if (profileError || !profile) {
+    res.status(500).json({ error: 'Error verificando tu cuenta.' })
+    return
+  }
+
+  const userPlan: 'free' | 'pro' = profile.plan === 'pro' ? 'pro' : 'free'
 
   // Free tier limit: 1 pack per 7 days
   if (userPlan === 'free') {
@@ -68,7 +82,7 @@ packRouter.post('/generate', requireAuth, async (req, res) => {
   }
 
   // Layer 1: classify intent
-  console.log('[pack/generate] classifying intent for:', dx)
+  // Note: never log `dx` — it contains PHI (the diagnosis text).
   let intent
   try {
     intent = await classifyIntent(dx)

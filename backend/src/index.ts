@@ -32,20 +32,37 @@ app.use(cors({
   },
 }))
 
-// Raw body for Stripe webhooks — must come before express.json()
-app.use('/stripe/webhook', express.raw({ type: 'application/json' }))
 app.use(express.json())
 
-app.get('/health', (_req, res) => res.json({ ok: true }))
+app.get('/health', async (_req, res) => {
+  const checks: Record<string, 'ok' | 'error'> = {}
+
+  // Verify Supabase connectivity with a minimal query
+  try {
+    const { error } = await supabase.from('profiles').select('id').limit(1)
+    checks.supabase = error ? 'error' : 'ok'
+  } catch {
+    checks.supabase = 'error'
+  }
+
+  // Verify Anthropic key is present (actual API call is too expensive for a health check)
+  checks.anthropic = process.env.ANTHROPIC_API_KEY ? 'ok' : 'error'
+
+  const allOk = Object.values(checks).every(v => v === 'ok')
+  res.status(allOk ? 200 : 503).json({ ok: allOk, checks, ts: new Date().toISOString() })
+})
 
 import { packRouter } from './routes/pack'
-import { stripeRouter } from './routes/stripe'
 import { requireAuth } from './middleware/auth'
 
 // Auth required for all /pack routes (individual routes also apply requireAuth as defense-in-depth)
 app.use('/pack', requireAuth)
 app.use('/pack', packRouter)
-app.use('/stripe', stripeRouter)
+
+// Stripe webhook lives at frontend/app/api/stripe/webhook (Next.js).
+// That endpoint has idempotency (email_sends UNIQUE), trial_end handling,
+// and welcome email — features missing here. The Stripe dashboard MUST point
+// only to https://aliis.app/api/stripe/webhook, never to this backend.
 
 // Sentry Express error handler must come AFTER all routes/middleware
 Sentry.setupExpressErrorHandler(app)
