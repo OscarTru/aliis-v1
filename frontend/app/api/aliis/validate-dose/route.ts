@@ -6,7 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 function sanitizeInput(value: string, maxLen: number): string {
   return value
     .slice(0, maxLen)
-    .replace(/[`"\n\r]/g, ' ')
+    .replace(/[`"\n\r<>]/g, ' ')
     .trim()
 }
 
@@ -32,8 +32,14 @@ export async function POST(req: Request) {
     )
   }
 
-  const { name, dose } = await req.json()
-  if (!name?.trim()) {
+  let body: { name?: unknown; dose?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return Response.json({ error: 'Solicitud inválida' }, { status: 400 })
+  }
+  const { name, dose } = body
+  if (typeof name !== 'string' || !name.trim()) {
     return Response.json({ error: 'Falta nombre' }, { status: 400 })
   }
 
