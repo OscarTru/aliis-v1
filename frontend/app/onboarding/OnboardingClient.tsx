@@ -1,13 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+
+const LOADING_PHRASES = [
+  'Normalizando tus medicamentos…',
+  'Revisando tu historial médico…',
+  'Preparando tu expediente clínico…',
+  'Casi listo…',
+]
 import { TagInput } from '@/components/ui/TagInput'
 import { saveMedicalProfile, syncOnboardingCondiciones } from '@/app/actions/medical-profile'
 import { syncOnboardingMedications } from '@/app/actions/treatments'
@@ -24,6 +32,17 @@ export default function OnboardingClient() {
   const [name, setName] = useState('')
   const [who, setWho] = useState<'yo' | 'familiar' | null>(null)
   const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+
+  // Rotate loading phrases while syncing
+  useEffect(() => {
+    if (!syncing) return
+    const interval = setInterval(() => {
+      setPhraseIdx(i => (i + 1) % LOADING_PHRASES.length)
+    }, 1800)
+    return () => clearInterval(interval)
+  }, [syncing])
 
   const [medProfile, setMedProfile] = useState({
     medicamentos: [] as string[],
@@ -83,15 +102,20 @@ export default function OnboardingClient() {
         sexo: (medProfile.sexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
       })
 
-      // Sync conditions → normalize names against library + AI, then update medical_profiles
+      // Show loading overlay while AI sync runs (can take a few seconds)
+      setSyncing(true)
+      setPhraseIdx(0)
+
+      // Sync conditions → normalize names against library + AI
       await syncOnboardingCondiciones(medProfile.condiciones_previas)
 
-      // Sync medications → treatments table (best-effort, non-blocking UX)
+      // Sync medications → treatments table
       await syncOnboardingMedications(medProfile.medicamentos)
 
       router.push('/ingreso')
     } finally {
       setSaving(false)
+      setSyncing(false)
     }
   }
 
@@ -280,6 +304,68 @@ export default function OnboardingClient() {
           </div>
         )}
       </main>
+
+      {/* Syncing overlay — shown while AI normalizes medications and conditions */}
+      <AnimatePresence>
+        {syncing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center gap-6"
+          >
+            {/* Pulsing logo */}
+            <motion.div
+              animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
+              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+            >
+              <Image
+                src="/assets/aliis-original.png"
+                alt="Aliis"
+                width={80}
+                height={30}
+                className="object-contain logo-hide-dark"
+              />
+              <Image
+                src="/assets/aliis-black.png"
+                alt="Aliis"
+                width={80}
+                height={30}
+                className="object-contain logo-show-dark"
+              />
+            </motion.div>
+
+            {/* Rotating phrase */}
+            <div className="h-6 overflow-hidden relative w-[260px] text-center">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={phraseIdx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.35 }}
+                  className="font-serif italic text-[15px] text-muted-foreground absolute inset-x-0"
+                >
+                  {LOADING_PHRASES[phraseIdx]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+
+            {/* Progress dots */}
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-primary/40"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

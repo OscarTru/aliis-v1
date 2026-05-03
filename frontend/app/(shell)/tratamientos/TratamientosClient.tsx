@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pill, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Pill, Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react'
 import { deleteTreatment } from '@/app/actions/treatments'
 import { FREQUENCY_LABELS } from '@/lib/types'
 import { AddTreatmentModal } from '@/components/AddTreatmentModal'
@@ -60,34 +60,48 @@ export function TratamientosClient({ initialTreatments }: Props) {
       {/* Compact list */}
       <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
         {treatments.map(t => {
-          const freq = t.frequency === 'other'
-            ? (t.frequency_label ?? 'Otra frecuencia')
-            : FREQUENCY_LABELS[t.frequency]
+          const freqUnconfirmed = t.frequency === 'other' && !t.frequency_label?.trim()
+          const freq = freqUnconfirmed
+            ? null
+            : t.frequency === 'other'
+              ? (t.frequency_label ?? 'Otra frecuencia')
+              : FREQUENCY_LABELS[t.frequency]
 
           return (
-            <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+            <div key={t.id} className={`flex items-center gap-3 px-4 py-3 ${freqUnconfirmed || !t.dose ? 'bg-amber-500/5' : ''}`}>
               {/* Icon */}
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Pill className="w-3.5 h-3.5 text-primary" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${freqUnconfirmed || !t.dose ? 'bg-amber-500/15' : 'bg-primary/10'}`}>
+                <Pill className={`w-3.5 h-3.5 ${freqUnconfirmed || !t.dose ? 'text-amber-500' : 'text-primary'}`} />
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-sans text-[14px] font-medium text-foreground leading-tight truncate">
                   {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
-                  {t.dose && (
-                    <span className="font-normal text-muted-foreground ml-1.5 text-[13px]">{t.dose}</span>
-                  )}
+                  {t.dose
+                    ? <span className="font-normal text-muted-foreground ml-1.5 text-[13px]">{t.dose}</span>
+                    : <span className="font-normal text-amber-500/80 ml-1.5 text-[12px] inline-flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" /> sin dosis</span>
+                  }
                 </p>
-                <p className="font-sans text-[11px] text-muted-foreground/60 leading-tight mt-0.5 truncate">
-                  {freq}
-                  {t.started_at && (
-                    <span className="ml-2">
-                      · Desde {new Date(t.started_at + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                  {t.indefinite && <span className="ml-2">· Indefinido</span>}
-                </p>
+                {freqUnconfirmed ? (
+                  <button
+                    onClick={() => setEditingTreatment(t)}
+                    className="font-sans text-[11px] text-amber-500/80 hover:text-amber-500 leading-tight mt-0.5 flex items-center gap-1 bg-transparent border-none cursor-pointer p-0"
+                  >
+                    <AlertTriangle className="w-3 h-3" />
+                    Frecuencia sin definir — toca para completar
+                  </button>
+                ) : (
+                  <p className="font-sans text-[11px] text-muted-foreground/60 leading-tight mt-0.5 truncate">
+                    {freq}
+                    {t.started_at && (
+                      <span className="ml-2">
+                        · Desde {new Date(t.started_at + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                      </span>
+                    )}
+                    {t.indefinite && <span className="ml-2">· Indefinido</span>}
+                  </p>
+                )}
               </div>
 
               {/* Actions */}

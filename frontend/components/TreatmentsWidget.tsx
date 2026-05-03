@@ -89,7 +89,9 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
   const [, startTransition] = useTransition()
 
   const missingDose = treatments.filter(t => !t.dose?.trim())
+  const missingFreq = treatments.filter(t => t.frequency === 'other' && !t.frequency_label?.trim())
   const [showDoseToast, setShowDoseToast] = useState(false)
+  const [showFreqToast, setShowFreqToast] = useState(false)
 
   useEffect(() => {
     if (missingDose.length > 0) {
@@ -97,6 +99,13 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
       return () => clearTimeout(t)
     }
   }, [missingDose.length])
+
+  useEffect(() => {
+    if (missingFreq.length > 0) {
+      const t = setTimeout(() => setShowFreqToast(true), 1400)
+      return () => clearTimeout(t)
+    }
+  }, [missingFreq.length])
 
   if (treatments.length === 0) return null
 
@@ -181,12 +190,19 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
                   <p className="font-sans text-[13px] font-medium text-foreground leading-tight truncate">
                     {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
                   </p>
-                  {t.dose
-                    ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
-                    : <p className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1">
-                        <AlertTriangle className="w-2.5 h-2.5" /> falta la dosis
-                      </p>
-                  }
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {t.dose
+                      ? <p className="font-mono text-[10px] text-muted-foreground/40 leading-tight">{t.dose}</p>
+                      : <p className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1">
+                          <AlertTriangle className="w-2.5 h-2.5" /> falta dosis
+                        </p>
+                    }
+                    {t.frequency === 'other' && !t.frequency_label?.trim() && (
+                      <Link href="/tratamientos" className="font-mono text-[10px] text-amber-500/70 leading-tight flex items-center gap-1 no-underline hover:text-amber-500 transition-colors">
+                        <AlertTriangle className="w-2.5 h-2.5" /> definir frecuencia →
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -251,7 +267,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
         </div>
       )}
 
-      {/* Toast — missing dose warning */}
+      {/* Toasts — missing info warnings */}
       <AnimatePresence>
         {showDoseToast && (
           <motion.div
@@ -279,6 +295,38 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
             </div>
             <button
               onClick={() => setShowDoseToast(false)}
+              className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors border-none bg-transparent cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          </motion.div>
+        )}
+        {showFreqToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+            className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
+          >
+            <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-[12px] font-medium text-foreground leading-tight mb-0.5">
+                {missingFreq.length === 1
+                  ? `¿Con qué frecuencia tomas ${missingFreq[0].name.charAt(0).toUpperCase() + missingFreq[0].name.slice(1)}?`
+                  : `${missingFreq.length} medicamentos sin frecuencia definida`}
+              </p>
+              <p className="font-sans text-[11px] text-muted-foreground/70 leading-relaxed">
+                Define la frecuencia en{' '}
+                <Link href="/tratamientos" className="text-amber-500 underline-offset-2 underline">
+                  tus tratamientos
+                </Link>{' '}para llevar el seguimiento correcto.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowFreqToast(false)}
               className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors border-none bg-transparent cursor-pointer"
             >
               <X size={13} />
