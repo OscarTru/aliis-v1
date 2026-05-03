@@ -180,7 +180,11 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    return new Response(`Database update failed: ${message}`, { status: 500 })
+    const isDev = process.env.NODE_ENV === 'development'
+    return Response.json(
+      { error: 'Webhook error', ...(isDev && { detail: message }) },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ received: true })

@@ -151,10 +151,9 @@ Genera El Hilo para este usuario.`
     const message = err instanceof Error ? err.message : String(err)
     const stack = err instanceof Error ? err.stack : undefined
     console.error('[aliis/hilo] generation failed:', message, stack)
-    // Surface the underlying error message in dev so we can debug fast.
-    // In prod this message is also useful — the front-end shows it as toast.
+    const isDev = process.env.NODE_ENV === 'development'
     return Response.json(
-      { error: 'No se pudo generar El Hilo', detail: message },
+      { error: 'No se pudo generar El Hilo', ...(isDev && { detail: message }) },
       { status: 502 }
     )
   }
