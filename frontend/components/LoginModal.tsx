@@ -353,39 +353,41 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                 <Input type="email" placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
                 <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={inputCls} />
                 <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className={inputCls} />
-                <label className="flex items-start gap-2.5 cursor-pointer select-none mt-0.5">
-                  <input
-                    type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
-                    Acepto los{' '}
-                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
-                      términos y condiciones
-                    </a>
-                    {' '}y la{' '}
-                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
-                      política de privacidad
-                    </a>
-                  </span>
-                </label>
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={acceptedMedicalData}
-                    onChange={(e) => setAcceptedMedicalData(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="font-sans text-[13px] text-muted-foreground leading-snug">
-                    Acepto el{' '}
-                    <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
-                      tratamiento de mis datos de salud
-                    </a>
-                    {' '}(Art. 9 GDPR · LFPDPPP)
-                  </span>
-                </label>
+                <div className="flex flex-col gap-1.5 mt-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
+                    <span className="font-sans text-[11px] text-muted-foreground/80 leading-none">
+                      Acepto los{' '}
+                      <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        términos
+                      </a>
+                      {' '}y la{' '}
+                      <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        política de privacidad
+                      </a>
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedMedicalData}
+                      onChange={(e) => setAcceptedMedicalData(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
+                    <span className="font-sans text-[11px] text-muted-foreground/80 leading-none">
+                      Acepto el{' '}
+                      <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">
+                        tratamiento de mis datos de salud
+                      </a>
+                      {' '}(Art. 9 GDPR · LFPDPPP)
+                    </span>
+                  </label>
+                </div>
                 {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
                 <Button
                   type="submit"
