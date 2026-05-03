@@ -80,33 +80,54 @@ No incluyas texto adicional fuera del JSON.`
     return
   }
 
+  // Normalise + dedupe up-front so we don't double-count the same symptom
+  // mentioned twice in the same log (e.g. "dolor de cabeza" + "cefalea").
+  // Dedupe by lowercased name; later occurrences override attention flags.
+  const normalised = new Map<string, ExtractedSymptom>()
+  for (const s of symptoms) {
+    if (!s.name || typeof s.name !== 'string') continue
+    const key = s.name.trim().toLowerCase()
+    if (!key) continue
+    normalised.set(key, { ...s, name: key })
+  }
+  if (normalised.size === 0) return
+
   const now = new Date().toISOString()
+  const names = [...normalised.keys()]
 
-  for (const symptom of symptoms) {
-    if (!symptom.name || typeof symptom.name !== 'string') continue
+  // Single round-trip: fetch ALL existing tracked symptoms for these names.
+  // Was N round-trips (one .select per symptom) → now 1 batch select.
+  const { data: existingRows, error: selectError } = await supabase
+    .from('tracked_symptoms')
+    .select('id, name, occurrences')
+    .eq('user_id', userId)
+    .eq('resolved', false)
+    .in('name', names)
 
-    const { data: existing } = await supabase
-      .from('tracked_symptoms')
-      .select('id, occurrences')
-      .eq('user_id', userId)
-      .ilike('name', symptom.name)
-      .eq('resolved', false)
-      .single()
+  if (selectError) {
+    logger.error({ err: selectError }, 'extractAndUpsertSymptoms: select failed')
+    return
+  }
 
+  // Build per-name lookup. Names in the DB should already be lowercase
+  // (we always insert that way), but defensively lowercase again here.
+  const existingByName = new Map<string, { id: string; occurrences: number }>()
+  for (const row of existingRows ?? []) {
+    existingByName.set(row.name.toLowerCase(), { id: row.id, occurrences: row.occurrences })
+  }
+
+  // Split into two batches: updates for known symptoms, inserts for new ones.
+  const updates: Array<{ id: string; occurrences: number; symptom: ExtractedSymptom }> = []
+  const inserts: Array<Record<string, unknown>> = []
+
+  for (const symptom of normalised.values()) {
+    const existing = existingByName.get(symptom.name)
     if (existing) {
-      await supabase
-        .from('tracked_symptoms')
-        .update({
-          occurrences: existing.occurrences + 1,
-          last_seen_at: now,
-          needs_medical_attention: symptom.needs_medical_attention,
-          attention_reason: symptom.attention_reason ?? null,
-        })
-        .eq('id', existing.id)
+      updates.push({ id: existing.id, occurrences: existing.occurrences + 1, symptom })
     } else {
-      await supabase.from('tracked_symptoms').insert({
+      inserts.push({
         user_id: userId,
-        name: symptom.name.toLowerCase(),
+        name: symptom.name,
         first_seen_at: now,
         last_seen_at: now,
         occurrences: 1,
@@ -114,6 +135,33 @@ No incluyas texto adicional fuera del JSON.`
         attention_reason: symptom.attention_reason ?? null,
       })
     }
+  }
+
+  // One bulk INSERT for all new symptoms.
+  if (inserts.length > 0) {
+    const { error: insertError } = await supabase.from('tracked_symptoms').insert(inserts)
+    if (insertError) {
+      logger.error({ err: insertError, count: inserts.length }, 'extractAndUpsertSymptoms: bulk insert failed')
+    }
+  }
+
+  // Updates can't be batched into one query (each row needs a different value)
+  // but Promise.all parallelises the round-trips. With ~10 symptoms max this is
+  // bounded and finishes in one network RTT instead of 10.
+  if (updates.length > 0) {
+    await Promise.allSettled(
+      updates.map(u =>
+        supabase
+          .from('tracked_symptoms')
+          .update({
+            occurrences: u.occurrences,
+            last_seen_at: now,
+            needs_medical_attention: u.symptom.needs_medical_attention,
+            attention_reason: u.symptom.attention_reason ?? null,
+          })
+          .eq('id', u.id)
+      )
+    )
   }
 }
 

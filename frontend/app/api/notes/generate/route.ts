@@ -80,34 +80,48 @@ export async function POST(req: Request) {
     })
   }
 
-  // Return existing note if already generated (1-per-pack limit for free tier)
-  const { data: existingNote } = await supabase
-    .from('pack_notes')
-    .select('*')
-    .eq('pack_id', packId)
-    .eq('user_id', user.id)
-    .maybeSingle()
+  // Fetch existing note (if any) and all chat messages in parallel.
+  // We need both before deciding whether to regenerate: the note is reusable
+  // ONLY if the chat hasn't grown since it was generated.
+  const [existingNoteRes, messagesRes] = await Promise.all([
+    supabase
+      .from('pack_notes')
+      .select('content, updated_at')
+      .eq('pack_id', packId)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('pack_chats')
+      .select('role, text, created_at')
+      .eq('pack_id', packId)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(50),
+  ])
 
-  if (existingNote) {
-    return new Response(JSON.stringify({ content: existingNote.content, alreadyExists: true }), {
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  // Fetch all chat messages for this pack
-  const { data: messages, error: messagesError } = await supabase
-    .from('pack_chats')
-    .select('role, text, created_at')
-    .eq('pack_id', packId)
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(50)
+  const existingNote = existingNoteRes.data
+  const messages = messagesRes.data
+  const messagesError = messagesRes.error
 
   if (messagesError) {
     return new Response(JSON.stringify({ error: 'Error al obtener conversación' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
+  }
+
+  // Cache hit: only return the cached note if no new chat messages have
+  // arrived since it was generated. Otherwise the note is stale and the user
+  // would see "Aprendí que..." that doesn't reflect their last 5 questions.
+  if (existingNote) {
+    const lastMessageAt = messages?.length ? new Date(messages[messages.length - 1].created_at).getTime() : 0
+    const noteAt = new Date(existingNote.updated_at).getTime()
+    if (lastMessageAt <= noteAt) {
+      return new Response(JSON.stringify({ content: existingNote.content, alreadyExists: true }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+    // Fall through to regenerate, the upsert at the end will overwrite the row.
   }
 
   const userMessages = (messages ?? []).filter((m) => m.role === 'user')
