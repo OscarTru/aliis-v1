@@ -1,9 +1,47 @@
 import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { rateLimit } from '@/lib/rate-limit'
+
+function sanitizeInput(value: string, maxLen: number): string {
+  return value
+    .slice(0, maxLen)
+    .replace(/[`"\n\r]/g, ' ')
+    .trim()
+}
 
 export async function POST(req: Request) {
+  // Authentication
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return Response.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  // Rate limiting: 20 requests per hour per user
+  const rl = await rateLimit(`user:${user.id}:validate-dose`, 20, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)),
+        },
+      }
+    )
+  }
+
   const { name, dose } = await req.json()
   if (!name?.trim()) {
+    return Response.json({ error: 'Falta nombre' }, { status: 400 })
+  }
+
+  // Input sanitization: enforce length limits and strip injection-prone chars
+  const safeName = sanitizeInput(String(name), 100)
+  const safeDose = dose ? sanitizeInput(String(dose), 50) : ''
+
+  if (!safeName) {
     return Response.json({ error: 'Falta nombre' }, { status: 400 })
   }
 
@@ -12,8 +50,8 @@ export async function POST(req: Request) {
       model: models.insight,
       prompt: `Eres un farmacéutico clínico experto. Tu tarea es validar el nombre y dosis de un medicamento registrado por un paciente, con foco en su seguridad.
 
-Medicamento escrito por el paciente: "${name.trim()}"
-Dosis escrita: "${dose?.trim() || ''}"
+Medicamento escrito por el paciente: <nombre>${safeName}</nombre>
+Dosis escrita: <dosis>${safeDose}</dosis>
 
 Responde SOLO con JSON válido, sin markdown, sin explicación:
 {
@@ -60,10 +98,10 @@ REGLAS:
     return Response.json(parsed)
   } catch {
     return Response.json({
-      nameNormalized: name.trim(),
+      nameNormalized: safeName,
       nameConfidence: 'high',
       unit: '',
-      doseNormalized: dose ?? '',
+      doseNormalized: safeDose,
       warning: false,
       warningLevel: 'none',
       warningMessage: '',
