@@ -2,713 +2,124 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  forwardRef,
-  type ReactNode,
-} from 'react'
-import './AliisDemo.css'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Icon } from '@iconify/react'
 
-// ─── Reusable bits ────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// AliisDemo — animated marketing demo of the real product.
+//
+// Design goals:
+//   1. Visually faithful to the live app shell (Sidebar / BottomNav / page
+//      tokens). What landing visitors see should match what they get post-signup.
+//   2. Adapts between desktop sidebar (≥768px) and mobile bottom-nav (<768px),
+//      mirroring the app breakpoints.
+//   3. Smooth scene transitions and micro-animations using motion/react instead
+//      of a manually-driven RAF crossfade.
+//
+// Performance:
+//   - The RAF time loop is paused when the demo is offscreen (IntersectionObserver),
+//     and only resumed if the user hasn't manually paused. Same behaviour as before.
+// ─────────────────────────────────────────────────────────────────────────────
 
-type IconName = 'plus' | 'file' | 'book' | 'pill' | 'stetho'
+// ─── Scenes timeline ────────────────────────────────────────────────────────
 
-const SidebarIcon = ({ name, active }: { name: IconName; active: boolean }) => {
-  const stroke = active ? '#1F8A9B' : '#71717a'
-  const common = {
-    width: 16,
-    height: 16,
-    viewBox: '0 0 24 24',
-    fill: 'none' as const,
-    stroke,
-    strokeWidth: 1.6,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  }
-  if (name === 'plus')
-    return (
-      <svg {...common}>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 8v8M8 12h8" />
-      </svg>
-    )
-  if (name === 'file')
-    return (
-      <svg {...common}>
-        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-        <path d="M14 3v6h6" />
-      </svg>
-    )
-  if (name === 'book')
-    return (
-      <svg {...common}>
-        <path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z" />
-        <path d="M4 18a2 2 0 0 1 2-2h12" />
-      </svg>
-    )
-  if (name === 'pill')
-    return (
-      <svg {...common}>
-        <rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)" />
-        <path d="M8.5 8.5l7 7" />
-      </svg>
-    )
-  if (name === 'stetho')
-    return (
-      <svg {...common}>
-        <path d="M6 3v6a4 4 0 0 0 8 0V3" />
-        <circle cx="18" cy="14" r="2.5" />
-        <path d="M10 13v3a4 4 0 0 0 5.5 3.7" />
-      </svg>
-    )
-  return null
-}
-
-const Sidebar = ({ active }: { active: string }) => {
-  const items: { id: string; label: string; icon: IconName }[] = [
-    { id: 'nuevo', label: 'Nuevo diagnóstico', icon: 'plus' },
-    { id: 'expediente', label: 'Mi expediente', icon: 'file' },
-    { id: 'diario', label: 'Mi diario', icon: 'book' },
-    { id: 'tratamientos', label: 'Mis tratamientos', icon: 'pill' },
-    { id: 'diagnosticos', label: 'Diagnósticos', icon: 'stetho' },
-  ]
-  return (
-    <aside className="aliis-sidebar" data-collapsed="false">
-      <div className="aliis-sidebar-logo">
-        <img src="/assets/aliis-logo-full.png" alt="aliis" />
-      </div>
-      <nav className="aliis-sidebar-nav">
-        {items.map((it) => (
-          <div key={it.id} className={'aliis-nav-item' + (active === it.id ? ' is-active' : '')}>
-            <SidebarIcon name={it.icon} active={active === it.id} />
-            <span>{it.label}</span>
-          </div>
-        ))}
-      </nav>
-      <div className="aliis-sidebar-user">
-        <div className="aliis-avatar">N</div>
-        <div className="aliis-user-meta">
-          <div>Oscar</div>
-          <div className="aliis-user-email">oscar.trujillo93@gmail.c…</div>
-        </div>
-      </div>
-    </aside>
-  )
-}
-
-const NotifBell = () => (
-  <div className="aliis-notif">
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#71717a"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-    <span className="aliis-notif-dot">1</span>
-  </div>
-)
-
-// ─── Scene 1: Nuevo diagnóstico ───────────────────────────────
-const SceneNuevo = ({
-  typed,
-  isFocus,
-  ctaActive,
-}: {
-  typed: string
-  isFocus: boolean
-  ctaActive: boolean
-}) => (
-  <div className="aliis-scene aliis-scene-nuevo">
-    <NotifBell />
-    <div className="aliis-nuevo-body">
-      <div className="aliis-eyebrow">PASO 1 DE 4</div>
-      <h1 className="aliis-serif-title">¿Qué te dijo tu médico?</h1>
-      <p className="aliis-subcopy">
-        Escribe el diagnóstico, copia lo que dice tu receta, o cuéntalo con tus palabras.
-      </p>
-      <div className={'aliis-input ' + (isFocus ? 'is-focus' : '')}>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#a1a1aa"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <span className="aliis-input-text">
-          {typed || (
-            <span className="aliis-input-placeholder">
-              Escribe tu diagnóstico o busca en la biblioteca…
-            </span>
-          )}
-          {isFocus && <span className="aliis-caret" />}
-        </span>
-      </div>
-      <button className={'aliis-btn-cta ' + (ctaActive ? 'is-active' : '')}>Continuar →</button>
-    </div>
-  </div>
-)
-
-// ─── Scene 2: Expediente ──────────────────────────────────────
-const ExpedienteCard = ({
-  title,
-  body,
-  chap,
-  date,
-  hilite,
-}: {
-  title: string
-  body: string
-  chap: string
-  date: string
-  hilite?: boolean
-}) => (
-  <div className={'aliis-exp-card' + (hilite ? ' is-hilite' : '')}>
-    <div className="aliis-exp-card-bar" />
-    <div className="aliis-exp-card-head">
-      <h3>{title}</h3>
-      <div className="aliis-exp-card-actions">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="1.6">
-          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m1 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-        </svg>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="1.6">
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </div>
-    </div>
-    <p className="aliis-exp-card-body">{body}</p>
-    <div className="aliis-exp-card-meta">
-      <span className="aliis-chap">{chap}</span>
-      <span className="aliis-date">{date}</span>
-    </div>
-    <div className="aliis-exp-card-foot">
-      <span>Continúa donde lo dejaste</span>
-      <span className="aliis-continuar">Continuar →</span>
-    </div>
-  </div>
-)
-
-const SceneExpediente = ({ hiliteFirst }: { hiliteFirst: boolean }) => (
-  <div className="aliis-scene aliis-scene-exp">
-    <NotifBell />
-    <div className="aliis-exp-grid">
-      <div className="aliis-exp-main">
-        <div className="aliis-eyebrow">7 DIAGNÓSTICOS</div>
-        <h1 className="aliis-serif-title">
-          Mi <em>expediente</em>
-        </h1>
-        <div className="aliis-exp-tabs">
-          <span className="is-active">Todos</span>
-          <span>Sin leer</span>
-          <span>A medias</span>
-          <span>Completados</span>
-        </div>
-        <div className="aliis-exp-list">
-          <ExpedienteCard
-            hilite={hiliteFirst}
-            title="Dislipidemia (Colesterol y Triglicéridos Alterados)"
-            body="Tu análisis de sangre mostró que las grasas en tu sangre (colesterol y triglicéridos) están fuera de rango. No sientes nada ahora, pero si no se controlan, aumentan el riesgo de infarto o…"
-            chap="1 DE 6 CAPÍTULOS"
-            date="3 de mayo"
-          />
-          <ExpedienteCard
-            title="Diabetes"
-            body="Tu cuerpo tiene dificultades para usar el azúcar que comes como energía, y eso con el tiempo puede afectar varios órganos. La buena noticia es que con los cambios correctos, la diabetes…"
-            chap="2 DE 6 CAPÍTULOS"
-            date="2 de mayo"
-          />
-          <ExpedienteCard
-            title="Hipertensión Arterial"
-            body="El corazón está empujando la sangre con más fuerza de la necesaria, y eso va desgastando tus arterias sin que lo sientas. Con el control adecuado, vas a seguir haciendo tu vida normal."
-            chap="4 DE 6 CAPÍTULOS"
-            date="30 de abril"
-          />
-        </div>
-      </div>
-      <div className="aliis-exp-side">
-        <div className="aliis-exp-side-head">
-          <span className="aliis-eyebrow">HISTORIAL MÉDICO</span>
-          <span className="aliis-modify">✎ Modificar</span>
-        </div>
-        <div className="aliis-side-card">
-          <div className="aliis-side-row">
-            <span className="aliis-side-label">Diagnósticos</span>
-            <span className="aliis-side-add">+ Agregar</span>
-          </div>
-          <div className="aliis-side-pill aliis-side-pill-full">
-            Dislipidemia (Colesterol y Triglicéridos Alterados)
-          </div>
-          <div className="aliis-side-pills">
-            <span className="aliis-side-pill">Diabetes</span>
-            <span className="aliis-side-pill">Hipertensión Arterial</span>
-            <span className="aliis-side-pill">Apnea del Sueño</span>
-            <span className="aliis-side-pill">Migraña</span>
-            <span className="aliis-side-pill">ACV / Ictus</span>
-            <span className="aliis-side-pill">Síncope</span>
-          </div>
-          <div className="aliis-side-row" style={{ marginTop: 14 }}>
-            <span className="aliis-side-label">Medicamentos</span>
-            <span className="aliis-side-add">Gestionar →</span>
-          </div>
-          <div className="aliis-side-meds">
-            <div>Ramipril 5 mg</div>
-            <div>Ácido acetilsalicílico 100 mg</div>
-            <div>Atorvastatina 40 mg</div>
-            <div>Paracetamol 500 mg</div>
-            <div>Ibuprofeno 400 mg</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
-// ─── Scene 3: Explicación del diagnóstico ─────────────────────
-const SceneExplicacion = ({ readProgress }: { readProgress: number }) => (
-  <div className="aliis-scene aliis-scene-exp-detail">
-    <div className="aliis-exp-detail-top">
-      <span className="aliis-prepare">📋 Preparar consulta</span>
-      <NotifBell />
-    </div>
-    <div className="aliis-exp-detail-grid">
-      <aside className="aliis-chap-side">
-        <div className="aliis-eyebrow">ESTA EXPLICACIÓN</div>
-        <div className="aliis-chap-cond">Dislipidemia (Colesterol y Triglicéridos Altera…</div>
-        <div className="aliis-chap-list">
-          <div className="aliis-chap-item is-active">
-            <span className="aliis-chap-dot is-active" />
-            ¿Qué es?
-          </div>
-          <div className="aliis-chap-item">
-            <span className="aliis-chap-dot" />
-            ¿Cómo funciona?
-          </div>
-          <div className="aliis-chap-item">
-            <span className="aliis-chap-dot" />
-            ¿Qué esperar?
-          </div>
-          <div className="aliis-chap-item">
-            <span className="aliis-chap-dot" />
-            ¿Qué preguntar?
-          </div>
-          <div className="aliis-chap-item">
-            <span className="aliis-chap-dot" />
-            ¿Cuándo actuar?
-          </div>
-          <div className="aliis-chap-item">
-            <span className="aliis-chap-dot" />
-            Mito frecuente
-          </div>
-        </div>
-        <div className="aliis-chap-tools">
-          <div className="aliis-chap-tools-h">Herramientas</div>
-          <div className="aliis-chap-tool">⤴︎ Compartir</div>
-        </div>
-      </aside>
-      <main className="aliis-chap-main">
-        <div className="aliis-eyebrow">01 · 3 MIN</div>
-        <h1 className="aliis-serif-title aliis-q">
-          ¿Qué es <em>exactamente?</em>
-        </h1>
-        <p className="aliis-italic-sub">
-          Tienes demasiada grasa circulando en tu sangre, y eso no duele, pero va dañando tus arterias en silencio.{' '}
-          <span className="aliis-leer-link">📖 Leer a profundidad →</span>
-        </p>
-        <div className="aliis-chap-body">
-          <p>
-            Oscar, entiendo que recibir otro diagnóstico encima de la diabetes y la hipertensión puede sentirse como demasiado. Pero quiero que sepas algo desde el principio: esto no es una emergencia de hoy. Es información que te da ventaja para actuar antes de que algo malo pase.
-          </p>
-          <p>
-            La dislipidemia significa que alguna de las grasas en tu sangre está alterada. Esas grasas son principalmente el colesterol y los triglicéridos. El colesterol LDL (el que se llama &apos;malo&apos;) se deposita en las paredes de tus arterias formando placas, como sarro en una tubería.
-          </p>
-          <p>
-            Lo que hace difícil notar esto es que no produce ningún síntoma. No duele, no marea, no avisa. La mayoría de las personas se enteran, como tú, por un análisis de rutina.
-          </p>
-          <div className="aliis-callout">
-            <div className="aliis-eyebrow">PARA IMAGINARLO ASÍ</div>
-            <p>
-              Piensa en tus arterias como tuberías de agua. El LDL alto es como cal que se va pegando por dentro, poco a poco, estrechando el paso. Al principio el agua fluye normal. Pero con los años, ese sarro se acumula hasta que la tubería se tapa o se rompe.
-            </p>
-          </div>
-        </div>
-      </main>
-    </div>
-    <div className="aliis-chap-foot">
-      <span className="aliis-chap-foot-disclaimer">
-        Esta información es educativa y no reemplaza la consulta con tu médico.
-      </span>
-      <div className="aliis-chap-progress">
-        <div style={{ width: readProgress * 100 + '%' }} />
-      </div>
-      <div className="aliis-chap-foot-nav">
-        <button className="aliis-btn-ghost">← Anterior</button>
-        <span>1 / 6</span>
-        <button className="aliis-btn-dark">Siguiente →</button>
-      </div>
-    </div>
-  </div>
-)
-
-// ─── Scene 4: Chat con Aliis (overlay) ────────────────────────
-const SceneChat = ({
-  userQuestion,
-  aiText,
-  isTyping,
-}: {
-  userQuestion: string
-  aiText: string
-  isTyping: boolean
-}) => {
-  const [slidIn, setSlidIn] = useState(false)
-  useEffect(() => {
-    const id = setTimeout(() => setSlidIn(true), 50)
-    return () => clearTimeout(id)
-  }, [])
-  return (
-    <div className="aliis-scene aliis-scene-chat">
-      {/* Behind: the explicacion screen */}
-      <SceneExplicacion readProgress={0.5} />
-      {/* Chat panel */}
-      <div
-        className="aliis-chat-panel"
-        style={{ transform: slidIn ? 'translateX(0)' : 'translateX(100%)' }}
-      >
-        <div className="aliis-chat-head">
-          <div>
-            <div className="aliis-eyebrow">· ALIIS ·</div>
-            <div className="aliis-chat-cond">Dislipidemia (Colesterol y Triglicéridos Alterados)</div>
-          </div>
-          <span className="aliis-chat-x">×</span>
-        </div>
-        <div className="aliis-chat-tabs">
-          <span className="is-active">Chat</span>
-          <span>Mis apuntes</span>
-        </div>
-        <div className="aliis-chat-body">
-          {userQuestion && (
-            <div className="aliis-chat-user-row">
-              <div className="aliis-chat-user-bubble">{userQuestion}</div>
-            </div>
-          )}
-          {(aiText || isTyping) && (
-            <div className="aliis-chat-ai-row">
-              <div className="aliis-chat-ai-avatar">
-                <img src="/assets/aliis-logo.png" alt="" />
-              </div>
-              <div className="aliis-chat-ai-bubble">
-                {aiText}
-                {isTyping && <span className="aliis-caret aliis-caret-dark" />}
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="aliis-chat-input">
-          <span>Pregunta sobre Dislipidemia (Colesterol y…</span>
-          <span className="aliis-chat-send">↑</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Scene 5: Diario ──────────────────────────────────────────
-const SceneDiario = ({ chartProgress }: { chartProgress: number }) => {
-  const w = 380
-  const h = 150
-  const series: { c: string; pts: [number, number][] }[] = [
-    { c: '#ef4444', pts: [[0, 90], [1, 140], [2, 110], [3, 150], [4, 118]] },
-    { c: '#a855f7', pts: [[0, 80], [1, 90], [2, 70], [3, 100], [4, 72]] },
-    { c: '#22c55e', pts: [[0, 95], [1, 100], [2, 82], [3, 108], [4, 95]] },
-    { c: '#f59e0b', pts: [[0, 86], [1, 78], [2, 90], [3, 72], [4, 88]] },
-    { c: '#3b82f6', pts: [[0, 40], [1, 45], [2, 40], [3, 55], [4, 68]] },
-  ]
-  const xs = (i: number) => 20 + (i / 4) * (w - 40)
-  const ys = (v: number) => h - 20 - ((v - 30) / 130) * (h - 40)
-  return (
-    <div className="aliis-scene aliis-scene-diario">
-      <NotifBell />
-      <div className="aliis-diario-grid">
-        <div className="aliis-diario-main">
-          <div className="aliis-eyebrow">MI DIARIO</div>
-          <h1 className="aliis-serif-title">
-            Tu <em>diario</em> de salud
-          </h1>
-          <div className="aliis-diario-aliis-card">
-            <div className="aliis-diario-aliis-head">
-              <img src="/assets/aliis-logo.png" alt="" />
-              <span>Aliis</span>
-            </div>
-            <p>
-              Hola Oscar, he notado que tu presión arterial ha estado en 135/85 mmHg esta semana, y me llama la atención que la sistólica ronde los 135 — un poco arriba de lo ideal para alguien con diabetes. Tu glucosa se ve bien controlada, lo cual es excelente, pero sería buena idea mencionar estos números de presión en tu próxima cita para ver si necesita ajustes.
-            </p>
-          </div>
-          <div className="aliis-diario-chart-card">
-            <div className="aliis-diario-chart-head">
-              <span className="aliis-eyebrow">SÍNTOMAS Y SIGNOS VITALES</span>
-              <button className="aliis-btn-dark aliis-btn-small">+ Registrar</button>
-            </div>
-            <div className="aliis-diario-chips">
-              <span className="aliis-chip-dark is-active">Glucosa</span>
-              <span className="aliis-chip-dark">Sistólica</span>
-              <span className="aliis-chip-dark">Diastólica</span>
-              <span className="aliis-chip-dark">FC</span>
-              <span className="aliis-chip-dark">Peso</span>
-              <span className="aliis-chip-dark">Temp</span>
-            </div>
-            <div className="aliis-diario-chart-row">
-              <div className="aliis-diario-chart-entries">
-                <div className="aliis-entry">
-                  <div className="aliis-entry-when">29 ABR · 16:59</div>
-                  <div className="aliis-entry-vals">
-                    Glucosa <strong>89 mg/dL</strong>
-                  </div>
-                  <div className="aliis-entry-vals">
-                    TA <strong>135/87</strong> · FC <strong>99 lpm</strong>
-                  </div>
-                  <div className="aliis-entry-sym">
-                    Síntoma: <em>dolor de cabeza</em>
-                  </div>
-                </div>
-                <div className="aliis-entry">
-                  <div className="aliis-entry-when">28 ABR · 23:59</div>
-                  <div className="aliis-entry-vals">
-                    Glucosa <strong>77 mg/dL</strong>
-                  </div>
-                  <div className="aliis-entry-vals">
-                    TA <strong>122/79</strong> · FC <strong>70 lpm</strong>
-                  </div>
-                  <div className="aliis-entry-sym">Tranquilo</div>
-                </div>
-              </div>
-              <svg width={w} height={h} className="aliis-chart-svg">
-                {[40, 80, 120, 160].map((v) => (
-                  <line
-                    key={v}
-                    x1="20"
-                    x2={w - 20}
-                    y1={ys(v)}
-                    y2={ys(v)}
-                    stroke="rgba(0,0,0,0.05)"
-                    strokeDasharray="2 3"
-                  />
-                ))}
-                {[40, 80, 120, 160].map((v) => (
-                  <text key={v} x="6" y={ys(v) + 3} fontSize="8" fill="#a1a1aa">
-                    {v}
-                  </text>
-                ))}
-                {series.map((s, si) => {
-                  const visible = Math.min(s.pts.length, Math.ceil(chartProgress * s.pts.length))
-                  if (visible < 1) return null
-                  const pts = s.pts.slice(0, visible)
-                  const d = pts
-                    .map((p, i) => (i === 0 ? 'M' : 'L') + xs(p[0]) + ' ' + ys(p[1]))
-                    .join(' ')
-                  return (
-                    <g key={si}>
-                      <path
-                        d={d}
-                        stroke={s.c}
-                        strokeWidth="1.5"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      {pts.map((p, i) => (
-                        <circle key={i} cx={xs(p[0])} cy={ys(p[1])} r="2.5" fill={s.c} />
-                      ))}
-                    </g>
-                  )
-                })}
-                <text x="20" y={h - 5} fontSize="8" fill="#a1a1aa">
-                  26/04 20:37
-                </text>
-                <text x={w / 2 - 30} y={h - 5} fontSize="8" fill="#a1a1aa">
-                  27/04 22:13
-                </text>
-                <text x={w - 80} y={h - 5} fontSize="8" fill="#a1a1aa">
-                  29/04 16:15
-                </text>
-              </svg>
-            </div>
-          </div>
-        </div>
-        <div className="aliis-diario-side">
-          <div className="aliis-side-card">
-            <div className="aliis-eyebrow" style={{ color: '#a1a1aa' }}>
-              HOY · DOMINGO, 3 DE MAYO
-            </div>
-            <div className="aliis-meds-h">
-              Mis <em>medicamentos</em>
-            </div>
-            <div className="aliis-med-row">
-              <span>
-                Ramipril
-                <br />
-                <small>5 mg</small>
-              </span>
-              <span className="aliis-check">✓</span>
-            </div>
-            <div className="aliis-med-row">
-              <span>
-                Ácido acetilsalicílico
-                <br />
-                <small>100 mg</small>
-              </span>
-              <span className="aliis-check">✓</span>
-            </div>
-            <div className="aliis-med-row">
-              <span>
-                Atorvastatina
-                <br />
-                <small>40 mg</small>
-              </span>
-              <span className="aliis-check is-empty">○</span>
-            </div>
-            <div className="aliis-med-row">
-              <span>
-                Paracetamol
-                <br />
-                <small>500 mg</small>
-              </span>
-              <span className="aliis-checks">✓✓✓✓</span>
-            </div>
-            <div className="aliis-med-row">
-              <span>
-                Ibuprofeno
-                <br />
-                <small>400 mg</small>
-              </span>
-              <span />
-            </div>
-            <div className="aliis-streak">🔥 1 día seguidos</div>
-          </div>
-          <div className="aliis-side-card aliis-side-card-small">
-            <div className="aliis-eyebrow">TU HISTORIA DE SALUD</div>
-            <div className="aliis-side-card-title">
-              El Hilo <span style={{ float: 'right', color: '#a1a1aa' }}>›</span>
-            </div>
-            <div className="aliis-side-card-sub">3 de mayo</div>
-          </div>
-          <div className="aliis-side-card aliis-side-card-small">
-            <div className="aliis-eyebrow">CÁPSULA DEL TIEMPO</div>
-            <div className="aliis-side-card-title">Comparar mi mes</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Caption ──────────────────────────────────────────────────
-const Caption = ({ eyebrow, title }: { eyebrow: string; title: string }) => (
-  <div className="aliis-caption" key={title}>
-    <div className="aliis-eyebrow">{eyebrow}</div>
-    <h3 className="aliis-caption-title">{title}</h3>
-  </div>
-)
-
-// ─── Browser frame ────────────────────────────────────────────
-const BrowserFrame = forwardRef<HTMLDivElement, { children: ReactNode }>(
-  function BrowserFrame({ children }, ref) {
-    return (
-      <div className="aliis-browser is-macos">
-        <div className="aliis-browser-top">
-          <div className="aliis-traffic">
-            <span style={{ background: '#ff5f57' }} />
-            <span style={{ background: '#febc2e' }} />
-            <span style={{ background: '#28c840' }} />
-          </div>
-          <div className="aliis-browser-url">
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#71717a"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <rect x="4" y="11" width="16" height="10" rx="2" />
-              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-            </svg>
-            <span>aliis.app</span>
-          </div>
-          <div style={{ width: 60 }} />
-        </div>
-        <div className="aliis-browser-body" ref={ref}>
-          {children}
-        </div>
-      </div>
-    )
-  }
-)
-
-// ─── Timeline ─────────────────────────────────────────────────
-
-type SceneId = 'nuevo' | 'expediente' | 'explicacion' | 'chat' | 'diario'
-type SceneDef = { id: SceneId; dur: number; eyebrow: string; caption: string }
+type SceneId = 'ingreso' | 'historial' | 'pack' | 'chat' | 'diario'
+type SceneDef = { id: SceneId; dur: number; eyebrow: string; caption: string; nav: NavId }
 
 const SCENES: SceneDef[] = [
-  { id: 'nuevo', dur: 5.0, eyebrow: '01 · INGRESO', caption: 'Cuéntale a Aliis tu diagnóstico' },
-  { id: 'expediente', dur: 4.5, eyebrow: '02 · TU EXPEDIENTE', caption: 'Todo lo que entiendes, en un solo lugar' },
-  { id: 'explicacion', dur: 5.0, eyebrow: '03 · EXPLICACIÓN', caption: 'En palabras que entiendes — sin jerga' },
-  { id: 'chat', dur: 5.5, eyebrow: '04 · PREGÚNTALE', caption: 'Aliis te responde, con la ciencia detrás' },
-  { id: 'diario', dur: 5.0, eyebrow: '05 · DIARIO', caption: 'Tu salud, día a día — Aliis encuentra los patrones' },
+  { id: 'ingreso',   dur: 5.0, eyebrow: '01 · INGRESO',     caption: 'Cuéntale a Aliis tu diagnóstico',                  nav: 'ingreso' },
+  { id: 'historial', dur: 4.5, eyebrow: '02 · EXPEDIENTE',  caption: 'Todo lo que entiendes, en un solo lugar',          nav: 'historial' },
+  { id: 'pack',      dur: 5.0, eyebrow: '03 · EXPLICACIÓN', caption: 'En palabras que entiendes — sin jerga',            nav: 'historial' },
+  { id: 'chat',      dur: 5.5, eyebrow: '04 · PREGÚNTALE',  caption: 'Aliis te responde, con la ciencia detrás',         nav: 'historial' },
+  { id: 'diario',    dur: 5.0, eyebrow: '05 · DIARIO',      caption: 'Tu salud, día a día — Aliis encuentra los patrones', nav: 'diario' },
 ]
 
 const FULL_DIAG = 'Dislipidemia'
 
+// ─── Nav definitions (mirror real Sidebar + BottomNav) ──────────────────────
+
+type NavId = 'ingreso' | 'historial' | 'diario' | 'tratamientos' | 'cuenta' | 'condiciones'
+
+const SIDEBAR_NAV: { id: NavId; href: string; label: string; icon: string }[] = [
+  { id: 'ingreso',      href: '/ingreso',      label: 'Nuevo diagnóstico', icon: 'solar:add-circle-bold-duotone' },
+  { id: 'historial',    href: '/historial',    label: 'Mi expediente',     icon: 'solar:folder-with-files-bold-duotone' },
+  { id: 'diario',       href: '/diario',       label: 'Mi diario',         icon: 'solar:notebook-bold-duotone' },
+  { id: 'tratamientos', href: '/tratamientos', label: 'Mis tratamientos',  icon: 'solar:pills-bold-duotone' },
+  { id: 'condiciones',  href: '/condiciones',  label: 'Diagnósticos',      icon: 'solar:stethoscope-bold-duotone' },
+]
+
+const BOTTOM_NAV: { id: NavId; label: string; bold: string; linear: string }[] = [
+  { id: 'ingreso',      label: 'Nuevo',        bold: 'solar:add-circle-bold-duotone',         linear: 'solar:add-circle-linear' },
+  { id: 'historial',    label: 'Expediente',   bold: 'solar:folder-with-files-bold-duotone',  linear: 'solar:folder-with-files-linear' },
+  { id: 'diario',       label: 'Diario',       bold: 'solar:notebook-bold-duotone',           linear: 'solar:notebook-linear' },
+  { id: 'tratamientos', label: 'Tratamientos', bold: 'solar:pills-bold-duotone',              linear: 'solar:pills-linear' },
+  { id: 'cuenta',       label: 'Cuenta',       bold: 'solar:user-circle-bold-duotone',        linear: 'solar:user-circle-linear' },
+]
+
+// ─── Cursor path (subtle pointer hint) ──────────────────────────────────────
+//
+// Coords are percentages of the MAIN PANE (the area to the right of the
+// sidebar on desktop, full width on mobile). They're hand-tuned to land on
+// real interactive elements in each scene — keep them in sync with the
+// scene layouts above.
+
 type CursorTarget = { t: number; x: number; y: number }
 const CURSOR_TARGETS: Record<SceneId, CursorTarget[]> = {
-  nuevo: [
-    { t: 0, x: 32, y: 30 },
-    { t: 0.6, x: 50, y: 53 },
-    { t: 2.6, x: 50, y: 53 },
-    { t: 3.6, x: 50, y: 64 },
-    { t: 5.0, x: 50, y: 64 },
+  // Ingreso: form is centered (max-w-[420px] mx-auto) inside main pane.
+  // - Input pill sits around y=48% (middle of vertically-centered card)
+  // - CTA "Continuar" sits around y=58% (just below input)
+  ingreso: [
+    { t: 0,   x: 30, y: 30 },  // off to the side, settling in
+    { t: 0.6, x: 50, y: 48 },  // click on input
+    { t: 2.8, x: 50, y: 48 },  // stay there while typing
+    { t: 3.8, x: 50, y: 58 },  // move down to CTA
+    { t: 5.0, x: 50, y: 58 },
   ],
-  expediente: [
-    { t: 0, x: 70, y: 28 },
-    { t: 1.0, x: 50, y: 42 },
-    { t: 2.5, x: 60, y: 50 },
-    { t: 4.5, x: 60, y: 50 },
+  // Historial: header at top, chips, then 3 cards. First card is around y=42%.
+  historial: [
+    { t: 0,   x: 70, y: 26 },
+    { t: 1.2, x: 50, y: 38 },  // hover near first card title
+    { t: 2.5, x: 50, y: 42 },  // click first card
+    { t: 4.5, x: 50, y: 42 },
   ],
-  explicacion: [
-    { t: 0, x: 55, y: 38 },
-    { t: 1.5, x: 52, y: 56 },
-    { t: 3.5, x: 60, y: 70 },
-    { t: 5.0, x: 87, y: 92 },
+  // Pack desktop: "Pregúntale a Aliis" pill is in the top-right of the
+  // content area, around y=12%, x=88%.
+  pack: [
+    { t: 0,   x: 50, y: 35 },
+    { t: 1.5, x: 50, y: 50 },  // reading body
+    { t: 3.5, x: 55, y: 60 },  // reading callout
+    { t: 4.8, x: 88, y: 12 },  // arrive at "Pregúntale" pill
+    { t: 5.0, x: 88, y: 12 },  // click
   ],
+  // Chat: drawer takes right ~65% of main pane on desktop. Input is at
+  // bottom of drawer, around y=92%. Drawer center is around x=82%.
   chat: [
-    { t: 0, x: 70, y: 55 },
-    { t: 0.8, x: 87, y: 88 },
-    { t: 2.5, x: 95, y: 88 },
-    { t: 5.5, x: 78, y: 50 },
+    { t: 0,   x: 70, y: 55 },
+    { t: 0.8, x: 82, y: 92 },  // click chat input
+    { t: 2.5, x: 82, y: 92 },
+    { t: 5.5, x: 82, y: 50 },  // drift to read AI reply
   ],
+  // Diario: just observation. Hover the chart area.
   diario: [
-    { t: 0, x: 50, y: 35 },
-    { t: 1.5, x: 60, y: 22 },
-    { t: 3.0, x: 50, y: 55 },
-    { t: 5.0, x: 35, y: 70 },
+    { t: 0,   x: 50, y: 30 },
+    { t: 1.5, x: 55, y: 28 },  // insight highlight
+    { t: 3.0, x: 50, y: 60 },  // chart area
+    { t: 5.0, x: 60, y: 60 },
   ],
 }
 
-const interpCursor = (targets: CursorTarget[], t: number) => {
+// Moments in each scene where the cursor "clicks". The cursor must be
+// AT the click target at this exact time — see CURSOR_TARGETS above.
+const CLICK_TIMES: Record<SceneId, number[]> = {
+  ingreso:   [0.6, 3.8],   // tap on input, tap on continue button
+  historial: [2.5],        // click first card
+  pack:      [5.0],        // click "Pregúntale a Aliis"
+  chat:      [0.8],        // click chat input
+  diario:    [],           // no clicks, just observe
+}
+
+function interpCursor(targets: CursorTarget[], t: number) {
   for (let i = 0; i < targets.length - 1; i++) {
     if (t >= targets[i].t && t < targets[i + 1].t) {
       const a = targets[i]
@@ -722,23 +133,743 @@ const interpCursor = (targets: CursorTarget[], t: number) => {
   return { x: last.x, y: last.y }
 }
 
-// ─── Main component ───────────────────────────────────────────
+// ─── Browser frame ──────────────────────────────────────────────────────────
+
+function BrowserFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-full h-full rounded-2xl overflow-hidden border border-border bg-background shadow-[0_30px_80px_-20px_rgba(0,0,0,.25)] flex flex-col">
+      {/* Top bar */}
+      <div className="h-9 flex items-center px-3.5 gap-3 border-b border-border bg-muted/40 shrink-0">
+        <div className="flex gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+          <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
+          <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-md bg-background border border-border/60 font-mono text-[10px] text-muted-foreground/70 max-w-[200px] truncate">
+            <Icon icon="solar:lock-bold-duotone" width={9} className="text-emerald-500/70" />
+            aliis.app
+          </div>
+        </div>
+        <div className="w-10" />
+      </div>
+      {/* Body */}
+      <div className="flex-1 min-h-0 overflow-hidden bg-background">{children}</div>
+    </div>
+  )
+}
+
+// ─── Sidebar (desktop) — mirror of components/Sidebar.tsx ────────────────────
+// `isMobile` is driven by the demo's own container width (ResizeObserver), not
+// the viewport. This way the demo correctly shows bottom-nav whenever its
+// rendered width is narrow, regardless of where it's embedded.
+
+function Sidebar({ active, isMobile }: { active: NavId; isMobile: boolean }) {
+  if (isMobile) return null
+  return (
+    <aside className="flex w-[208px] shrink-0 h-full border-r border-border bg-background flex-col">
+      {/* Logo */}
+      <div className="px-3 pt-5 pb-2">
+        <img src="/assets/aliis-original.png" alt="Aliis" width={88} height={32} className="object-contain logo-hide-dark" />
+        <img src="/assets/aliis-black.png" alt="Aliis" width={88} height={32} className="object-contain logo-show-dark" />
+      </div>
+      {/* Main nav */}
+      <nav className="flex flex-col gap-1 py-3 px-2">
+        {SIDEBAR_NAV.map(item => {
+          const isActive = item.id === active
+          return (
+            <div
+              key={item.id}
+              className={[
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors',
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground',
+              ].join(' ')}
+            >
+              <Icon icon={item.icon} width={20} className="shrink-0" />
+              <span className="font-sans text-[13px] font-medium truncate">{item.label}</span>
+            </div>
+          )
+        })}
+      </nav>
+      <div className="flex-1" />
+      {/* Upgrade row (free plan) */}
+      <div className="px-2 pb-2">
+        <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-primary">
+          <Icon icon="solar:crown-bold-duotone" width={20} className="shrink-0" />
+          <span className="font-sans text-[13px] font-medium">Actualizar a Pro</span>
+        </div>
+      </div>
+      {/* User row */}
+      <div className="border-t border-border px-3 py-3 flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-serif text-[12px] font-semibold">O</div>
+        <div className="min-w-0">
+          <div className="font-sans text-[12px] font-medium text-foreground truncate">Oscar</div>
+          <div className="font-mono text-[9px] text-muted-foreground truncate">free</div>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+// ─── Mobile bottom nav — mirror of components/BottomNav.tsx ─────────────────
+
+function BottomNav({ active, isMobile }: { active: NavId; isMobile: boolean }) {
+  // Bottom nav on mobile uses a slightly different mapping than the sidebar
+  // (no condiciones, has cuenta).
+  if (!isMobile) return null
+  return (
+    <div className="absolute bottom-0 left-0 right-0 flex border-t border-border bg-background/95 backdrop-blur-xl">
+      {BOTTOM_NAV.map(item => {
+        const isActive = item.id === active
+        return (
+          <div
+            key={item.id}
+            className={[
+              'flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5',
+              isActive ? 'text-primary' : 'text-muted-foreground',
+            ].join(' ')}
+          >
+            <Icon icon={isActive ? item.bold : item.linear} width={22} />
+            <span className="font-sans text-[9px] font-medium leading-none">{item.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Notification bell (top-right floating) ─────────────────────────────────
+
+function NotifBell() {
+  return (
+    <div className="absolute top-3 right-3 md:top-4 md:right-4 w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-muted-foreground">
+      <Icon icon="solar:bell-bold-duotone" width={15} />
+      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-destructive text-white font-mono text-[8px] flex items-center justify-center">1</span>
+    </div>
+  )
+}
+
+// ─── Page header (eyebrow + serif title) ────────────────────────────────────
+
+function PageHeader({ eyebrow, title, italic }: { eyebrow: string; title: string; italic?: string }) {
+  return (
+    <div>
+      <p className="font-mono text-[9px] md:text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-1.5">
+        {eyebrow}
+      </p>
+      <h1 className="font-serif text-[22px] md:text-[28px] tracking-[-0.022em] leading-[1.1]">
+        {title} {italic && <em className="text-muted-foreground">{italic}</em>}
+      </h1>
+    </div>
+  )
+}
+
+// ─── Scene 1: Ingreso ───────────────────────────────────────────────────────
+
+function SceneIngreso({ typed, isFocus, ctaActive }: { typed: string; isFocus: boolean; ctaActive: boolean }) {
+  return (
+    <motion.div
+      key="scene-ingreso"
+      className="absolute inset-0 px-5 md:px-10 pt-7 md:pt-10 pb-16 md:pb-10 overflow-hidden"
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+    >
+      <NotifBell />
+      <div className="max-w-[420px] mx-auto h-full flex flex-col justify-center">
+        <p className="font-mono text-[9px] md:text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-2">
+          Paso 1 de 4
+        </p>
+        <h1 className="font-serif text-[26px] md:text-[36px] leading-[1.12] tracking-[-0.025em] mb-2">
+          ¿Qué te dijo <em className="text-muted-foreground">tu médico?</em>
+        </h1>
+        <p className="font-sans text-[13px] md:text-[14px] text-muted-foreground leading-relaxed mb-6">
+          Escribe el diagnóstico, copia lo que dice tu receta, o cuéntalo con tus palabras.
+        </p>
+        <motion.div
+          animate={{ borderColor: isFocus ? 'hsl(var(--primary))' : 'hsl(var(--border))' }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center gap-2.5 px-4 h-12 rounded-2xl border border-border bg-muted/40 mb-4"
+        >
+          <Icon icon="solar:magnifer-linear" width={15} className="text-muted-foreground shrink-0" />
+          <span className="font-sans text-[14px] text-foreground flex-1 truncate">
+            {typed || <span className="text-muted-foreground/50">Escribe tu diagnóstico…</span>}
+            {isFocus && <span className="inline-block w-px h-[14px] bg-foreground align-middle ml-0.5 animate-pulse" />}
+          </span>
+        </motion.div>
+        <motion.button
+          animate={{
+            backgroundColor: ctaActive ? 'hsl(var(--secondary))' : 'hsl(var(--muted))',
+            color: ctaActive ? 'hsl(var(--secondary-foreground))' : 'hsl(var(--muted-foreground))',
+          }}
+          transition={{ duration: 0.25 }}
+          className="w-full h-12 rounded-2xl font-sans text-[14px] font-medium border-none flex items-center justify-center gap-2"
+        >
+          Continuar
+          <Icon icon="solar:arrow-right-linear" width={15} />
+        </motion.button>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Scene 2: Historial ─────────────────────────────────────────────────────
+
+const HISTORIAL_PACKS = [
+  { dx: 'Dislipidemia', sub: 'Tu colesterol y triglicéridos están alterados — sin síntomas, pero relevante.', meta: '1 de 6 capítulos · 3 may', status: 'partial' as const },
+  { dx: 'Diabetes tipo 2', sub: 'Tu cuerpo tiene dificultades para usar el azúcar como energía.', meta: '2 de 6 capítulos · 2 may', status: 'partial' as const },
+  { dx: 'Hipertensión arterial', sub: 'Tu corazón empuja la sangre con más fuerza de la necesaria.', meta: '4 de 6 capítulos · 30 abr', status: 'mostly' as const },
+]
+
+function SceneHistorial({ hiliteFirst }: { hiliteFirst: boolean }) {
+  return (
+    <motion.div
+      key="scene-historial"
+      className="absolute inset-0 px-4 md:px-10 pt-5 md:pt-8 pb-16 md:pb-10 overflow-hidden"
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+    >
+      <NotifBell />
+      <div className="max-w-[640px] mx-auto h-full">
+        <PageHeader eyebrow="3 diagnósticos" title="Mi" italic="expediente" />
+        {/* Filter chips */}
+        <div className="flex gap-1.5 flex-wrap my-4 md:my-5">
+          {['Todos', 'Sin leer', 'A medias', 'Completados'].map((c, i) => (
+            <span
+              key={c}
+              className={[
+                'px-3 py-1 rounded-full font-sans text-[11px] md:text-[12px] border',
+                i === 0 ? 'bg-foreground text-background border-transparent' : 'border-border text-muted-foreground',
+              ].join(' ')}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+        {/* Pack list */}
+        <motion.div
+          className="flex flex-col gap-2.5"
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
+        >
+          {HISTORIAL_PACKS.map((p, i) => (
+            <motion.div
+              key={p.dx}
+              variants={{
+                hidden: { opacity: 0, y: 8 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 0.61, 0.36, 1] } },
+              }}
+              animate={
+                i === 0 && hiliteFirst
+                  ? {
+                      boxShadow: [
+                        '0 0 0 0px hsl(var(--primary) / 0)',
+                        '0 0 0 4px hsl(var(--primary) / 0.16)',
+                        '0 0 0 8px hsl(var(--primary) / 0)',
+                      ],
+                      borderColor: ['hsl(var(--border))', 'hsl(var(--primary) / 0.5)', 'hsl(var(--primary) / 0.5)'],
+                    }
+                  : {}
+              }
+              transition={{ duration: 1.2, ease: 'easeOut' }}
+              className="rounded-2xl border border-border bg-background overflow-hidden"
+            >
+              {/* Progress bar */}
+              <div className="h-[3px] bg-muted">
+                <div className={p.status === 'mostly' ? 'h-full bg-primary w-[66%]' : 'h-full bg-primary/50 w-[20%]'} />
+              </div>
+              <div className="px-4 md:px-5 py-3 md:py-4 flex items-start gap-3 md:gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-serif text-[15px] md:text-[17px] tracking-[-0.015em] truncate">{p.dx}</h3>
+                  <p className="font-sans text-[12px] md:text-[12.5px] text-muted-foreground line-clamp-2 leading-snug mt-0.5">{p.sub}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="font-mono text-[9px] md:text-[10px] tracking-[.08em] uppercase text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">A medias</span>
+                    <span className="font-mono text-[9px] md:text-[10px] text-muted-foreground/40">{p.meta}</span>
+                  </div>
+                </div>
+                <Icon icon="solar:alt-arrow-right-linear" width={16} className="text-muted-foreground shrink-0 mt-0.5" />
+              </div>
+              <div className={[
+                'border-t border-border/60 px-4 md:px-5 py-2 font-sans text-[11px] md:text-[12px] flex items-center justify-between',
+                'bg-muted/40 text-muted-foreground',
+              ].join(' ')}>
+                <span>Continuar</span>
+                <Icon icon="solar:arrow-right-linear" width={11} />
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Scene 3: Pack (chapter view) ───────────────────────────────────────────
+
+const PACK_TLDR = 'Tienes demasiada grasa circulando en tu sangre, y eso no duele, pero va dañando tus arterias en silencio.'
+
+function ScenePack({ readProgress, sceneT }: { readProgress: number; sceneT: number }) {
+  // Typewriter on TLDR — starts ~0.4s into the scene, finishes around 2.2s.
+  // Words-at-a-time feels natural (real prose) and more polished than
+  // letter-by-letter for long sentences.
+  const TLDR_START = 0.4
+  const TLDR_END = 2.2
+  const tldrWords = useMemo(() => PACK_TLDR.split(' '), [])
+  const tldrProgress = Math.max(0, Math.min(1, (sceneT - TLDR_START) / (TLDR_END - TLDR_START)))
+  const tldrShown = tldrWords.slice(0, Math.ceil(tldrProgress * tldrWords.length)).join(' ')
+  const tldrTyping = tldrProgress > 0 && tldrProgress < 1
+
+  // Body paragraph fades in only after TLDR is done — feels like reading flow.
+  const bodyVisible = sceneT > TLDR_END + 0.1
+  const calloutVisible = sceneT > TLDR_END + 0.7
+
+  return (
+    <motion.div
+      key="scene-pack"
+      className="absolute inset-0 flex flex-col"
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+    >
+      {/* Mobile chapter tabs */}
+      <div className="md:hidden sticky top-0 z-10 bg-foreground/[0.04] border-b border-border/70 px-4 py-2.5 flex items-center gap-1.5">
+        <motion.span
+          layout
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          className="h-7 px-3 rounded-full bg-primary text-white font-sans text-xs font-medium flex items-center"
+        >
+          ¿Qué es?
+        </motion.span>
+        {[1, 2, 3, 4, 5].map(i => (
+          <motion.span
+            key={i}
+            layout
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            className="h-2 w-2 rounded-full bg-foreground/30"
+          />
+        ))}
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-hidden px-5 md:px-12 pt-5 md:pt-8 pb-20 md:pb-16">
+        <div className="max-w-[560px] mx-auto">
+          {/* Top meta + actions */}
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <span className="font-mono text-[9px] md:text-[10px] tracking-[.15em] uppercase text-muted-foreground/60">
+              01 · 3 MIN
+            </span>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="hidden md:inline-flex h-[28px] px-2.5 rounded-full bg-background border border-border items-center gap-1.5 font-sans text-[11px]">
+                <Icon icon="solar:clipboard-check-bold-duotone" width={13} className="text-secondary" />
+                Preparar consulta
+                <span className="font-mono text-[8px] tracking-[.1em] uppercase bg-secondary/15 text-secondary rounded px-1 py-0.5 ml-0.5">Pro</span>
+              </span>
+              <motion.span
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="inline-flex h-[26px] md:h-[28px] px-2.5 rounded-full bg-foreground text-background items-center gap-1 font-sans text-[10px] md:text-[11px] font-medium shadow-[var(--c-btn-primary-shadow)]"
+              >
+                <Icon icon="solar:chat-round-bold-duotone" width={13} />
+                <span className="hidden md:inline">Pregúntale a Aliis</span>
+                <span className="md:hidden">Aliis</span>
+              </motion.span>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h1 className="font-serif text-[22px] md:text-[32px] leading-[1.12] tracking-[-0.022em] mb-2.5">
+            ¿Qué es <em className="text-muted-foreground">exactamente?</em>
+          </h1>
+          {/* TL;DR — typewriter words-at-a-time */}
+          <p className="font-serif italic text-muted-foreground text-[13px] md:text-[15px] leading-[1.55] mb-5 md:mb-6 min-h-[3em]">
+            {tldrShown}
+            {tldrTyping && (
+              <span
+                className="inline-block w-[2px] h-[0.9em] bg-muted-foreground/60 ml-0.5 align-middle"
+                style={{ animation: 'aliis-blink 0.9s steps(2) infinite' }}
+              />
+            )}
+          </p>
+
+          {/* Body — fades in after TLDR finishes typing */}
+          <div className="space-y-3.5 md:space-y-4 font-sans text-[13px] md:text-[15px] leading-[1.7] text-foreground">
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={bodyVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={{ duration: 0.4 }}
+            >
+              Oscar, recibir otro diagnóstico encima de la diabetes y la hipertensión puede sentirse como demasiado. Pero quiero que sepas algo: esto no es una emergencia de hoy.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={calloutVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={{ duration: 0.45 }}
+              className="my-5 md:my-6 p-4 md:p-5 rounded-[14px] border bg-[rgba(31,138,155,.05)] border-[rgba(31,138,155,.18)]"
+            >
+              <p className="font-mono text-[9px] md:text-[10px] tracking-[.15em] uppercase text-primary mb-2">
+                Para imaginarlo así
+              </p>
+              <p className="font-serif text-[13px] md:text-[15px] leading-[1.55] m-0">
+                Piensa en tus arterias como tuberías. El LDL alto es como cal que se va pegando por dentro, estrechando el paso poco a poco.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer with progress */}
+      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background">
+        <div className="h-[2px] bg-muted">
+          <motion.div
+            className="h-full bg-primary"
+            animate={{ width: `${readProgress * 100}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
+        </div>
+        <div className="flex items-center justify-between px-4 md:px-12 py-2.5 md:py-3 md:pb-3 pb-[calc(0.625rem+44px+env(safe-area-inset-bottom))] md:pb-3">
+          <span className="px-3 md:px-4 py-1.5 rounded-full border border-border font-sans text-[11px] md:text-[12px] text-muted-foreground">← Anterior</span>
+          <span className="font-mono text-[10px] md:text-[11px] text-muted-foreground/50 tracking-[.08em]">1 / 5</span>
+          <span className="px-3 md:px-4 py-1.5 rounded-full bg-foreground text-background font-sans text-[11px] md:text-[12px] font-medium shadow-[var(--c-btn-primary-shadow)]">Siguiente →</span>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Scene 4: Chat drawer ───────────────────────────────────────────────────
+
+function SceneChat({ userQuestion, aiText, isTyping }: { userQuestion: string; aiText: string; isTyping: boolean }) {
+  return (
+    <motion.div
+      key="scene-chat"
+      className="absolute inset-0"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.28 }}
+    >
+      {/* Pack content behind (fully read state, no typing animation) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <ScenePack readProgress={0.5} sceneT={10} />
+      </div>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-foreground/20"
+      />
+      {/* Drawer */}
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 30 }}
+        className="absolute top-0 right-0 bottom-0 w-full md:w-[340px] bg-background border-l border-border flex flex-col shadow-2xl"
+      >
+        {/* Header */}
+        <div className="px-5 py-3.5 border-b border-border flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-mono text-[9px] tracking-[.18em] uppercase text-primary/70 mb-0.5">· Aliis ·</p>
+            <p className="font-serif text-[13px] md:text-[15px] truncate">Dislipidemia</p>
+          </div>
+          <Icon icon="solar:close-circle-bold" width={18} className="text-muted-foreground/60 mt-0.5" />
+        </div>
+        {/* Tabs */}
+        <div className="flex border-b border-border">
+          <span className="flex-1 py-2 font-sans text-[12px] font-medium text-primary border-b-2 border-primary text-center">Chat</span>
+          <span className="flex-1 py-2 font-sans text-[12px] font-medium text-muted-foreground text-center">Mis apuntes</span>
+        </div>
+        {/* Body */}
+        <div className="flex-1 px-3.5 py-3.5 overflow-hidden flex flex-col gap-3">
+          {userQuestion && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex justify-end"
+            >
+              <div className="max-w-[85%] bg-foreground text-background rounded-[12px_12px_3px_12px] px-3 py-2 font-sans text-[12px] leading-[1.6]">
+                {userQuestion}
+              </div>
+            </motion.div>
+          )}
+          {(aiText || isTyping) && (
+            <div className="flex gap-2 items-start">
+              <div className="w-6 h-6 rounded-full bg-background border border-border shrink-0 flex items-center justify-center mt-0.5">
+                <img src="/assets/aliis-logo.png" alt="" width={14} height={14} className="object-contain" />
+              </div>
+              <div className="max-w-[85%] bg-muted border border-border rounded-[3px_12px_12px_12px] px-3 py-2 font-sans text-[12px] leading-[1.6]">
+                {aiText}
+                {isTyping && (
+                  <span className="inline-flex gap-0.5 ml-1 align-middle">
+                    {[0, 1, 2].map(i => (
+                      <motion.span
+                        key={i}
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }}
+                        className="w-1 h-1 rounded-full bg-primary"
+                      />
+                    ))}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Input */}
+        <div className="px-3.5 pt-2 pb-3.5 border-t border-border">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl border border-border bg-background">
+            <span className="flex-1 font-sans text-[12px] text-muted-foreground/50 truncate">Pregunta sobre Dislipidemia…</span>
+            <span className="w-6 h-6 rounded-full bg-foreground text-background flex items-center justify-center shrink-0">
+              <Icon icon="solar:alt-arrow-up-bold" width={11} />
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─── Scene 5: Diario (with whisker BP chart) ────────────────────────────────
+
+const DIARIO_DAYS = ['26/04', '27/04', '28/04', '29/04', '30/04']
+// SBP / DBP per day
+const BP_DATA: { sbp: number; dbp: number }[] = [
+  { sbp: 122, dbp: 78 },
+  { sbp: 138, dbp: 88 },
+  { sbp: 132, dbp: 84 },
+  { sbp: 128, dbp: 82 },
+  { sbp: 134, dbp: 86 },
+]
+
+function SceneDiario({ chartProgress }: { chartProgress: number }) {
+  // Chart geometry
+  const W = 320
+  const H = 110
+  const PAD_X = 18
+  const PAD_Y = 12
+  const Y_MIN = 60
+  const Y_MAX = 150
+  const xs = (i: number) => PAD_X + (i / (BP_DATA.length - 1)) * (W - PAD_X * 2)
+  const ys = (v: number) => H - PAD_Y - ((v - Y_MIN) / (Y_MAX - Y_MIN)) * (H - PAD_Y * 2)
+
+  // Full MAP polyline path — always rendered fully; the line "draws itself"
+  // via pathLength clipping animated below.
+  const fullMapPath = BP_DATA
+    .map((d, i) => {
+      const map = Math.round((d.sbp + 2 * d.dbp) / 3)
+      return `${i === 0 ? 'M' : 'L'} ${xs(i).toFixed(1)} ${ys(map).toFixed(1)}`
+    })
+    .join(' ')
+
+  return (
+    <motion.div
+      key="scene-diario"
+      className="absolute inset-0 px-4 md:px-10 pt-5 md:pt-8 pb-16 md:pb-10 overflow-hidden"
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -24 }}
+      transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+    >
+      <NotifBell />
+      <div className="max-w-[560px] mx-auto h-full overflow-hidden">
+        <p className="font-mono text-[9px] md:text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-1">
+          Mi diario
+        </p>
+        <h1 className="font-serif text-[22px] md:text-[28px] leading-[1.2]">
+          Tu <em>diario</em> de salud
+        </h1>
+
+        {/* Aliis insight */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="mt-4 md:mt-5 p-3.5 md:p-4 rounded-2xl border border-primary/20 bg-primary/5"
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-5 h-5 rounded-full bg-background border border-border flex items-center justify-center">
+              <img src="/assets/aliis-logo.png" alt="" width={11} height={11} className="object-contain" />
+            </div>
+            <span className="font-mono text-[9px] md:text-[10px] tracking-[.12em] uppercase text-primary">Aliis</span>
+          </div>
+          <p className="font-serif italic text-[12px] md:text-[14px] leading-[1.5] text-foreground/85">
+            Hola Oscar, tu presión esta semana ha estado en{' '}
+            <motion.span
+              initial={{ backgroundColor: 'rgba(231,76,60,0)' }}
+              animate={{ backgroundColor: ['rgba(231,76,60,0)', 'rgba(231,76,60,0.18)', 'rgba(231,76,60,0)'] }}
+              transition={{ delay: 0.6, duration: 1.4, ease: 'easeInOut' }}
+              className="not-italic font-sans font-medium text-foreground rounded px-1"
+            >
+              132/84
+            </motion.span>{' '}
+            — un poco arriba de lo ideal. Vale la pena mencionarlo en tu próxima consulta.
+          </p>
+        </motion.div>
+
+        {/* Chart card */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="mt-3 md:mt-4 p-3.5 md:p-4 rounded-2xl border border-border bg-card"
+        >
+          {/* Chips */}
+          <div className="flex flex-wrap gap-1 md:gap-1.5 mb-3">
+            {[
+              { label: 'Glucosa', active: false },
+              { label: 'Presión', active: true },
+              { label: 'FC', active: false },
+              { label: 'Peso', active: false },
+              { label: 'Temp', active: false },
+            ].map(c => (
+              <span
+                key={c.label}
+                className={[
+                  'px-2 md:px-2.5 py-0.5 rounded-full font-sans text-[10px] md:text-[11px] border',
+                  c.active ? 'bg-foreground text-background border-transparent' : 'bg-transparent text-muted-foreground border-border',
+                ].join(' ')}
+              >
+                {c.label}
+              </span>
+            ))}
+          </div>
+
+          {/* SVG chart — line draws itself, then whiskers cascade in */}
+          <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+            {/* grid lines (always visible) */}
+            {[80, 100, 120, 140].map(v => (
+              <line
+                key={v}
+                x1={PAD_X}
+                x2={W - PAD_X}
+                y1={ys(v)}
+                y2={ys(v)}
+                stroke="hsl(var(--border))"
+                strokeDasharray="2 3"
+                strokeWidth={1}
+              />
+            ))}
+            {/* MAP line — full path rendered, but pathLength clips it
+                progressively from 0 → 1 driven by chartProgress. This is the
+                native SVG "drawing" effect: feels like a pen tracing the line. */}
+            <motion.path
+              d={fullMapPath}
+              stroke="#e74c3c"
+              strokeWidth={1.8}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ pathLength: chartProgress }}
+            />
+            {/* Whiskers — each whisker fades+scales-in when its corresponding
+                segment of the line has been drawn. Threshold = (i / N). */}
+            {BP_DATA.map((d, i) => {
+              const threshold = i / Math.max(BP_DATA.length - 1, 1)
+              const visible = chartProgress >= threshold - 0.03
+              const x = xs(i)
+              const yTop = ys(d.sbp)
+              const yBot = ys(d.dbp)
+              const map = Math.round((d.sbp + 2 * d.dbp) / 3)
+              const yMap = ys(map)
+              return (
+                <motion.g
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={visible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  style={{ transformOrigin: `${x}px ${yMap}px` }}
+                  stroke="#e74c3c"
+                  strokeWidth={1.4}
+                  strokeLinecap="round"
+                >
+                  <line x1={x} x2={x} y1={yTop} y2={yBot} />
+                  <line x1={x - 3.5} x2={x + 3.5} y1={yTop} y2={yTop} />
+                  <line x1={x - 3.5} x2={x + 3.5} y1={yBot} y2={yBot} />
+                  <circle cx={x} cy={yMap} r={2.6} fill="#e74c3c" stroke="none" />
+                </motion.g>
+              )
+            })}
+            {/* x labels */}
+            {DIARIO_DAYS.map((d, i) => (
+              <text
+                key={d}
+                x={xs(i)}
+                y={H - 1}
+                fontSize={8}
+                fontFamily="var(--font-mono)"
+                fill="hsl(var(--muted-foreground))"
+                textAnchor="middle"
+                opacity={0.6}
+              >
+                {d}
+              </text>
+            ))}
+          </svg>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Caption (below browser) ────────────────────────────────────────────────
+
+function Caption({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <motion.div
+      key={title}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.3 }}
+      className="text-center mt-5 md:mt-6"
+    >
+      <p className="font-mono text-[9px] md:text-[10px] tracking-[.18em] uppercase text-muted-foreground/60 mb-1.5">
+        {eyebrow}
+      </p>
+      <h3 className="font-serif text-[18px] md:text-[22px] leading-[1.25] tracking-[-0.015em]">
+        {title}
+      </h3>
+    </motion.div>
+  )
+}
+
+// ─── Main component ─────────────────────────────────────────────────────────
+
+type Ripple = { id: number; x: number; y: number }
 
 export default function AliisDemo() {
-  const [t, setT] = useState(0) // global time in seconds
+  const [t, setT] = useState(0)
   const [playing, setPlaying] = useState(true)
-  const [scale, setScale] = useState(1)
-  // userPaused tracks explicit pause via the play/pause button, so the
-  // IntersectionObserver doesn't restart playback when the user paused manually.
+  // Container-driven responsive: switch to bottom-nav layout when the demo's
+  // own width is narrow, regardless of the page viewport. This way the demo
+  // adapts whether it's embedded full-width on mobile or scaled inside a
+  // narrow card on desktop.
+  const [isMobile, setIsMobile] = useState(false)
+  const [ripples, setRipples] = useState<Ripple[]>([])
+  const rippleIdRef = useRef(0)
+
+  function emitRipple(x: number, y: number) {
+    const id = ++rippleIdRef.current
+    setRipples(prev => [...prev, { id, x, y }])
+    // Auto-remove after the ripple animation finishes (650ms).
+    setTimeout(() => {
+      setRipples(prev => prev.filter(r => r.id !== id))
+    }, 700)
+  }
   const userPausedRef = useRef(false)
-  const shellHostRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0)
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const frameRef = useRef<HTMLDivElement | null>(null)
 
-  // Pause RAF when demo scrolls out of viewport — saves CPU on mobile and
-  // on desktop when the user scrolls past the hero. Resumes automatically
-  // when the demo comes back into view (unless the user manually paused).
+  // Pause RAF when the demo is offscreen
   useEffect(() => {
     const el = rootRef.current
     if (!el || typeof IntersectionObserver === 'undefined') return
@@ -750,31 +881,25 @@ export default function AliisDemo() {
           setPlaying(false)
         }
       },
-      { threshold: 0.1 } // pause when less than 10% is visible
+      { threshold: 0.1 }
     )
     io.observe(el)
     return () => io.disconnect()
   }, [])
 
-  // Auto-scale fixed 1280×724 shell to fit the browser body
+  // Container-width based isMobile flag. Threshold 640px matches the natural
+  // shrink point where the sidebar (208px) eats too much horizontal real estate.
   useEffect(() => {
-    const compute = () => {
-      const host = shellHostRef.current
-      if (!host) return
-      const r = host.getBoundingClientRect()
-      const designW = 1280
-      const designH = 724
-      const s = Math.min(r.width / designW, r.height / designH)
-      setScale(s || 1)
-    }
-    compute()
-    const ro = new ResizeObserver(compute)
-    if (shellHostRef.current) ro.observe(shellHostRef.current)
-    window.addEventListener('resize', compute)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', compute)
-    }
+    const el = frameRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width
+        setIsMobile(w < 640)
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
   const totalDur = useMemo(() => SCENES.reduce((a, s) => a + s.dur, 0), [])
@@ -784,9 +909,9 @@ export default function AliisDemo() {
       const dt = (now - lastRef.current) / 1000
       lastRef.current = now
       if (playing) {
-        setT((prev) => {
+        setT(prev => {
           let next = prev + dt
-          if (next >= totalDur) next = 0 // loop
+          if (next >= totalDur) next = 0
           return next
         })
       }
@@ -798,7 +923,7 @@ export default function AliisDemo() {
     }
   }, [playing, totalDur])
 
-  // Find current scene
+  // Resolve current scene + intra-scene progress
   let acc = 0
   let sceneIdx = 0
   let sceneT = 0
@@ -817,149 +942,183 @@ export default function AliisDemo() {
   const scene = SCENES[sceneIdx]
   const sceneProgress = Math.min(1, sceneT / scene.dur)
 
-  // Per-scene state
+  // Per-scene derived state
   const typedChars = Math.min(FULL_DIAG.length, Math.floor((sceneT - 0.6) / 0.13))
   const typedText = sceneT > 0.6 ? FULL_DIAG.slice(0, Math.max(0, typedChars)) : ''
   const inputFocus = sceneT > 0.3 && sceneT < scene.dur - 0.3
   const ctaActive = typedText.length > 0
-  const hiliteFirst = sceneT > 1.8
+  const hiliteFirst = sceneT > 1.6
   const readProg = Math.min(1, sceneT / scene.dur)
-  const userQuestion = sceneT > 1.0 ? '¿porqué pasa?' : ''
+  const userQuestion = sceneT > 1.0 ? '¿por qué pasa?' : ''
   const aiFull =
-    'Buena pregunta. Tu hígado tiene unos receptores que atrapan el LDL para eliminarlo. Si no funcionan bien, el colesterol se queda dando vueltas y termina pegándose en las arterias.'
+    'Buena pregunta. Tu hígado tiene receptores que atrapan el LDL. Si no funcionan bien, el colesterol se queda dando vueltas y se pega en las arterias.'
   const aiStart = 1.6
-  const aiChars = Math.min(aiFull.length, Math.floor((sceneT - aiStart) / 0.025))
-  const aiText = sceneT > aiStart ? aiFull.slice(0, Math.max(0, aiChars)) : ''
-  const isTyping = sceneT > aiStart && aiChars < aiFull.length
-  const chartProgress = Math.min(1, Math.max(0, (sceneT - 0.8) / (scene.dur - 1.5)))
+  // Stream by word-chunks (mimics real LLM token streaming) instead of char
+  // by char — feels much more realistic. Average chunk size is 1-2 words,
+  // pace is ~12 tokens/sec which matches Haiku's typical streaming speed.
+  const aiWords = useMemo(() => aiFull.split(/(\s+)/), []) // keep whitespace tokens
+  const aiVisibleTokens = Math.min(aiWords.length, Math.floor((sceneT - aiStart) * 14))
+  const aiText = sceneT > aiStart ? aiWords.slice(0, Math.max(0, aiVisibleTokens)).join('') : ''
+  const isTyping = sceneT > aiStart && aiVisibleTokens < aiWords.length
+  const chartProgress = Math.min(1, Math.max(0, (sceneT - 0.6) / (scene.dur - 1.5)))
 
   const cursor = interpCursor(CURSOR_TARGETS[scene.id] ?? [{ t: 0, x: 50, y: 50 }], sceneT)
 
-  // Crossfade with previous scene
-  const [prevScene, setPrevScene] = useState<SceneId | null>(null)
-  const lastSceneIdRef = useRef<SceneId>(scene.id)
-  useEffect(() => {
-    if (lastSceneIdRef.current !== scene.id) {
-      const prevId = lastSceneIdRef.current
-      lastSceneIdRef.current = scene.id
-      setPrevScene(prevId)
-      const id = setTimeout(() => setPrevScene(null), 700)
-      return () => clearTimeout(id)
+  // Click ripple emission. When sceneT crosses a click time defined in
+  // CLICK_TIMES, push a ripple at the cursor position; AnimatePresence
+  // handles its scale-out + fade-out animation. We track the last emitted
+  // index per scene so we don't double-fire on every frame.
+  const lastClickIdxRef = useRef<{ sceneId: SceneId; idx: number }>({ sceneId: scene.id, idx: -1 })
+  // Reset emission tracker on scene change (otherwise re-entering scene
+  // ingreso wouldn't re-emit clicks because idx is "ahead").
+  if (lastClickIdxRef.current.sceneId !== scene.id) {
+    lastClickIdxRef.current = { sceneId: scene.id, idx: -1 }
+  }
+  const clickTimes = CLICK_TIMES[scene.id] ?? []
+  for (let i = lastClickIdxRef.current.idx + 1; i < clickTimes.length; i++) {
+    if (sceneT >= clickTimes[i]) {
+      lastClickIdxRef.current.idx = i
+      // Push to ripples queue (defer so we don't setState during render)
+      queueMicrotask(() => emitRipple(cursor.x, cursor.y))
+    } else {
+      break
     }
-  }, [scene.id])
+  }
 
-  const renderSceneById = (id: SceneId) => {
+  function renderScene(id: SceneId): React.ReactNode {
     switch (id) {
-      case 'nuevo':
-        return <SceneNuevo typed={typedText} isFocus={inputFocus} ctaActive={ctaActive} />
-      case 'expediente':
-        return <SceneExpediente hiliteFirst={hiliteFirst} />
-      case 'explicacion':
-        return <SceneExplicacion readProgress={readProg} />
+      case 'ingreso':
+        return <SceneIngreso typed={typedText} isFocus={inputFocus} ctaActive={ctaActive} />
+      case 'historial':
+        return <SceneHistorial hiliteFirst={hiliteFirst} />
+      case 'pack':
+        return <ScenePack readProgress={readProg} sceneT={sceneT} />
       case 'chat':
         return <SceneChat userQuestion={userQuestion} aiText={aiText} isTyping={isTyping} />
       case 'diario':
         return <SceneDiario chartProgress={chartProgress} />
-      default:
-        return null
     }
   }
 
-  const navMap: Record<SceneId, string> = {
-    nuevo: 'nuevo',
-    expediente: 'expediente',
-    explicacion: 'expediente',
-    chat: 'expediente',
-    diario: 'diario',
-  }
-  const activeNav = navMap[scene.id] || 'nuevo'
-
   return (
-    <div className="aliis-demo-root" ref={rootRef}>
-      <div className="aliis-stage">
-        <div className="aliis-bg-glow" />
-
-        <div className="aliis-stage-inner">
-          <BrowserFrame ref={shellHostRef}>
-            <div className="aliis-app-shell" style={{ transform: `scale(${scale})` }}>
-              <Sidebar active={activeNav} />
-              <div className="aliis-main-pane">
-                {prevScene && (
-                  <div className="aliis-scene-wrap is-leaving" key={'leave-' + prevScene}>
-                    {renderSceneById(prevScene)}
-                  </div>
-                )}
-                <div className="aliis-scene-wrap is-entering" key={'enter-' + scene.id}>
-                  {renderSceneById(scene.id)}
-                </div>
-                <div
-                  className="aliis-cursor"
-                  style={{ left: cursor.x + '%', top: cursor.y + '%' }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24">
-                    <path
-                      d="M5 3l5 18 3-7 7-3z"
-                      fill="#0F2633"
-                      stroke="#fff"
-                      strokeWidth="1.4"
-                      strokeLinejoin="round"
+    <div ref={rootRef} className="relative w-full">
+      {/* Browser frame holds the whole thing. Aspect ratio shifts to taller
+          (4/3) on narrow containers to give mobile content room to breathe. */}
+      <div
+        ref={frameRef}
+        className={[
+          'relative max-w-[960px] mx-auto',
+          isMobile ? 'aspect-[3/4]' : 'aspect-[16/10]',
+        ].join(' ')}
+      >
+        <BrowserFrame>
+          <div className="relative w-full h-full flex bg-background">
+            {/* Sidebar — only when container is wide enough */}
+            <Sidebar active={scene.nav} isMobile={isMobile} />
+            {/* Main pane */}
+            <div className="relative flex-1 min-w-0 overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                {renderScene(scene.id)}
+              </AnimatePresence>
+              {/* Click ripples — fixed at the click position, scale + fade out. */}
+              {!isMobile && (
+                <AnimatePresence>
+                  {ripples.map(r => (
+                    <motion.span
+                      key={r.id}
+                      initial={{ opacity: 0.45, scale: 0 }}
+                      animate={{ opacity: 0, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.65, ease: 'easeOut' }}
+                      style={{
+                        position: 'absolute',
+                        left: `${r.x}%`,
+                        top: `${r.y}%`,
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        border: '2px solid hsl(var(--primary))',
+                        pointerEvents: 'none',
+                        zIndex: 29,
+                      }}
                     />
+                  ))}
+                </AnimatePresence>
+              )}
+
+              {/* Cursor — hidden on mobile (touch interface, no pointer).
+                  Subtle scale-down "tap" pulse synced with click moments. */}
+              {!isMobile && (
+                <motion.div
+                  className="absolute pointer-events-none z-30"
+                  style={{ left: `${cursor.x}%`, top: `${cursor.y}%`, translateX: '-2px', translateY: '-2px' }}
+                  animate={{ scale: ripples.length > 0 ? 0.82 : 1 }}
+                  transition={{ duration: 0.12, ease: 'easeOut' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" className="drop-shadow-md">
+                    <path d="M5 3l5 18 3-7 7-3z" fill="hsl(var(--foreground))" stroke="white" strokeWidth={1.4} strokeLinejoin="round" />
                   </svg>
-                </div>
-              </div>
+                </motion.div>
+              )}
             </div>
-          </BrowserFrame>
-
-          <Caption eyebrow={scene.eyebrow} title={scene.caption} />
-
-          {/* Progress dots */}
-          <div className="aliis-progress">
-            {SCENES.map((s, i) => (
-              <div
-                key={s.id}
-                className={
-                  'aliis-progress-dot' +
-                  (i === sceneIdx ? ' is-active' : '') +
-                  (i < sceneIdx ? ' is-done' : '')
-                }
-                onClick={() => {
-                  let acc2 = 0
-                  for (let j = 0; j < i; j++) acc2 += SCENES[j].dur
-                  setT(acc2)
-                }}
-              >
-                <div
-                  className="aliis-progress-fill"
-                  style={{
-                    width:
-                      i < sceneIdx ? '100%' : i === sceneIdx ? sceneProgress * 100 + '%' : '0%',
-                  }}
-                />
-              </div>
-            ))}
+            {/* Bottom nav — only on narrow containers */}
+            <BottomNav active={scene.nav === 'condiciones' ? 'historial' : scene.nav} isMobile={isMobile} />
           </div>
+        </BrowserFrame>
+      </div>
 
-          {/* Play/pause */}
+      {/* Caption */}
+      <AnimatePresence mode="wait">
+        <Caption key={scene.id} eyebrow={scene.eyebrow} title={scene.caption} />
+      </AnimatePresence>
+
+      {/* Progress dots */}
+      <div className="flex items-center justify-center gap-2 mt-4 md:mt-5">
+        {SCENES.map((s, i) => (
           <button
-            className="aliis-play"
+            key={s.id}
             onClick={() => {
-              userPausedRef.current = playing // if currently playing, user is pausing
-              setPlaying((p) => !p)
+              let acc2 = 0
+              for (let j = 0; j < i; j++) acc2 += SCENES[j].dur
+              setT(acc2)
             }}
-            aria-label={playing ? 'Pausar' : 'Reproducir'}
+            aria-label={`Ir a escena ${i + 1}`}
+            className="relative h-1 w-10 md:w-14 rounded-full bg-muted overflow-hidden border-none cursor-pointer p-0"
           >
-            {playing ? (
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="5" width="4" height="14" rx="1" />
-                <rect x="14" y="5" width="4" height="14" rx="1" />
-              </svg>
-            ) : (
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 4l13 8-13 8z" />
-              </svg>
-            )}
+            <div
+              className="absolute inset-y-0 left-0 bg-foreground transition-[width] duration-100 ease-linear"
+              style={{
+                width: i < sceneIdx ? '100%' : i === sceneIdx ? `${sceneProgress * 100}%` : '0%',
+              }}
+            />
           </button>
-        </div>
+        ))}
+      </div>
+
+      {/* Play / pause */}
+      <div className="flex justify-center mt-3">
+        <button
+          type="button"
+          onClick={() => {
+            userPausedRef.current = playing
+            setPlaying(p => !p)
+          }}
+          aria-label={playing ? 'Pausar' : 'Reproducir'}
+          className="w-9 h-9 rounded-full bg-muted text-foreground flex items-center justify-center border-none cursor-pointer hover:bg-muted/70 transition-colors"
+        >
+          {playing ? (
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          ) : (
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 4l13 8-13 8z" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail } from 'lucide-react'
+import { Mail, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
@@ -218,6 +218,16 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div className="relative w-full sm:max-w-[400px] bg-background rounded-2xl border border-border shadow-2xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 pointer-events-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
+
+        {/* Close button — top-right, always visible */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute right-3 top-3 w-9 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted bg-transparent border-none cursor-pointer transition-colors z-10"
+        >
+          <X size={18} />
+        </button>
 
         {/* Logo — siempre visible */}
         <div className="text-center mb-4">

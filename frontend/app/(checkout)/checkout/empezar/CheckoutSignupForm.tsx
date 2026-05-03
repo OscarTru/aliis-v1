@@ -150,62 +150,101 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1923] text-white relative overflow-hidden">
-      {/* Subtle background glow */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(31,138,155,0.18) 0%, transparent 60%)',
-        }}
-      />
+    // Split layout, identical to /checkout (step 2) so the visual transition
+    // between paso 1 → paso 2 is seamless. Same proportions, same colors,
+    // same back-button placement.
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
 
-      {/* Top bar */}
-      <div className="relative border-b border-white/10">
-        <div className="max-w-[1080px] mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
-          {/* Back — return wherever the user came from (landing, /precios,
-              /historial, etc). Falls back to /precios if no history. */}
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.history.length > 1) {
-                router.back()
-              } else {
-                router.push('/precios')
-              }
-            }}
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-[13px] font-sans bg-transparent border-none cursor-pointer p-0"
-          >
-            <ArrowLeft size={15} />
-            Volver
-          </button>
+      {/* Left — editorial, dark bg */}
+      <div className="bg-[#0a0a0a] flex flex-col px-10 py-12 lg:px-16 lg:py-16">
+        {/* Back */}
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back()
+            } else {
+              router.push('/precios')
+            }
+          }}
+          className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[.12em] uppercase text-white/30 hover:text-white/60 transition-colors bg-transparent border-none cursor-pointer p-0 self-start mb-12"
+        >
+          <ArrowLeft size={11} />
+          Volver
+        </button>
+
+        <div className="flex flex-col gap-8 flex-1">
+          {/* Logo */}
           <Image
-            src="/assets/aliis-original.png"
+            src="/assets/aliis-black-single.png"
             alt="Aliis"
-            width={72}
-            height={28}
-            className="object-contain opacity-90"
+            width={36}
+            height={36}
+            className="object-contain"
           />
+
+          {/* Step indicator */}
+          <div className="font-mono text-[10px] tracking-[.18em] uppercase text-[#1f8a9b]">
+            Paso 1 de 2 · Crea tu cuenta
+          </div>
+
+          {/* Headline */}
+          <div>
+            <p className="font-mono text-[10px] tracking-[.18em] uppercase text-white/30 mb-3">
+              Aliis Pro
+            </p>
+            <h1 className="font-serif text-[clamp(2rem,3.5vw,2.8rem)] leading-[1.15] text-white">
+              Empieza tu prueba{' '}
+              <em className="text-white/40">de 14 días.</em>
+            </h1>
+          </div>
+
+          {/* Features */}
+          <ul className="flex flex-col gap-3 list-none p-0 m-0">
+            {[
+              'Explicaciones ilimitadas con tu perfil médico',
+              'Asistente IA con memoria y streaming',
+              'Detector de inconsistencias dx ↔ tratamiento',
+              'Análisis de correlación síntoma-vital',
+              'Preparar consulta con tu médico',
+            ].map((f) => (
+              <li key={f} className="flex items-start gap-3">
+                <span className="text-[#1f8a9b] mt-0.5 text-[15px]">✓</span>
+                <span className="font-sans text-[14px] text-white/60">{f}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Price — at bottom */}
+          <div className="mt-auto pt-8 border-t border-white/10">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-sans text-[42px] font-bold text-white leading-none">
+                {planInfo.price}
+              </span>
+              <span className="font-sans text-[15px] text-white/40">
+                /{priceKey.endsWith('_yearly') ? 'año' : 'mes'}
+              </span>
+            </div>
+            <p className="font-sans text-[13px] text-[#1f8a9b] mt-2">
+              14 días gratis · no se cobra nada hasta que termine la prueba
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="relative max-w-[1080px] mx-auto px-5 sm:px-8 py-10 sm:py-14 grid grid-cols-1 md:grid-cols-[1.1fr_.9fr] gap-10 md:gap-14 items-start">
-
-        {/* Left: form */}
+      {/* Right — signup form */}
+      <div className="bg-background flex flex-col items-center justify-center px-6 py-10 lg:px-16 lg:py-16">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+          className="w-full max-w-[420px]"
         >
-          <div className="font-mono text-[10px] tracking-[.2em] uppercase text-white/50 mb-2">
-            Paso 1 de 2 · Crea tu cuenta
-          </div>
-          <h1 className="font-serif text-[clamp(2rem,4.5vw,3rem)] tracking-[-0.025em] leading-[1.05] m-0 mb-3">
-            Empieza tu prueba <em className="text-white/55">de 14 días.</em>
-          </h1>
-          <p className="font-sans text-[15px] text-white/60 leading-relaxed mb-7 max-w-[44ch]">
-            Crea tu cuenta primero. En el siguiente paso ingresarás tu método de pago — no se cobra nada hasta que terminen los 14 días de prueba.
+          <h2 className="font-serif text-[24px] text-foreground mb-2">
+            Crea tu cuenta
+          </h2>
+          <p className="font-sans text-[13.5px] text-muted-foreground leading-relaxed mb-6">
+            En el siguiente paso ingresarás tu método de pago. No se cobra nada hasta que terminen los 14 días.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -219,16 +258,16 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
                 required
                 spellCheck={false}
                 autoComplete="off"
-                className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 font-mono tracking-widest pr-9 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+                className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[12px] placeholder:text-muted-foreground/70 font-mono tracking-widest pr-9 focus-visible:border-primary/50"
               />
               {inviteCode.trim().length >= 6 && (
-                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-mono font-medium ${inviteChecking ? 'text-white/40' : inviteValidated ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-mono font-medium ${inviteChecking ? 'text-muted-foreground' : inviteValidated ? 'text-emerald-500' : 'text-destructive'}`}>
                   {inviteChecking ? '…' : inviteValidated ? '✓' : '✗'}
                 </span>
               )}
             </div>
             {inviteError && inviteCode.trim().length >= 6 && !inviteChecking && (
-              <p className="font-sans text-[12px] text-red-400 -mt-1">{inviteError}</p>
+              <p className="font-sans text-[12px] text-destructive -mt-1">{inviteError}</p>
             )}
 
             {/* Google OAuth — only active when invite is valid */}
@@ -236,16 +275,16 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={!inviteValidated || googleLoading}
-              className="w-full flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-[1.5px] border-white/15 bg-white text-black font-sans text-[14.5px] font-medium hover:bg-white/95 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+              className="w-full flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl border border-border bg-background hover:bg-muted text-foreground font-sans text-[14px] font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <GoogleIcon />
               {googleLoading ? 'Redirigiendo…' : 'Continuar con Google'}
             </button>
 
             <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="font-sans text-[11px] text-white/40">o con email</span>
-              <div className="flex-1 h-px bg-white/10" />
+              <div className="flex-1 h-px bg-border" />
+              <span className="font-sans text-[11px] text-muted-foreground">o con email</span>
+              <div className="flex-1 h-px bg-border" />
             </div>
 
             <div className="flex gap-2.5">
@@ -255,7 +294,7 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+                className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-primary/50"
               />
               <Input
                 type="text"
@@ -263,7 +302,7 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+                className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-primary/50"
               />
             </div>
             <Input
@@ -272,7 +311,7 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+              className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-primary/50"
             />
             <Input
               type="password"
@@ -281,7 +320,7 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+              className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-primary/50"
             />
             <Input
               type="password"
@@ -290,107 +329,67 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
-              className="h-12 rounded-xl border-[1.5px] border-white/15 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-secondary/30 focus-visible:ring-[3px] focus-visible:border-secondary"
+              className="h-11 rounded-xl border border-border bg-muted text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus-visible:border-primary/50"
             />
 
             <div className="flex flex-col gap-1.5 mt-2">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-start gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-white/20 accent-secondary flex-shrink-0 cursor-pointer"
+                  className="w-3.5 h-3.5 mt-0.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
                 />
-                <span className="font-sans text-[11px] text-white/55 leading-none">
+                <span className="font-sans text-[11.5px] text-muted-foreground leading-snug">
                   Acepto los{' '}
-                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">términos</a>
+                  <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">términos</a>
                   {' '}y la{' '}
-                  <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">política de privacidad</a>
+                  <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">política de privacidad</a>
                 </span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-start gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={acceptedMedicalData}
                   onChange={(e) => setAcceptedMedicalData(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-white/20 accent-secondary flex-shrink-0 cursor-pointer"
+                  className="w-3.5 h-3.5 mt-0.5 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
                 />
-                <span className="font-sans text-[11px] text-white/55 leading-none">
+                <span className="font-sans text-[11.5px] text-muted-foreground leading-snug">
                   Acepto el{' '}
-                  <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">tratamiento de mis datos de salud</a>
+                  <a href="/privacidad#datos-medicos" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">tratamiento de mis datos de salud</a>
                   {' '}(Art. 9 GDPR · LFPDPPP)
                 </span>
               </label>
             </div>
 
-            {error && <p className="text-red-400 font-sans text-[13px] m-0">{error}</p>}
+            {error && <p className="text-destructive font-sans text-[13px] m-0">{error}</p>}
 
             <Button
               type="submit"
               disabled={loading || !inviteValidated || !firstName.trim() || !lastName.trim() || !email.trim() || password.length < 6 || !confirmPassword || !acceptedTerms || !acceptedMedicalData}
-              className="h-12 rounded-xl mt-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 font-sans font-medium text-[15px] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-11 rounded-xl mt-2 bg-foreground text-background hover:bg-foreground/90 font-sans font-medium text-[14.5px] disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {loading ? 'Creando cuenta…' : 'Continuar →'}
             </Button>
           </form>
 
           {/* Already have account */}
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px] font-sans">
+          <div className="mt-5 text-[13px] font-sans text-center">
             <button
               type="button"
               onClick={() => setShowLogin(true)}
-              className="text-white/55 hover:text-white bg-transparent border-none cursor-pointer transition-colors"
+              className="text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer transition-colors"
             >
               ¿Ya tienes cuenta? Inicia sesión →
             </button>
           </div>
-        </motion.div>
 
-        {/* Right: order summary */}
-        <motion.aside
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.05 }}
-          className="md:sticky md:top-20"
-        >
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm">
-            <div className="font-mono text-[10px] tracking-[.2em] uppercase text-white/45 mb-3">
-              Resumen
-            </div>
-            <div className="flex items-baseline justify-between mb-1">
-              <h3 className="font-serif text-[22px] m-0">Aliis Pro</h3>
-              <span className="font-mono text-[10px] uppercase tracking-[.18em] text-emerald-400">14 días gratis</span>
-            </div>
-            <p className="font-serif italic text-[14px] text-white/55 m-0 mb-5">
-              {planInfo.label} · {planInfo.price}
-            </p>
-
-            <ul className="list-none p-0 m-0 flex flex-col gap-2.5 text-[13.5px] text-white/75">
-              {[
-                'Explicaciones ilimitadas con tu perfil médico',
-                'Asistente IA con memoria y streaming',
-                'Detector de inconsistencias dx ↔ tratamiento',
-                'Análisis de correlación síntoma-vital',
-                'El Hilo y Cápsula del tiempo',
-                'Preparar consulta con tu médico',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="hsl(var(--secondary))" strokeWidth="1.8" strokeLinecap="round" className="mt-1 shrink-0" aria-hidden>
-                    <path d="M3 7.5L6 10.5 11.5 4.5" />
-                  </svg>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="my-5 h-px bg-white/10" />
-
-            <div className="flex items-center gap-2 text-[12px] text-white/50">
-              <ShieldCheck size={14} />
-              <span>No te cobramos hasta que terminen los 14 días.</span>
-            </div>
+          {/* Trust footer */}
+          <div className="flex items-center justify-center gap-1.5 mt-6 text-[11.5px] text-muted-foreground">
+            <ShieldCheck size={13} />
+            <span>No te cobramos hasta que terminen los 14 días</span>
           </div>
-        </motion.aside>
+        </motion.div>
       </div>
 
       {showLogin && (
