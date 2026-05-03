@@ -289,7 +289,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
               <div className="flex-1">
                 <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">Medicamento *</label>
                 <input
-                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
+                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50"
                   placeholder="Ej: Metformina"
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -299,7 +299,7 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
               <div className="w-28">
                 <label className="font-mono text-[11px] tracking-[.12em] uppercase text-muted-foreground/60 mb-1.5 block">Dosis</label>
                 <input
-                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] focus:outline-none focus:border-primary/50 text-foreground"
+                  className="h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50"
                   placeholder="500 mg"
                   value={dose}
                   onChange={e => { setDose(e.target.value); setConfirmedDose(false) }}
