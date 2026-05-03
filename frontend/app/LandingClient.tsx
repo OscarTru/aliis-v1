@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,6 +15,33 @@ import { Icon } from '@iconify/react'
 import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
 import AliisDemo from '../components/AliisDemo'
+
+// ─── LazySection ──────────────────────────────────────────────
+// Defers mounting of below-the-fold sections until they approach
+// the viewport. rootMargin="400px" starts mounting ~400px before
+// visible, so there's no pop-in on normal scrolling.
+function LazySection({ children, minHeight = 400 }: { children: React.ReactNode; minHeight?: number }) {
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const observe = useCallback(() => {
+    if (!ref.current) return
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); io.disconnect() } },
+      { rootMargin: '400px' }
+    )
+    io.observe(ref.current)
+    return () => io.disconnect()
+  }, [])
+
+  useEffect(observe, [observe])
+
+  return (
+    <div ref={ref}>
+      {visible ? children : <div style={{ minHeight }} />}
+    </div>
+  )
+}
 
 // ─── Hero ─────────────────────────────────────────────────────
 
@@ -1165,12 +1192,12 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
       <Suspense><AppNav initialInitial={initialInitial} /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
       <DemoSection />
-      <WhatAliisDoes />
-      <HowItWorks />
-      <TrustSection />
-      <ProPowerTools />
-      <Founders />
-      <PricingSection onCTA={() => setShowLogin(true)} />
+      <LazySection minHeight={500}><WhatAliisDoes /></LazySection>
+      <LazySection minHeight={400}><HowItWorks /></LazySection>
+      <LazySection minHeight={200}><TrustSection /></LazySection>
+      <LazySection minHeight={600}><ProPowerTools /></LazySection>
+      <LazySection minHeight={500}><Founders /></LazySection>
+      <LazySection minHeight={400}><PricingSection onCTA={() => setShowLogin(true)} /></LazySection>
       <Footer />
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>

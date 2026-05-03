@@ -728,9 +728,33 @@ export default function AliisDemo() {
   const [t, setT] = useState(0) // global time in seconds
   const [playing, setPlaying] = useState(true)
   const [scale, setScale] = useState(1)
+  // userPaused tracks explicit pause via the play/pause button, so the
+  // IntersectionObserver doesn't restart playback when the user paused manually.
+  const userPausedRef = useRef(false)
   const shellHostRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // Pause RAF when demo scrolls out of viewport — saves CPU on mobile and
+  // on desktop when the user scrolls past the hero. Resumes automatically
+  // when the demo comes back into view (unless the user manually paused).
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!userPausedRef.current) setPlaying(true)
+        } else {
+          setPlaying(false)
+        }
+      },
+      { threshold: 0.1 } // pause when less than 10% is visible
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   // Auto-scale fixed 1280×724 shell to fit the browser body
   useEffect(() => {
@@ -851,7 +875,7 @@ export default function AliisDemo() {
   const activeNav = navMap[scene.id] || 'nuevo'
 
   return (
-    <div className="aliis-demo-root">
+    <div className="aliis-demo-root" ref={rootRef}>
       <div className="aliis-stage">
         <div className="aliis-bg-glow" />
 
@@ -916,7 +940,14 @@ export default function AliisDemo() {
           </div>
 
           {/* Play/pause */}
-          <button className="aliis-play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pausar' : 'Reproducir'}>
+          <button
+            className="aliis-play"
+            onClick={() => {
+              userPausedRef.current = playing // if currently playing, user is pausing
+              setPlaying((p) => !p)
+            }}
+            aria-label={playing ? 'Pausar' : 'Reproducir'}
+          >
             {playing ? (
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="5" width="4" height="14" rx="1" />
