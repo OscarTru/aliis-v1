@@ -82,8 +82,8 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
         <div className="ce-fade">
           <Eyebrow style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
-            Saliste de la consulta sin entender nada.{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>Aliis te lo explica.</em>
+            Saliste de tu consulta y no sabes qué sigue.{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>Aliis te acompaña.</em>
           </h1>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '40ch', margin: '0 0 28px' }}>
             Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
