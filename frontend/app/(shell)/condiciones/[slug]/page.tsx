@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createPublicSupabaseClient } from '@/lib/supabase-public'
 import { ConditionView } from '@/components/ConditionView'
 import type { Condition } from '@/lib/types'
+
+// Revalidate every hour — condition content is editorial and changes rarely.
+// ISR caches the rendered HTML at the edge, eliminating Supabase queries on
+// repeated visits to the same condition page.
+export const revalidate = 3600
 
 export default async function CondicionPage({
   params,
@@ -9,7 +14,7 @@ export default async function CondicionPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = createPublicSupabaseClient()
 
   const { data: condition } = await supabase
     .from('conditions')

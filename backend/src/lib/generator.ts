@@ -195,12 +195,25 @@ export async function generatePack(
         : []),
     ]
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
-      system: systemBlocks,
-      messages: [{ role: 'user', content: userPrompt }],
-    })
+    // 45s timeout — Sonnet 4.6 with 8k tokens normally finishes in 15-25s.
+    // If we cross 45s something is wrong (network, model overload); fail fast
+    // so the user gets a 5xx instead of waiting for Railway's hard timeout.
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 45_000)
+    let response
+    try {
+      response = await client.messages.create(
+        {
+          model: 'claude-sonnet-4-6',
+          max_tokens: 8192,
+          system: systemBlocks,
+          messages: [{ role: 'user', content: userPrompt }],
+        },
+        { signal: controller.signal }
+      )
+    } finally {
+      clearTimeout(timeout)
+    }
 
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')

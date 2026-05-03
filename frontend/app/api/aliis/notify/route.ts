@@ -60,28 +60,43 @@ export async function GET(req: Request) {
 
   if (shardedUserIds.length === 0) return Response.json({ sent: 0, skipped: 0, shard, total })
 
-  // Batched: who already received an insight notification today?
-  const { data: existingNotifs } = await supabase
-    .from('notifications')
-    .select('user_id')
-    .in('user_id', shardedUserIds)
-    .gte('created_at', todayStart)
-    .eq('type', 'insight')
-  const alreadyNotified = new Set((existingNotifs ?? []).map(r => r.user_id))
+  // Two independent cadences:
+  //  - insight: 1 per user every 7 days (LLM-backed, real spend, must dedupe)
+  //  - reminder: 1 per user every 24h ("registra tus signos") — cheap, no LLM
+  // We track them separately so a user can get a daily reminder without
+  // burning a fresh insight generation each day.
+  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Batched: cached insights for today
-  const { data: cachedInsights } = await supabase
-    .from('aliis_insights')
-    .select('user_id, content')
-    .in('user_id', shardedUserIds)
-    .gte('generated_at', todayStart)
+  // Insights already sent in the last 7 days (notifications + cache)
+  const [insightNotifsRes, reminderNotifsRes, cachedInsightsRes] = await Promise.all([
+    supabase
+      .from('notifications')
+      .select('user_id')
+      .in('user_id', shardedUserIds)
+      .gte('created_at', since7d)
+      .eq('type', 'insight'),
+    supabase
+      .from('notifications')
+      .select('user_id')
+      .in('user_id', shardedUserIds)
+      .gte('created_at', todayStart)
+      .eq('type', 'reminder'),
+    supabase
+      .from('aliis_insights')
+      .select('user_id, content')
+      .in('user_id', shardedUserIds)
+      .gte('generated_at', since7d),
+  ])
+
+  const insightSentInWeek = new Set((insightNotifsRes.data ?? []).map(r => r.user_id))
+  const reminderSentToday = new Set((reminderNotifsRes.data ?? []).map(r => r.user_id))
   const cacheByUser = new Map(
-    (cachedInsights ?? []).map(r => [r.user_id, r.content as string])
+    (cachedInsightsRes.data ?? []).map(r => [r.user_id, r.content as string])
   )
 
-  // Users that still need an insight generated
+  // Users that still need an insight generated (no notif this week + no cache)
   const toGenerate = shardedUserIds.filter(
-    id => !alreadyNotified.has(id) && !cacheByUser.has(id)
+    id => !insightSentInWeek.has(id) && !cacheByUser.has(id)
   )
 
   // Batched: profiles, symptom_logs, packs for users needing generation
@@ -132,10 +147,30 @@ export async function GET(req: Request) {
     url: string
   }> = []
   const expiredEndpoints: string[] = []
+  const pushPayloads: Array<{ endpoint: string; p256dh: string; auth: string; body: string }> = []
 
+  // ---- Phase 1: emit reminders (cheap, no LLM, daily cadence) ----
+  // Reminders go out for everyone who hasn't already received one today.
+  // No Anthropic call, no concurrency limit needed.
   for (const userId of shardedUserIds) {
-    if (alreadyNotified.has(userId)) { skipped++; continue }
+    if (reminderSentToday.has(userId)) continue
+    notificationsToInsert.push({
+      user_id: userId,
+      title: '¿Cómo te sientes hoy?',
+      body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
+      type: 'reminder',
+      url: '/diario?registrar=1',
+    })
+  }
 
+  // ---- Phase 2: generate insights with bounded concurrency (weekly cadence) ----
+  // Each Anthropic call takes 1-3s. With concurrency 6, 200 generations finish
+  // in ~30-90s, well under Vercel's 60s function timeout.
+  const CONCURRENCY = 6
+  const usersToProcess = shardedUserIds.filter(id => !insightSentInWeek.has(id))
+  skipped = shardedUserIds.length - usersToProcess.length
+
+  async function processUser(userId: string): Promise<void> {
     let content = cacheByUser.get(userId) ?? null
 
     if (!content) {
@@ -160,7 +195,7 @@ export async function GET(req: Request) {
         content = (message.content[0] as { type: string; text: string }).text.trim()
       } catch {
         skipped++
-        continue
+        return
       }
 
       insightsToInsert.push({
@@ -170,37 +205,45 @@ export async function GET(req: Request) {
       })
     }
 
-    notificationsToInsert.push(
-      {
-        user_id: userId,
-        title: 'Aliis',
-        body: content.slice(0, 500),
-        type: 'insight',
-        url: '/diario',
-      },
-      {
-        user_id: userId,
-        title: '¿Cómo te sientes hoy?',
-        body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
-        type: 'reminder',
-        url: '/diario?registrar=1',
-      }
-    )
-
+    notificationsToInsert.push({
+      user_id: userId,
+      title: 'Aliis',
+      body: content.slice(0, 500),
+      type: 'insight',
+      url: '/diario',
+    })
     sent++
 
     const sub = subsByUser.get(userId)
-    if (sub) {
-      const result = await sendPushNotification(sub, {
-        title: 'Aliis',
-        body: content.slice(0, 120),
-        url: '/diario',
-      })
-      if (!result.ok && result.expired) {
-        expiredEndpoints.push(sub.endpoint)
-      }
-    }
+    if (sub) pushPayloads.push({ ...sub, body: content.slice(0, 120) })
   }
+
+  // Pool runner — keeps CONCURRENCY workers active until queue drains.
+  let cursor = 0
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, usersToProcess.length) }, async () => {
+      while (cursor < usersToProcess.length) {
+        const idx = cursor++
+        await processUser(usersToProcess[idx])
+      }
+    })
+  )
+
+  // ---- Phase 2: fan out push notifications in parallel ----
+  // Web push is network-bound; allSettled lets us tolerate partial failures.
+  const pushResults = await Promise.allSettled(
+    pushPayloads.map(p =>
+      sendPushNotification(
+        { endpoint: p.endpoint, p256dh: p.p256dh, auth: p.auth },
+        { title: 'Aliis', body: p.body, url: '/diario' }
+      )
+    )
+  )
+  pushResults.forEach((r, i) => {
+    if (r.status === 'fulfilled' && !r.value.ok && r.value.expired) {
+      expiredEndpoints.push(pushPayloads[i].endpoint)
+    }
+  })
 
   // Single round trip per write category
   if (insightsToInsert.length > 0) {

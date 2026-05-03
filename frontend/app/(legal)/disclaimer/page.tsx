@@ -173,7 +173,7 @@ export default function DisclaimerPage() {
           Si tienes preguntas sobre este Disclaimer o sobre el alcance del servicio:
         </p>
         <p>
-          <strong>Correo:</strong> trujilloreyesoscarmi@gmail.com<br />
+          <strong>Correo:</strong> hola@cerebrosesponjosos.com<br />
           <strong>Tiempo de respuesta:</strong> 5–10 días hábiles
         </p>
       </LegalSection>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppNav } from '../components/AppNav'
 import { Footer } from '../components/Footer'
@@ -10,8 +11,37 @@ import { LoginModal } from '../components/LoginModal'
 import { Eyebrow } from '../components/ui/Eyebrow'
 import { Capsule } from '../components/ui/Capsule'
 import { Glow } from '../components/ui/Glow'
+import { Icon } from '@iconify/react'
 import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
+import AliisDemo from '../components/AliisDemo'
+
+// ─── LazySection ──────────────────────────────────────────────
+// Defers mounting of below-the-fold sections until they approach
+// the viewport. rootMargin="400px" starts mounting ~400px before
+// visible, so there's no pop-in on normal scrolling.
+function LazySection({ children, minHeight = 400 }: { children: React.ReactNode; minHeight?: number }) {
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const observe = useCallback(() => {
+    if (!ref.current) return
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); io.disconnect() } },
+      { rootMargin: '400px' }
+    )
+    io.observe(ref.current)
+    return () => io.disconnect()
+  }, [])
+
+  useEffect(observe, [observe])
+
+  return (
+    <div ref={ref}>
+      {visible ? children : <div style={{ minHeight }} />}
+    </div>
+  )
+}
 
 // ─── Hero ─────────────────────────────────────────────────────
 
@@ -77,17 +107,17 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
   return (
     <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
-      <div className="relative max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[1.1fr_.9fr] gap-8 md:gap-14 items-center">
-        <div className="ce-fade">
-          <Eyebrow style={{ marginBottom: 22 }}>· AI Assistant · Salud cerebral ·</Eyebrow>
+      <div className="relative max-w-[72rem] mx-auto">
+        <div className="ce-fade" style={{ maxWidth: '54rem', margin: '0 auto', textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
-            Saliste de la consulta sin entender nada.{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>Aliis no te deja solo.</em>
+            Saliste de tu consulta y no sabes qué sigue.{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>Aliis te acompaña.</em>
           </h1>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.75, color: 'var(--c-text-muted)', maxWidth: '38ch', margin: '0 0 32px' }}>
-            Aliis te acompaña de la consulta a lo que sigue. Tu expediente médico explicado capítulo a capítulo, con fuentes verificables, un diario de síntomas, Asistente IA por capítulo y más de 60 diagnósticos revisados por especialistas.
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', margin: '0 auto 28px' }}>
+            Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20, justifyContent: 'center' }}>
             <button onClick={onCTA}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -99,7 +129,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              Entender mi diagnóstico →
+              Crear mi cuenta gratis →
             </button>
             <button onClick={onVerEjemplo}
               style={{
@@ -111,11 +141,16 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
               Ver un ejemplo real
             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <Capsule tone="teal">✓ Basado en evidencia · PubMed, DOI, guías clínicas</Capsule>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: '#10b981' }} />
+              Sin tarjeta · Cancelas cuando quieras
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--c-text-faint)' }}>
+              · 575k personas en Cerebros Esponjosos
+            </span>
           </div>
         </div>
-        <InputPreview onCTA={onCTA} />
       </div>
     </section>
   )
@@ -125,27 +160,31 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
 
 function WhatAliisDoes() {
   const items = [
-    { n: '01', t: 'Explica tu diagnóstico', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma, preguntas para tu médico. Todo en el lenguaje que necesitas, con la fuente detrás.' },
-    { n: '02', t: 'Cada afirmación', i: 'viene con su fuente', d: 'PubMed, DOI, guías clínicas. Si no hay evidencia que soporte algo, Aliis te lo dice. Sin inventar nada.' },
-    { n: '03', t: 'Pregúntale', i: 'lo que no quedó claro', d: 'Cada capítulo tiene su propio Asistente IA. Pregunta con tus palabras y Aliis responde en contexto — sin empezar de cero cada vez.' },
-    { n: '04', t: 'Lleva tu diario', i: 'de síntomas y apuntes', d: 'Registra cómo te sientes día a día. Agrega apuntes a cada diagnóstico. Llega a tu próxima cita con todo ordenado.' },
-    { n: '05', t: 'Explora la biblioteca', i: 'de diagnósticos', d: 'Más de 60 condiciones revisadas por especialistas. Neurología, cardiología, digestivo y más — organizadas para que encuentres lo que necesitas.' },
+    { n: '01', t: 'Explicaciones claras', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma y preguntas para tu médico. Estructurado, sin paja, en lenguaje que entiendes.' },
+    { n: '02', t: 'Cada afirmación', i: 'con su referencia', d: 'PubMed, DOI, guías clínicas. Antes de responder, un verificador comprueba que la fuente exista. Si no la encuentra, no escribe la frase.' },
+    { n: '03', t: 'Asistente IA', i: 'al lado de cada capítulo', d: 'Pregunta lo que no quedó claro con tus palabras. Responde en contexto del capítulo que estás leyendo, sin volver a explicar todo de cero.' },
+    { n: '04', t: 'Tus tratamientos', i: 'siempre a mano', d: 'Añade dosis y horario. Aliis valida la dosis con IA al añadirla y marca tus tomas del día con racha de adherencia.' },
+    { n: '05', t: 'Diario de síntomas', i: 'y signos vitales', d: 'Escribe cómo te sientes y registra glucosa, presión, FC o peso. Aliis extrae los síntomas automáticamente y los ordena para tu próxima consulta.' },
+    { n: '06', t: 'Biblioteca con', i: '60+ condiciones', d: 'Diagnósticos revisados por residentes de neurología. Si tu médico te mencionó algo y quieres explorarlo antes, está aquí.' },
   ]
   return (
     <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
-          <Eyebrow style={{ marginBottom: 18 }}>· Qué hace Aliis ·</Eyebrow>
+        <div style={{ marginBottom: 64, maxWidth: '46rem', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Lo que viene gratis ·</Eyebrow>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
-            Cinco cosas que necesitas{' '}
-            <em style={{ color: 'var(--c-text-faint)' }}>antes de tu próxima cita.</em>
+            Todo esto, sin pagar nada{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>desde el primer día.</em>
           </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', marginTop: 18, marginLeft: 'auto', marginRight: 'auto' }}>
+            Crea tu cuenta y empieza con una explicación esta semana. Tu diario, tus tratamientos y tu asistente IA están incluidos para siempre.
+          </p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', borderTop: '1px solid var(--c-border)' }}>
           {items.map((it, i) => (
-            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: i < items.length - 1 ? '1px solid var(--c-border)' : 'none' }}>
+            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: (i + 1) % 3 !== 0 ? '1px solid var(--c-border)' : 'none' }}>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', marginBottom: 18 }}>{it.n}</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
                 {it.t} <em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
               </h3>
               <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
@@ -161,9 +200,9 @@ function WhatAliisDoes() {
 
 function HowItWorks() {
   const steps = [
-    { n: 'Describes', t: 'tu diagnóstico', d: 'Pega el texto de la consulta, escribe el nombre, o busca entre más de 60 condiciones. Aliis lo identifica.' },
-    { n: 'Recibes', t: 'tu expediente completo', d: 'Capítulos estructurados: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico. Cada dato con su fuente.' },
-    { n: 'Sigues desde ahí', t: 'cuando lo necesitas', d: 'Tu diario, el Asistente IA por capítulo, la biblioteca. Todo en el mismo lugar, siempre disponible.' },
+    { n: 'Describes', t: 'tu diagnóstico', d: 'Pega lo que te dijo el médico, escribe el nombre o busca en la biblioteca. Aliis lo identifica y prepara tu explicación.' },
+    { n: 'Recibes', t: 'tu explicación', d: 'Seis capítulos con referencias verificables: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico y un mito frecuente.' },
+    { n: 'Sigues desde ahí', t: 'cada día', d: 'Tu diario, tus tratamientos y tu asistente IA por capítulo. Aliis aprende contigo y te prepara para tu próxima consulta.' },
   ]
   return (
     <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
@@ -226,7 +265,52 @@ function TrustSection() {
   )
 }
 
-// ─── Live example ─────────────────────────────────────────────
+// ─── Animated demo section (5-scene tour) ────────────────────
+
+function DemoSection() {
+  return (
+    <section
+      id="demo"
+      className="px-6 py-16 md:py-[120px]"
+      style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}
+    >
+      <div className="max-w-[72rem] mx-auto">
+        <div style={{ marginBottom: 48, maxWidth: '46rem', textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Cómo se ve por dentro ·</Eyebrow>
+          <h2
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'clamp(2rem,4.4vw,3.25rem)',
+              lineHeight: 1.06,
+              letterSpacing: '-.02em',
+              margin: 0,
+            }}
+          >
+            Cinco minutos en Aliis,{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>sin login.</em>
+          </h2>
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: 'var(--c-text-muted)',
+              maxWidth: '54ch',
+              marginTop: 16,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Un recorrido de la app real: cómo escribes tu diagnóstico, cómo se ve tu expediente, la explicación capítulo a capítulo, el asistente IA y tu diario de salud.
+          </p>
+        </div>
+        <AliisDemo />
+      </div>
+    </section>
+  )
+}
+
+// ─── Live example (legacy, currently unused) ─────────────────
 
 // Phase durations in ms
 const PHASE_DURATIONS = [8000, 8000, 15000, 14000, 14000]
@@ -547,7 +631,7 @@ function LiveExample() {
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 500, lineHeight: 1.2 }}>Migraña con aura</div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', color: 'var(--c-brand-teal-deep)', marginTop: 3 }}>· EXPEDIENTE ALIIS ·</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.15em', color: 'var(--c-brand-teal-deep)', marginTop: 3 }}>· EXPLICACIÓN ALIIS ·</div>
                   </div>
                   <div style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: 999, background: 'rgba(31,138,155,0.08)', border: '1px solid rgba(31,138,155,0.2)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.12em', color: 'var(--c-brand-teal-deep)' }}>
                     3 fuentes · PubMed
@@ -798,6 +882,109 @@ function LiveExample() {
   )
 }
 
+// ─── Pro power tools ─────────────────────────────────────────
+
+function ProPowerTools() {
+  const tools = [
+    {
+      icon: 'solar:user-id-bold-duotone',
+      title: 'Personalizadas con tu perfil',
+      body: 'Tus explicaciones consideran tus medicamentos, alergias, condiciones previas, edad y sexo. Aliis no te explica un libro de texto: te explica tu caso.',
+    },
+    {
+      icon: 'solar:danger-triangle-bold-duotone',
+      title: 'Detector de inconsistencias',
+      body: 'Si tienes un diagnóstico sin tratamiento, o un tratamiento sin diagnóstico que lo justifique, Aliis te avisa. Una segunda mirada antes de tu próxima consulta.',
+    },
+    {
+      icon: 'solar:graph-new-bold-duotone',
+      title: 'Análisis de correlación',
+      body: 'Cruza tu diario con tus signos vitales (presión, glucosa, FC, peso) y encuentra patrones reales. ¿La cefalea correlaciona con tu presión? Aliis lo ve.',
+    },
+    {
+      icon: 'solar:book-2-bold-duotone',
+      title: 'El Hilo: tu mes en una página',
+      body: 'Tu diario convertido en un resumen narrativo mensual. Lo que cambió, lo que mejoró, lo que sigue ahí. Listo para llevarlo al médico o solo para verte con perspectiva.',
+    },
+    {
+      icon: 'solar:calendar-mark-bold-duotone',
+      title: 'Cápsula del tiempo',
+      body: 'Cada mes, automático y por notificación: cómo van tus vitales comparados con el mes anterior. Datos que importan, sin que tengas que mirarlos tú.',
+    },
+    {
+      icon: 'solar:stethoscope-bold-duotone',
+      title: 'Preparar consulta',
+      body: 'Resumen impreso para llevar al médico: tus síntomas, vitales, tratamientos y dudas pendientes. Que cada cita valga lo que cuesta.',
+    },
+  ]
+  return (
+    <section id="pro" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', position: 'relative', overflow: 'hidden' }}>
+      {/* Subtle Pro accent */}
+      <div aria-hidden style={{
+        position: 'absolute', top: '-20%', right: '-10%', width: 600, height: 600, borderRadius: 999,
+        background: 'radial-gradient(circle, rgba(31,138,155,.08) 0%, transparent 60%)', pointerEvents: 'none',
+      }} />
+
+      <div className="relative max-w-[72rem] mx-auto">
+        <div className="mb-14 max-w-[48rem] mx-auto" style={{ textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Pro · Acompañamiento real ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
+            Para quien convive con su diagnóstico,{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>no solo para quien lo entiende.</em>
+          </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '54ch', marginTop: 18, marginLeft: 'auto', marginRight: 'auto' }}>
+            Pro convierte Aliis en un acompañante longitudinal: aprende de tu perfil, cruza tus datos, detecta lo que no cuadra y te prepara la próxima visita. Lo que te daría un médico que tuviera tiempo para ti.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {tools.map((tool, i) => (
+            <article
+              key={i}
+              className="p-6 rounded-2xl border transition-colors"
+              style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                style={{ background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)' }}
+              >
+                <Icon icon={tool.icon} width={22} height={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
+              </div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 19, lineHeight: 1.2, letterSpacing: '-.012em', margin: '0 0 8px' }}>{tool.title}</h3>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.65, color: 'var(--c-text-muted)', margin: 0 }}>{tool.body}</p>
+            </article>
+          ))}
+        </div>
+
+        {/* Inline CTA */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 p-8 rounded-2xl border" style={{ background: 'var(--c-surface)', borderColor: 'rgba(31,138,155,0.3)' }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 8 }}>14 días gratis · sin tarjeta</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, lineHeight: 1.25, letterSpacing: '-.015em' }}>
+              Pruébalo gratis dos semanas. Si no es para ti, lo dejas y no pasa nada.
+            </div>
+          </div>
+          <Link href="/checkout/empezar?plan=eur_monthly"
+            style={{
+              flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 28px', background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))',
+              boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
+              border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15, cursor: 'pointer',
+              transition: 'opacity .15s ease',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            Empezar 14 días gratis →
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Founders ─────────────────────────────────────────────────
 
 function Founders() {
@@ -911,38 +1098,52 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
                   </li>
                 ))}
               </ul>
-              <button onClick={onCTA}
-                style={{
-                  padding: '13px 20px', borderRadius: 12,
-                  background: tier.highlight ? 'hsl(var(--secondary))' : 'transparent',
-                  color: tier.highlight ? 'hsl(var(--secondary-foreground))' : 'var(--c-text)',
-                  boxShadow: tier.highlight ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
-                  border: `1px solid ${tier.highlight ? 'transparent' : 'rgba(31,138,155,.35)'}`,
-                  fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-                  transition: 'opacity .15s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-              >
-                {tier.cta}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-              </button>
+              {tier.highlight ? (
+                <Link
+                  href={`/checkout/empezar?plan=${currency.toLowerCase()}_monthly`}
+                  style={{
+                    padding: '13px 20px', borderRadius: 12,
+                    background: 'hsl(var(--secondary))',
+                    color: 'hsl(var(--secondary-foreground))',
+                    boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
+                    border: '1px solid transparent',
+                    fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                    transition: 'opacity .15s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    textDecoration: 'none',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  {tier.cta}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </Link>
+              ) : (
+                <button onClick={onCTA}
+                  style={{
+                    padding: '13px 20px', borderRadius: 12,
+                    background: 'transparent',
+                    color: 'var(--c-text)',
+                    border: '1px solid rgba(31,138,155,.35)',
+                    fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                    transition: 'opacity .15s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >
+                  {tier.cta}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </button>
+              )}
             </article>
           ))}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', paddingTop: 32, borderTop: '1px solid var(--c-border)' }}>
-          {[
-            { k: 'Cancelas cuando quieras', v: 'un click. Sin fricción.' },
-            { k: '14 días gratis', v: 'si no convence, lo pagado vuelve.' },
-            { k: 'Sin anuncios, nunca', v: 'tu diagnóstico no se vende.' },
-          ].map((item, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-subtle)', marginBottom: 4 }}>{item.k}</div>
-              <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 14, color: 'var(--c-text-muted)' }}>{item.v}</div>
-            </div>
-          ))}
+        <div style={{ textAlign: 'center', paddingTop: 32, borderTop: '1px solid var(--c-border)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--c-text-subtle)' }}>
+            Cancelas cuando quieras · 14 días gratis · Sin anuncios, nunca
+          </span>
         </div>
       </div>
     </section>
@@ -990,12 +1191,13 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       <Suspense><AppNav initialInitial={initialInitial} /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
-      <WhatAliisDoes />
-      <HowItWorks />
-      <TrustSection />
-      <LiveExample />
-      <Founders />
-      <PricingSection onCTA={() => setShowLogin(true)} />
+      <DemoSection />
+      <LazySection minHeight={500}><WhatAliisDoes /></LazySection>
+      <LazySection minHeight={400}><HowItWorks /></LazySection>
+      <LazySection minHeight={200}><TrustSection /></LazySection>
+      <LazySection minHeight={600}><ProPowerTools /></LazySection>
+      <LazySection minHeight={500}><Founders /></LazySection>
+      <LazySection minHeight={400}><PricingSection onCTA={() => setShowLogin(true)} /></LazySection>
       <Footer />
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>

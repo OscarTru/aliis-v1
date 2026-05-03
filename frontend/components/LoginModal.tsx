@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
 import Image from 'next/image'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -149,20 +149,22 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       if (!firstName.trim()) { setError('El nombre es obligatorio.'); setLoading(false); return }
       if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); setLoading(false); return }
 
-      // Atomically claim the invite code before creating the account.
-      // claim=true marks used=true in the same request, so the code is
-      // consumed even before email confirmation — no session required.
+      // Validate the invite code (read-only check) before creating the account.
+      // The actual claim happens atomically in /auth/callback after the user
+      // verifies their email — that way, if signup fails for any reason, the
+      // code is NOT consumed. The callback ties the claim to user.id, which is
+      // also our audit trail (used_by column).
       const codeToUse = inviteCode.trim().toUpperCase()
       if (!codeToUse) { setError('El código de invitación es obligatorio.'); setLoading(false); return }
 
-      const claimRes = await fetch('/api/invite/validate', {
+      const validateRes = await fetch('/api/invite/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToUse, claim: true }),
+        body: JSON.stringify({ code: codeToUse }),
       })
-      const claimData = await claimRes.json()
-      if (!claimData.valid) {
-        setError(claimData.error ?? 'Código de invitación no válido.')
+      const validateData = await validateRes.json()
+      if (!validateData.valid) {
+        setError(validateData.error ?? 'Código de invitación no válido.')
         setLoading(false)
         return
       }
@@ -173,7 +175,9 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Forward the invite code to the callback so it can be claimed
+          // atomically there (when we have user.id available).
+          emailRedirectTo: `${window.location.origin}/auth/callback?invite=${encodeURIComponent(codeToUse)}`,
           data: {
             name: fullName,
             consents_pending: {
@@ -209,7 +213,10 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-8 border border-border bg-background shadow-2xl max-h-[92vh] overflow-y-auto">
+      <DialogPortal>
+        <DialogOverlay />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="relative w-full sm:max-w-[400px] bg-background rounded-2xl border border-border shadow-2xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 pointer-events-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
         {/* Logo — siempre visible */}
@@ -429,7 +436,9 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
           )}
 
         </AnimatePresence>
-      </DialogContent>
+        </div>
+        </div>
+      </DialogPortal>
     </Dialog>
   )
 }

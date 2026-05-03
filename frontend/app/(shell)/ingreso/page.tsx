@@ -259,7 +259,8 @@ function IngresoPageInner() {
       if (!user) { router.push('/'); return }
 
       const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // getSession() can return null in SSR-auth flows; refresh if needed
+      const token = session?.access_token ?? (await supabase.auth.refreshSession()).data.session?.access_token
 
       const { data: profile } = await supabase
         .from('profiles')

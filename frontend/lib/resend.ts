@@ -6,10 +6,12 @@ export async function sendEmail({
   to,
   subject,
   html,
+  replyTo,
 }: {
   to: string
   subject: string
   html: string
+  replyTo?: string
 }) {
   try {
     await resend.emails.send({
@@ -17,8 +19,11 @@ export async function sendEmail({
       to,
       subject,
       html,
+      ...(replyTo ? { replyTo } : {}),
     })
+    return { ok: true as const }
   } catch (err) {
     console.error('Resend error:', err)
+    return { ok: false as const, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

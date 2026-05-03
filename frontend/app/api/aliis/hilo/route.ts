@@ -2,6 +2,7 @@ import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { models } from '@/lib/ai-providers'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 import type { SymptomLog, TrackedSymptom } from '@/lib/types'
 
 export async function POST(req: Request) {
@@ -9,15 +10,8 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  const rl = await rateLimit(`user:${user.id}:hilo`, 5, 3600)
-  if (!rl.ok) {
-    return Response.json(
-      { error: 'Demasiadas solicitudes — intenta más tarde' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
-    )
-  }
-
-  // Check monthly cache
+  // Check monthly cache FIRST — cached reads are free and shouldn't burn the
+  // rate-limit quota. Otherwise normal navigation triggers 429s in minutes.
   const thisMonth = new Date().toISOString().slice(0, 7)
   const { data: cached } = await supabase
     .from('aliis_insights')
@@ -30,6 +24,15 @@ export async function POST(req: Request) {
     .maybeSingle()
 
   if (cached) return Response.json({ content: cached.content, generatedAt: cached.generated_at, cached: true })
+
+  // Cache miss — only now apply the rate-limit (Anthropic spend is real here).
+  const rl = await rateLimit(`user:${user.id}:hilo`, 5, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -157,13 +160,10 @@ Genera El Hilo para este usuario.`
 
     return Response.json({ content, generatedAt: new Date().toISOString(), cached: false })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    const stack = err instanceof Error ? err.stack : undefined
-    console.error('[aliis/hilo] generation failed:', message, stack)
-    const isDev = process.env.NODE_ENV === 'development'
-    return Response.json(
-      { error: 'No se pudo generar El Hilo', ...(isDev && { detail: message }) },
-      { status: 502 }
-    )
+    // Log server-side (Sentry will pick it up); never echo internal details
+    // back to the client. Even in dev, leaking through the API hides bugs
+    // and trains us to ignore the real (server) logs.
+    logger.error({ err }, '[aliis/hilo] generation failed')
+    return Response.json({ error: 'No se pudo generar El Hilo' }, { status: 502 })
   }
 }

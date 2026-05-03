@@ -38,7 +38,14 @@ type MetricKey = typeof METRICS[number]['key']
 
 type ModalStep = 'select' | 'vitals' | 'symptom'
 
-const INPUT_CLS = 'w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+// Match the input style used in AddTreatmentModal: h-11 + bg-muted + 16px text
+// to avoid iOS zoom on focus, and consistent radius across the app.
+// min-w-0 lets flex-1 children shrink below their content width.
+// truncate clips long placeholders with ellipsis so they always fit inside
+// the input, no matter how narrow the viewport is. The smaller placeholder
+// font (text-[13px]) feels integrated with the modal without affecting the
+// actual value typed (which stays at 16px to avoid iOS zoom on focus).
+const INPUT_CLS = 'h-11 w-full min-w-0 truncate rounded-xl border border-border bg-muted px-3 font-sans text-[16px] text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
 const LABEL_CLS = 'font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground'
 
 function LogModal({
@@ -182,15 +189,15 @@ function LogModal({
                   type="number"
                   value={fields.bp_systolic}
                   onChange={e => setFields(f => ({ ...f, bp_systolic: e.target.value }))}
-                  placeholder="Sistólica mmHg"
-                  className={INPUT_CLS.replace('w-full', 'flex-1 min-w-0')}
+                  placeholder="Sistólica"
+                  className={INPUT_CLS.replace('w-full', 'flex-1')}
                 />
                 <input
                   type="number"
                   value={fields.bp_diastolic}
                   onChange={e => setFields(f => ({ ...f, bp_diastolic: e.target.value }))}
-                  placeholder="Diastólica mmHg"
-                  className={INPUT_CLS.replace('w-full', 'flex-1 min-w-0')}
+                  placeholder="Diastólica"
+                  className={INPUT_CLS.replace('w-full', 'flex-1')}
                 />
               </div>
             </div>
@@ -236,7 +243,7 @@ function LogModal({
                 onChange={e => setFields(f => ({ ...f, note: e.target.value }))}
                 placeholder="¿Cómo te sentías?"
                 rows={2}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 resize-none"
+                className="w-full rounded-xl border border-border bg-muted px-3 py-2.5 font-sans text-[16px] text-foreground placeholder:text-[13px] placeholder:text-muted-foreground/70 focus:outline-none focus:border-foreground/30 resize-none"
               />
             </div>
 
