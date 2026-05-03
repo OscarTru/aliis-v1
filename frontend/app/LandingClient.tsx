@@ -79,13 +79,13 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
     <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
       <div className="relative max-w-[72rem] mx-auto">
-        <div className="ce-fade" style={{ maxWidth: '54rem' }}>
-          <Eyebrow style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
+        <div className="ce-fade" style={{ maxWidth: '54rem', margin: '0 auto', textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
             Saliste de tu consulta y no sabes qué sigue.{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>Aliis te acompaña.</em>
           </h1>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '40ch', margin: '0 0 28px' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', margin: '0 auto 28px' }}>
             Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20, justifyContent: 'center' }}>
