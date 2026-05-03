@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { TagInput } from '@/components/ui/TagInput'
 import { saveMedicalProfile } from '@/app/actions/medical-profile'
+import { syncOnboardingMedications } from '@/app/actions/treatments'
 
 const PROMISES = [
   'Tu diagnóstico en palabras que puedes entender',
@@ -81,6 +82,9 @@ export default function OnboardingPage() {
         edad: medProfile.edad ? parseInt(medProfile.edad) : null,
         sexo: (medProfile.sexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
       })
+
+      // Sync medications → treatments table (best-effort, non-blocking UX)
+      await syncOnboardingMedications(medProfile.medicamentos)
 
       router.push('/ingreso')
     } finally {

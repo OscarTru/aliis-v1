@@ -1,8 +1,117 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { generateText } from 'ai'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { models } from '@/lib/ai-providers'
 import type { Treatment, TreatmentInput } from '@/lib/types'
+
+function sanitizeInput(value: string, maxLen: number): string {
+  return value.slice(0, maxLen).replace(/[`"\n\r<>]/g, ' ').trim()
+}
+
+interface ValidateDoseResult {
+  nameNormalized: string
+  doseNormalized: string
+}
+
+async function normalizeMedication(nameRaw: string, doseRaw: string): Promise<ValidateDoseResult> {
+  const safeName = sanitizeInput(nameRaw, 100)
+  const safeDose = sanitizeInput(doseRaw, 50)
+
+  const { text } = await generateText({
+    model: models.insight,
+    prompt: `Eres un farmacéutico clínico. Normaliza el nombre y dosis de este medicamento.
+
+Nombre: <nombre>${safeName}</nombre>
+Dosis: <dosis>${safeDose}</dosis>
+
+Responde SOLO con JSON válido, sin markdown:
+{"nameNormalized":"nombre genérico correcto en español","doseNormalized":"número y unidad, ej: 20 mg. Vacío si no hay dosis"}`,
+    maxOutputTokens: 80,
+  })
+
+  const cleaned = text.trim().replace(/```json|```/g, '').trim()
+  const parsed = JSON.parse(cleaned)
+  return {
+    nameNormalized: parsed.nameNormalized || safeName,
+    doseNormalized: parsed.doseNormalized || safeDose,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// syncOnboardingMedications
+// ---------------------------------------------------------------------------
+// Called after onboarding step 4. Takes raw medication strings (e.g.
+// "metformina 850mg"), normalises each through the AI, and creates a
+// Treatment record for every one that doesn't already exist.
+// Best-effort — any single failure is swallowed so the user still lands
+// on /ingreso without an error dialog.
+// ---------------------------------------------------------------------------
+export async function syncOnboardingMedications(medicamentos: string[]): Promise<void> {
+  if (!medicamentos.length) return
+
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  // Fetch existing active treatment names to avoid duplicates (case-insensitive)
+  const { data: existing } = await supabase
+    .from('treatments')
+    .select('name')
+    .eq('user_id', user.id)
+    .eq('active', true)
+
+  const existingNames = new Set(
+    (existing ?? []).map((t: { name: string }) => t.name.toLowerCase().trim())
+  )
+
+  for (const raw of medicamentos) {
+    const trimmed = raw.trim()
+    if (!trimmed) continue
+
+    // Heuristic: last token that looks like a dose (digits + unit) is the dose
+    const doseMatch = trimmed.match(/\b(\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|ml|UI|ui|iu|IU|u|U))\s*$/i)
+    const doseRaw = doseMatch ? doseMatch[1].trim() : ''
+    const nameRaw = doseMatch ? trimmed.slice(0, trimmed.length - doseMatch[0].length).trim() : trimmed
+
+    let normalizedName = nameRaw
+    let normalizedDose = doseRaw
+
+    try {
+      const result = await normalizeMedication(nameRaw, doseRaw)
+      normalizedName = result.nameNormalized
+      normalizedDose = result.doseNormalized
+    } catch {
+      // AI call failed — use raw strings
+    }
+
+    // Skip if this medication already exists (by normalized name)
+    if (existingNames.has(normalizedName.toLowerCase().trim())) continue
+
+    try {
+      await supabase.from('treatments').insert({
+        user_id: user.id,
+        name: normalizedName.trim(),
+        dose: normalizedDose?.trim() || null,
+        frequency: 'diario',       // safe default; user can edit later
+        frequency_label: null,
+        indefinite: true,
+        started_at: null,
+        ended_at: null,
+        last_changed_at: null,
+        notes: null,
+      })
+      existingNames.add(normalizedName.toLowerCase().trim())
+    } catch {
+      // Non-fatal
+    }
+  }
+
+  revalidatePath('/cuenta')
+  revalidatePath('/tratamientos')
+  triggerTreatmentCheck(user.id)
+}
 
 // Fire-and-forget: regenerate treatment check analysis for a pro user
 async function triggerTreatmentCheck(userId: string) {
