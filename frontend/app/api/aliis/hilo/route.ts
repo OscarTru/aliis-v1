@@ -10,15 +10,8 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  const rl = await rateLimit(`user:${user.id}:hilo`, 5, 3600)
-  if (!rl.ok) {
-    return Response.json(
-      { error: 'Demasiadas solicitudes — intenta más tarde' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
-    )
-  }
-
-  // Check monthly cache
+  // Check monthly cache FIRST — cached reads are free and shouldn't burn the
+  // rate-limit quota. Otherwise normal navigation triggers 429s in minutes.
   const thisMonth = new Date().toISOString().slice(0, 7)
   const { data: cached } = await supabase
     .from('aliis_insights')
@@ -31,6 +24,15 @@ export async function POST(req: Request) {
     .maybeSingle()
 
   if (cached) return Response.json({ content: cached.content, generatedAt: cached.generated_at, cached: true })
+
+  // Cache miss — only now apply the rate-limit (Anthropic spend is real here).
+  const rl = await rateLimit(`user:${user.id}:hilo`, 5, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 

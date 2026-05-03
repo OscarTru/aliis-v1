@@ -9,14 +9,8 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  const rl = await rateLimit(`user:${user.id}:consult`, 10, 3600)
-  if (!rl.ok) {
-    return Response.json(
-      { error: 'Demasiadas solicitudes — intenta más tarde' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
-    )
-  }
-
+  // Plan gate first — Pro only, but checking it here is cheaper than rate
+  // limit and gives a better error message to free users.
   const { data: profile } = await supabase
     .from('profiles')
     .select('plan, name')
@@ -30,7 +24,9 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const packId: string | null = typeof body.packId === 'string' ? body.packId : null
 
-  // Reuse existing summary if generated in the last 7 days for this pack
+  // Reuse existing summary if generated in the last 7 days for this pack.
+  // Cache check before rate-limit: cached reads are free and shouldn't burn
+  // the quota when the user re-opens the same pack's pre-consult summary.
   if (packId) {
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data: existing } = await supabase
@@ -43,6 +39,15 @@ export async function POST(request: Request) {
       .limit(1)
       .maybeSingle()
     if (existing) return Response.json({ token: existing.token, cached: true })
+  }
+
+  // Cache miss — apply rate-limit only when we're about to call Anthropic.
+  const rl = await rateLimit(`user:${user.id}:consult`, 10, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
   }
 
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()

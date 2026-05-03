@@ -11,16 +11,9 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  const rl = await rateLimit(`user:${user.id}:insight`, 5, 3600)
-  if (!rl.ok) {
-    return Response.json(
-      { error: 'Demasiadas solicitudes — intenta más tarde' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
-    )
-  }
-
-  // 1. Check cache — 1 insight per user per day. maybeSingle so no rows = null,
-  // not a 500 error. Order DESC + limit 1 in case multiple rows exist for today.
+  // 1. Check cache FIRST. Cached reads are free (no Anthropic call) so they
+  // shouldn't count against the rate limit. Otherwise just navigating the
+  // app and re-mounting the diary page burns through the quota in minutes.
   const today = new Date().toISOString().slice(0, 10)
   const { data: cached } = await supabase
     .from('aliis_insights')
@@ -34,6 +27,17 @@ export async function GET() {
 
   if (cached) {
     return Response.json({ content: cached.content, cached: true })
+  }
+
+  // 2. Cache miss — only now is it worth a rate-limit slot. Limit applies to
+  // actual generation (Anthropic spend + DB write). Bumped to 10/hour for
+  // headroom; the daily cache effectively caps it at 1 generation/day anyway.
+  const rl = await rateLimit(`user:${user.id}:insight`, 10, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
   }
 
   // 2. Fetch data — maybeSingle on profile and pack so users with no pack yet

@@ -58,14 +58,6 @@ export async function POST(req: Request) {
     })
   }
 
-  const rl = await rateLimit(`user:${user.id}:notes-generate`, 20, 3600)
-  if (!rl.ok) {
-    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes — intenta más tarde' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
-    })
-  }
-
   const { data: packOwner } = await supabase
     .from('packs')
     .select('id')
@@ -129,6 +121,16 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: 'Necesitas al menos 3 preguntas para generar apuntes' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Rate-limit only when we're actually going to call Anthropic (cache missed
+  // or note is stale and needs regeneration). Cached reads stay free.
+  const rl = await rateLimit(`user:${user.id}:notes-generate`, 20, 3600)
+  if (!rl.ok) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes — intenta más tarde' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
     })
   }
 
