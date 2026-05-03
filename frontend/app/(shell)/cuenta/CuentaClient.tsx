@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Check, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { PageHeader } from '@/components/PageHeader'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
@@ -320,7 +321,7 @@ export function CuentaClient({
           <Row label="Fecha de nacimiento">
             {birthDateEditing ? (
               <>
-                <Input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} autoFocus className="h-12 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]" />
+                <DatePicker value={birthDate} onChange={setBirthDate} placeholder="Selecciona fecha" />
                 <div className="flex gap-2 mt-2.5">
                   <button onClick={saveBirthDate} disabled={birthDateLoading} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border-none bg-secondary text-secondary-foreground font-sans text-sm font-medium cursor-pointer disabled:opacity-70 shadow-[var(--c-btn-primary-shadow)] hover:bg-secondary/90 transition-colors"><Check size={14} />{birthDateLoading ? 'Guardando…' : 'Guardar'}</button>
                   <button onClick={() => { setBirthDateEditing(false); setBirthDate(profile.birth_date ?? '') }} className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer"><X size={14} />Cancelar</button>
@@ -481,12 +482,11 @@ export function CuentaClient({
                 <label className="font-sans text-[12px] text-muted-foreground/70 mb-1.5 block">
                   Fecha de la cita
                 </label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={appointment}
-                  min={new Date().toISOString().slice(0, 10)}
-                  onChange={e => setAppointment(e.target.value)}
-                  className="h-11 rounded-xl border-[1.5px] focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:border-primary bg-muted font-sans text-[15px]"
+                  onChange={setAppointment}
+                  min={new Date()}
+                  placeholder="Selecciona fecha"
                 />
               </div>
             </div>

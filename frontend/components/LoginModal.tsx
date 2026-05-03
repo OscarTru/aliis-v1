@@ -211,7 +211,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[400px] rounded-3xl p-10 border border-border bg-background shadow-2xl overflow-hidden">
+      <DialogContent className="max-w-[400px] rounded-3xl p-6 sm:p-10 border border-border bg-background shadow-2xl max-h-[90vh] overflow-y-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
         {/* Logo — siempre visible */}
