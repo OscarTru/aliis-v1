@@ -2,6 +2,7 @@ import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
 import { logLlmUsage } from '@/lib/llm-usage'
+import { rateLimit } from '@/lib/rate-limit'
 import type { SymptomLog } from '@/lib/types'
 import { HAIKU_4_5 } from '@/lib/ai-models'
 
@@ -9,6 +10,14 @@ export async function GET() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+
+  const rl = await rateLimit(`user:${user.id}:insight`, 5, 3600)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Demasiadas solicitudes — intenta más tarde' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) } }
+    )
+  }
 
   // 1. Check cache — 1 insight per user per day. maybeSingle so no rows = null,
   // not a 500 error. Order DESC + limit 1 in case multiple rows exist for today.
