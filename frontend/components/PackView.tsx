@@ -80,8 +80,8 @@ function ChapterCard({
   }, [chapter.id, packId, userId, onRead])
 
   return (
-    <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
-      <div className="flex items-center justify-between gap-4 mb-2.5 pr-12">
+    <div className="h-full overflow-y-auto px-5 md:px-12 py-8 md:py-10 pb-28 md:pb-8">
+      <div className="flex items-center justify-between gap-4 mb-2.5">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 shrink-0">
           {chapter.n} · {chapter.readTime}
         </div>
@@ -196,48 +196,63 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
 
   return (
     <div className="flex flex-col h-full">
-      {/* Mobile chapter tabs */}
-      <div className="flex md:hidden overflow-x-auto gap-1 px-4 py-2 border-b border-border bg-background sticky top-0 z-10" style={{ scrollbarWidth: 'none' }}>
-        {pack.chapters.map((ch, i) => (
-          <button
-            key={ch.id}
-            onClick={() => setActiveIdx(i)}
-            className={cn(
-              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-              i === activeIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-            )}
-          >
-            {ch.kicker}
-          </button>
-        ))}
-        {pack.tools.length > 0 && (
-          <button
-            onClick={() => setActiveIdx(pack.chapters.length)}
-            className={cn(
-              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-              activeIdx === pack.chapters.length ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-            )}
-          >
-            Herramientas
-          </button>
-        )}
-        {(() => {
-          const verifiedRefs = pack.references.filter((r) => r.verified !== false)
-          if (verifiedRefs.length === 0) return null
-          const refsIdx = pack.chapters.length + (pack.tools.length > 0 ? 1 : 0)
-          return (
-            <button
-              onClick={() => setActiveIdx(refsIdx)}
-              className={cn(
-                'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-                activeIdx === refsIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-              )}
-            >
-              Referencias
-            </button>
-          )
-        })()}
-      </div>
+      {/* Mobile chapter tabs — animated pill that expands the active item, dots for the rest */}
+      {(() => {
+        const verifiedRefs = pack.references.filter((r) => r.verified !== false)
+        type Tab = { key: string; label: string; idx: number }
+
+        // Tabs show the kicker (e.g. "¿Qué es") which omits the closing "?".
+        // Close the question mark for clarity. If the kicker is too short to be
+        // meaningful on its own (e.g. "¿Qué" → ambiguous), include the italic
+        // continuation so the full question reads, e.g. "¿Qué esperar?".
+        function tabLabel(kicker: string, kickerItalic: string): string {
+          const k = kicker.trim()
+          const ki = kickerItalic.trim()
+          // First word after "¿" is the only word → kicker is too short, fold in italic
+          const wordsAfterMark = k.replace(/^¿/, '').trim().split(/\s+/)
+          const tooShort = k.startsWith('¿') && wordsAfterMark.length <= 1 && ki
+          const combined = tooShort ? `${k} ${ki}` : k
+          if (!combined.startsWith('¿')) return combined
+          if (combined.endsWith('?')) return combined
+          return `${combined}?`
+        }
+
+        const tabs: Tab[] = [
+          ...pack.chapters.map((ch, i) => ({ key: ch.id, label: tabLabel(ch.kicker, ch.kickerItalic), idx: i })),
+          ...(pack.tools.length > 0 ? [{ key: 'tools', label: 'Herramientas', idx: pack.chapters.length }] : []),
+          ...(verifiedRefs.length > 0
+            ? [{ key: 'refs', label: 'Referencias', idx: pack.chapters.length + (pack.tools.length > 0 ? 1 : 0) }]
+            : []),
+        ]
+        return (
+          <div className="flex md:hidden items-center justify-center gap-2 px-5 h-14 border-b border-border bg-background sticky top-0 z-10">
+            {tabs.map((t) => {
+              const isActive = activeIdx === t.idx
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveIdx(t.idx)}
+                  aria-label={t.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className="shrink-0 h-8 inline-flex items-center justify-center bg-transparent border-none cursor-pointer p-0"
+                >
+                  <span
+                    className={cn(
+                      'inline-flex items-center justify-center font-sans font-medium whitespace-nowrap overflow-hidden',
+                      'transition-all duration-300 ease-out',
+                      isActive
+                        ? 'h-8 px-4 rounded-full bg-secondary text-secondary-foreground text-xs'
+                        : 'h-2 w-2 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/60 text-transparent text-[0px]'
+                    )}
+                  >
+                    {t.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       <ChatDrawer
         dx={pack.dx}
