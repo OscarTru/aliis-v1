@@ -38,7 +38,9 @@ type MetricKey = typeof METRICS[number]['key']
 
 type ModalStep = 'select' | 'vitals' | 'symptom'
 
-const INPUT_CLS = 'w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+// Match the input style used in AddTreatmentModal: h-11 + bg-muted + 16px text
+// to avoid iOS zoom on focus, and consistent radius across the app.
+const INPUT_CLS = 'h-11 w-full rounded-xl border border-border bg-muted px-3 font-sans text-[16px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
 const LABEL_CLS = 'font-mono text-[10px] tracking-[.12em] uppercase text-muted-foreground'
 
 function LogModal({
@@ -236,7 +238,7 @@ function LogModal({
                 onChange={e => setFields(f => ({ ...f, note: e.target.value }))}
                 placeholder="¿Cómo te sentías?"
                 rows={2}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 font-sans text-[14px] focus:outline-none focus:border-foreground/30 resize-none"
+                className="w-full rounded-xl border border-border bg-muted px-3 py-2.5 font-sans text-[16px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 resize-none"
               />
             </div>
 
