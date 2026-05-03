@@ -268,9 +268,10 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
       )}
 
       {/* Toasts — missing info warnings */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {showDoseToast && (
           <motion.div
+            key="dose-toast"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -303,6 +304,7 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
         )}
         {showFreqToast && (
           <motion.div
+            key="freq-toast"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}

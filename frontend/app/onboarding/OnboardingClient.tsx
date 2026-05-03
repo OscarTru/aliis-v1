@@ -102,7 +102,7 @@ export default function OnboardingClient() {
         sexo: (medProfile.sexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
       })
 
-      // Show loading overlay while AI sync runs (can take a few seconds)
+      // Show loading overlay while AI sync runs — stays visible until navigation completes
       setSyncing(true)
       setPhraseIdx(0)
 
@@ -112,10 +112,12 @@ export default function OnboardingClient() {
       // Sync medications → treatments table
       await syncOnboardingMedications(medProfile.medicamentos)
 
-      router.push('/ingreso')
-    } finally {
-      setSaving(false)
+      // Navigate to historial (expediente) — overlay stays until page unmounts
+      router.push('/historial')
+    } catch {
+      // Only hide overlay on error so the user can retry
       setSyncing(false)
+      setSaving(false)
     }
   }
 
