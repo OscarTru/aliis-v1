@@ -134,6 +134,25 @@ export function CuentaClient({
   // Dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+
+  // Sign out reliably. Previously router.refresh() raced router.push() and
+  // sometimes the navigation never happened. We use a hard window navigation
+  // so the server picks up the cleared cookies on the next request, and we
+  // disable the button while it's in flight to prevent double-click bugs.
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch {
+      // ignore — we'll force-navigate anyway, the cookie may already be gone
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
+  }
 
   function showToast(msg: string, ok = true) {
     toast({
@@ -538,15 +557,12 @@ export function CuentaClient({
               <div className="font-sans text-[13px] text-muted-foreground">Salir de tu cuenta en este dispositivo.</div>
             </div>
             <button
-              onClick={async () => {
-                const supabase = createClient()
-                await supabase.auth.signOut()
-                router.refresh()
-                router.push('/')
-              }}
-              className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer whitespace-nowrap"
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="px-4 py-2.5 rounded-[10px] border border-border bg-transparent font-sans text-sm text-muted-foreground cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cerrar sesión
+              {signingOut ? 'Cerrando…' : 'Cerrar sesión'}
             </button>
           </div>
           <div className="px-6 py-5 flex items-center justify-between gap-6">
