@@ -22,7 +22,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No hay suscripción activa' }, { status: 400 })
   }
 
-  const origin = req.headers.get('origin') ?? 'https://aliis.app'
+  const ALLOWED_ORIGINS = ['https://aliis.app', 'https://www.aliis.app']
+  const rawOrigin = req.headers.get('origin') ?? ''
+  const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : 'https://aliis.app'
 
   const session = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,
