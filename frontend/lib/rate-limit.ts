@@ -1,11 +1,18 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { logger } from './logger'
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-)
+// Lazy-init: env vars aren't always available at module load (e.g. CI build's
+// "Collecting page data" step). Build the client on first use instead.
+let _admin: SupabaseClient | null = null
+function admin(): SupabaseClient {
+  if (_admin) return _admin
+  _admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+  return _admin
+}
 
 export interface RateLimitResult {
   ok: boolean
@@ -32,7 +39,7 @@ export async function rateLimit(
   )
   const resetAt = new Date(windowStart.getTime() + windowSec * 1000)
 
-  const { data, error } = await admin.rpc('increment_rate_limit', {
+  const { data, error } = await admin().rpc('increment_rate_limit', {
     p_key: key,
     p_window_start: windowStart.toISOString(),
   })

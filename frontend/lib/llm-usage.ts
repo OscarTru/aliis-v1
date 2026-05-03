@@ -1,11 +1,18 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { logger } from './logger'
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-)
+// Lazy-init — see rate-limit.ts for rationale (CI build collects pages
+// without env vars set, module-scope createClient throws).
+let _admin: SupabaseClient | null = null
+function admin(): SupabaseClient {
+  if (_admin) return _admin
+  _admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+  return _admin
+}
 
 interface AnthropicUsage {
   input_tokens?: number | null
@@ -25,7 +32,7 @@ export async function logLlmUsage(args: {
   usage?: AnthropicUsage
 }): Promise<void> {
   try {
-    await admin.from('llm_usage').insert({
+    await admin().from('llm_usage').insert({
       user_id: args.userId,
       endpoint: args.endpoint,
       model: args.model,
