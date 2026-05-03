@@ -76,7 +76,7 @@ const TRUST_PILLARS = [
     body: 'Disclaimer visible en cada pantalla. Aliis es lo que te prepara para la consulta, no lo que la sustituye.',
   },
   {
-    icon: 'solar:brain-bold-duotone',
+    icon: 'solar:lightbulb-bold-duotone',
     eyebrow: 'Origen',
     title: 'Hecho por Cerebros Esponjosos',
     body: 'La misma voz que ya sigues. La misma obsesión por explicar medicina bien, sin condescendencia.',

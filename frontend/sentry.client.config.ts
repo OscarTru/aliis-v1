@@ -1,8 +1,12 @@
 import * as Sentry from '@sentry/nextjs'
 import { scrubMedicalPII } from './lib/sentry-scrub'
 
+const isDev = process.env.NODE_ENV === 'development'
+
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? 'https://cb1476dc53c6459d0cb15784fbedfa6e@o4511318848110592.ingest.de.sentry.io/4511318872227920',
+  // Only report in production — avoids 403s from DSN auth in local dev.
+  dsn: isDev ? undefined : (process.env.NEXT_PUBLIC_SENTRY_DSN ?? ''),
+  enabled: !isDev,
   tracesSampleRate: 0.1,
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
