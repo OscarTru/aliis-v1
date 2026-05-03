@@ -25,7 +25,7 @@ export default async function SoportePage() {
       <PageHeader
         eyebrow="Cómo te ayudamos"
         title={<>Cuéntanos qué <em>necesitas</em>.</>}
-        subtitle="Responde el equipo de Cerebros Esponjosos. Soporte cubre temas de cuenta, suscripción y problemas técnicos."
+        subtitle="Responde el equipo de Aliis. Soporte cubre temas de cuenta, suscripción y problemas técnicos."
       />
 
       <SupportSection plan={plan} />
