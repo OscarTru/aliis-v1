@@ -14,6 +14,7 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  Customized,
 } from 'recharts'
 import {
   Dialog,
@@ -26,12 +27,14 @@ import { DiaryEntryModal } from '@/components/DiaryEntryModal'
 import type { SymptomLog } from '@/lib/types'
 
 const METRICS = [
-  { key: 'glucose',      label: 'Glucosa',    unit: 'mg/dL', color: 'hsl(var(--primary))' },
-  { key: 'bp_systolic',  label: 'Sistólica',  unit: 'mmHg',  color: '#e74c3c' },
-  { key: 'bp_diastolic', label: 'Diastólica', unit: 'mmHg',  color: '#e67e22' },
-  { key: 'heart_rate',   label: 'FC',         unit: 'lpm',   color: '#8e44ad' },
-  { key: 'weight',       label: 'Peso',       unit: 'kg',    color: '#27ae60' },
-  { key: 'temperature',  label: 'Temp',       unit: '°C',    color: '#2980b9' },
+  { key: 'glucose',     label: 'Glucosa',  unit: 'mg/dL', color: 'hsl(var(--primary))' },
+  // Single BP entry: chart line traces MAP (Mean Arterial Pressure) and a
+  // custom whisker layer renders the systolic↔diastolic range at each point,
+  // following the standard clinical convention for BP visualisation.
+  { key: 'bp',          label: 'Presión',  unit: 'mmHg',  color: '#e74c3c' },
+  { key: 'heart_rate',  label: 'FC',       unit: 'lpm',   color: '#8e44ad' },
+  { key: 'weight',      label: 'Peso',     unit: 'kg',    color: '#27ae60' },
+  { key: 'temperature', label: 'Temp',     unit: '°C',    color: '#2980b9' },
 ] as const
 
 type MetricKey = typeof METRICS[number]['key']
@@ -301,6 +304,103 @@ function MetricPills({ log }: { log: SymptomLog }) {
 const PREVIEW_COUNT = 2
 const PAGE_THRESHOLD = 7
 
+// Whisker layer for blood pressure. For each data point with both systolic
+// and diastolic, draws a vertical line from SBP to DBP plus small horizontal
+// caps at the extremes — the standard clinical representation. Recharts'
+// <Customized> component injects xAxisMap/yAxisMap so we can map data values
+// to pixel coordinates exactly aligned with the line chart.
+type BPDatum = { ts: number; bp_systolic: number | null; bp_diastolic: number | null }
+type AxisMap = Record<string, { scale: (v: number | string) => number; bandSize?: () => number }>
+
+function BPWhiskers(props: {
+  data?: BPDatum[]
+  xAxisMap?: AxisMap
+  yAxisMap?: AxisMap
+  color?: string
+}) {
+  const { data, xAxisMap, yAxisMap, color = '#e74c3c' } = props
+  if (!data || !xAxisMap || !yAxisMap) return null
+  const xAxis = Object.values(xAxisMap)[0]
+  const yAxis = Object.values(yAxisMap)[0]
+  if (!xAxis || !yAxis) return null
+
+  // Category x-axis uses the formatted date as the band key. We re-derive the
+  // same string the chart used so xAxis.scale() returns the band's center.
+  const CAP_W = 4 // half-width of horizontal cap (px)
+
+  return (
+    <g pointerEvents="none">
+      {data.map((d, i) => {
+        if (d.bp_systolic === null || d.bp_diastolic === null) return null
+        const xKey = format(new Date(d.ts), 'dd/MM HH:mm')
+        const xRaw = xAxis.scale(xKey)
+        const halfBand = typeof xAxis.bandSize === 'function' ? xAxis.bandSize() / 2 : 0
+        const x = xRaw + halfBand
+        const yTop = yAxis.scale(d.bp_systolic)
+        const yBot = yAxis.scale(d.bp_diastolic)
+        if (!Number.isFinite(x) || !Number.isFinite(yTop) || !Number.isFinite(yBot)) return null
+        return (
+          <g key={i} stroke={color} strokeWidth={1.5} strokeLinecap="round">
+            {/* vertical line: systolic ↔ diastolic */}
+            <line x1={x} x2={x} y1={yTop} y2={yBot} />
+            {/* top cap (systolic) */}
+            <line x1={x - CAP_W} x2={x + CAP_W} y1={yTop} y2={yTop} />
+            {/* bottom cap (diastolic) */}
+            <line x1={x - CAP_W} x2={x + CAP_W} y1={yBot} y2={yBot} />
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+// Custom tooltip formatter so BP shows as "120/80 (TAM 93)" instead of just
+// the mean value. Other metrics fall through to default formatting.
+type TooltipPayloadEntry = {
+  dataKey?: string
+  value?: number | string | null
+  name?: string
+  color?: string
+  payload?: Record<string, unknown>
+}
+function VitalsTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayloadEntry[]; label?: string }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-sans)',
+        fontSize: 12,
+        border: '1px solid hsl(var(--border))',
+        borderRadius: 8,
+        background: 'hsl(var(--background))',
+        padding: '8px 10px',
+      }}
+    >
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, opacity: 0.6, marginBottom: 4 }}>{label}</div>
+      {payload.map((p, i) => {
+        if (p.dataKey === 'bp') {
+          const sbp = p.payload?.bp_systolic
+          const dbp = p.payload?.bp_diastolic
+          const mean = p.value
+          if (sbp == null || dbp == null) return null
+          return (
+            <div key={i} style={{ color: p.color, lineHeight: 1.4 }}>
+              Presión: {String(sbp)}/{String(dbp)} mmHg
+              <span style={{ opacity: 0.6, marginLeft: 6 }}>(TAM {String(mean)})</span>
+            </div>
+          )
+        }
+        if (p.value == null) return null
+        return (
+          <div key={i} style={{ color: p.color, lineHeight: 1.4 }}>
+            {p.name}: {String(p.value)}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) {
   const [logs, setLogs] = useState<SymptomLog[]>(initialLogs)
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
@@ -354,16 +454,26 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
 
   const chartData = [...logs]
     .sort((a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime())
-    .map(l => ({
-      ts: new Date(l.logged_at).getTime(),
-      date: format(new Date(l.logged_at), 'dd/MM HH:mm'),
-      glucose: l.glucose,
-      bp_systolic: l.bp_systolic,
-      bp_diastolic: l.bp_diastolic,
-      heart_rate: l.heart_rate,
-      weight: l.weight,
-      temperature: l.temperature,
-    }))
+    .map(l => {
+      // Mean Arterial Pressure (TAM): (SBP + 2·DBP) / 3 — clinical convention.
+      // Only computed when both values are present.
+      const bp_mean =
+        l.bp_systolic !== null && l.bp_diastolic !== null
+          ? Math.round((l.bp_systolic + 2 * l.bp_diastolic) / 3)
+          : null
+      return {
+        ts: new Date(l.logged_at).getTime(),
+        date: format(new Date(l.logged_at), 'dd/MM HH:mm'),
+        glucose: l.glucose,
+        bp_systolic: l.bp_systolic,
+        bp_diastolic: l.bp_diastolic,
+        bp_mean,
+        bp: bp_mean, // alias used by the chart line + tooltip key
+        heart_rate: l.heart_rate,
+        weight: l.weight,
+        temperature: l.temperature,
+      }
+    })
 
   if (logs.length === 0) {
     return (
@@ -489,15 +599,18 @@ export function SymptomsSection({ initialLogs }: { initialLogs: SymptomLog[] }) 
                     minTickGap={40}
                   />
                   <YAxis tick={{ fontSize: 10, fontFamily: 'var(--font-mono)' }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      fontFamily: 'var(--font-sans)',
-                      fontSize: 12,
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 8,
-                      background: 'hsl(var(--background))',
-                    }}
-                  />
+                  <Tooltip content={<VitalsTooltip />} />
+                  {/* BP whiskers: rendered behind the line so the dot sits on top */}
+                  {activeMetrics.has('bp') && (
+                    <Customized
+                      component={(props: object) => (
+                        <BPWhiskers
+                          {...(props as { data?: BPDatum[]; xAxisMap?: AxisMap; yAxisMap?: AxisMap })}
+                          color={METRICS.find(m => m.key === 'bp')?.color}
+                        />
+                      )}
+                    />
+                  )}
                   {METRICS.filter(m => activeMetrics.has(m.key)).map(m => (
                     <Line
                       key={m.key}
