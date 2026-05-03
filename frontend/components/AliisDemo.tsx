@@ -109,10 +109,14 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Sidebar (desktop) — mirror of components/Sidebar.tsx ────────────────────
+// `isMobile` is driven by the demo's own container width (ResizeObserver), not
+// the viewport. This way the demo correctly shows bottom-nav whenever its
+// rendered width is narrow, regardless of where it's embedded.
 
-function Sidebar({ active }: { active: NavId }) {
+function Sidebar({ active, isMobile }: { active: NavId; isMobile: boolean }) {
+  if (isMobile) return null
   return (
-    <aside className="hidden md:flex w-[208px] shrink-0 h-full border-r border-border bg-background flex-col">
+    <aside className="flex w-[208px] shrink-0 h-full border-r border-border bg-background flex-col">
       {/* Logo */}
       <div className="px-3 pt-5 pb-2">
         <img src="/assets/aliis-original.png" alt="Aliis" width={88} height={32} className="object-contain logo-hide-dark" />
@@ -160,11 +164,12 @@ function Sidebar({ active }: { active: NavId }) {
 
 // ─── Mobile bottom nav — mirror of components/BottomNav.tsx ─────────────────
 
-function BottomNav({ active }: { active: NavId }) {
+function BottomNav({ active, isMobile }: { active: NavId; isMobile: boolean }) {
   // Bottom nav on mobile uses a slightly different mapping than the sidebar
   // (no condiciones, has cuenta).
+  if (!isMobile) return null
   return (
-    <div className="md:hidden absolute bottom-0 left-0 right-0 flex border-t border-border bg-background/95 backdrop-blur-xl">
+    <div className="absolute bottom-0 left-0 right-0 flex border-t border-border bg-background/95 backdrop-blur-xl">
       {BOTTOM_NAV.map(item => {
         const isActive = item.id === active
         return (
@@ -722,10 +727,16 @@ function Caption({ eyebrow, title }: { eyebrow: string; title: string }) {
 export default function AliisDemo() {
   const [t, setT] = useState(0)
   const [playing, setPlaying] = useState(true)
+  // Container-driven responsive: switch to bottom-nav layout when the demo's
+  // own width is narrow, regardless of the page viewport. This way the demo
+  // adapts whether it's embedded full-width on mobile or scaled inside a
+  // narrow card on desktop.
+  const [isMobile, setIsMobile] = useState(false)
   const userPausedRef = useRef(false)
   const rafRef = useRef<number | null>(null)
   const lastRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0)
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const frameRef = useRef<HTMLDivElement | null>(null)
 
   // Pause RAF when the demo is offscreen
   useEffect(() => {
@@ -743,6 +754,21 @@ export default function AliisDemo() {
     )
     io.observe(el)
     return () => io.disconnect()
+  }, [])
+
+  // Container-width based isMobile flag. Threshold 640px matches the natural
+  // shrink point where the sidebar (208px) eats too much horizontal real estate.
+  useEffect(() => {
+    const el = frameRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width
+        setIsMobile(w < 640)
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
   const totalDur = useMemo(() => SCENES.reduce((a, s) => a + s.dur, 0), [])
@@ -820,29 +846,38 @@ export default function AliisDemo() {
 
   return (
     <div ref={rootRef} className="relative w-full">
-      {/* Browser frame holds the whole thing */}
-      <div className="relative aspect-[16/11] md:aspect-[16/10] max-w-[960px] mx-auto">
+      {/* Browser frame holds the whole thing. Aspect ratio shifts to taller
+          (4/3) on narrow containers to give mobile content room to breathe. */}
+      <div
+        ref={frameRef}
+        className={[
+          'relative max-w-[960px] mx-auto',
+          isMobile ? 'aspect-[3/4]' : 'aspect-[16/10]',
+        ].join(' ')}
+      >
         <BrowserFrame>
           <div className="relative w-full h-full flex bg-background">
-            {/* Sidebar (desktop only) */}
-            <Sidebar active={scene.nav} />
+            {/* Sidebar — only when container is wide enough */}
+            <Sidebar active={scene.nav} isMobile={isMobile} />
             {/* Main pane */}
             <div className="relative flex-1 min-w-0 overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 {renderScene(scene.id)}
               </AnimatePresence>
-              {/* Cursor */}
-              <motion.div
-                className="absolute pointer-events-none z-30"
-                style={{ left: `${cursor.x}%`, top: `${cursor.y}%`, translateX: '-2px', translateY: '-2px' }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" className="drop-shadow-md">
-                  <path d="M5 3l5 18 3-7 7-3z" fill="hsl(var(--foreground))" stroke="white" strokeWidth={1.4} strokeLinejoin="round" />
-                </svg>
-              </motion.div>
+              {/* Cursor — hidden on mobile (touch interface, no pointer) */}
+              {!isMobile && (
+                <motion.div
+                  className="absolute pointer-events-none z-30"
+                  style={{ left: `${cursor.x}%`, top: `${cursor.y}%`, translateX: '-2px', translateY: '-2px' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" className="drop-shadow-md">
+                    <path d="M5 3l5 18 3-7 7-3z" fill="hsl(var(--foreground))" stroke="white" strokeWidth={1.4} strokeLinejoin="round" />
+                  </svg>
+                </motion.div>
+              )}
             </div>
-            {/* Bottom nav (mobile only) */}
-            <BottomNav active={scene.nav === 'condiciones' ? 'historial' : scene.nav} />
+            {/* Bottom nav — only on narrow containers */}
+            <BottomNav active={scene.nav === 'condiciones' ? 'historial' : scene.nav} isMobile={isMobile} />
           </div>
         </BrowserFrame>
       </div>
