@@ -173,6 +173,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: fullName,
             consents_pending: {
