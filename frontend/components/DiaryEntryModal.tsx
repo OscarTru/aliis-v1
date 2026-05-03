@@ -97,7 +97,7 @@ export function DiaryEntryModal({ open, onClose, onSaved }: Props) {
         <DialogOverlay />
         {/* Centered on all viewports. Unified modal pattern across the app. */}
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-          <div className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] pointer-events-auto">
+          <div className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto">
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0 border-b border-border/40">
