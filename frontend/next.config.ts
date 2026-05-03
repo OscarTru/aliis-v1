@@ -3,6 +3,14 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const isDev = process.env.NODE_ENV !== 'production'
 
+// Backend API origin allowed in connect-src.
+//   - In dev: localhost:3001 (Express backend)
+//   - In prod: Railway-hosted backend
+// Override via NEXT_PUBLIC_API_URL in env if either changes.
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (isDev ? 'http://localhost:3001' : 'https://aliis-v1-production.up.railway.app')
+
 // Build CSP. Dev needs 'unsafe-eval' for Next.js HMR / React Refresh.
 // Prod is stricter. Both allow Google Analytics + Tag Manager since gtag is loaded site-wide.
 const csp = [
@@ -11,7 +19,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://m.stripe.com https://m.stripe.network https://r.stripe.com https://accounts.google.com https://*.ingest.de.sentry.io https://www.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+  `connect-src 'self' ${apiUrl} https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://m.stripe.com https://m.stripe.network https://r.stripe.com https://accounts.google.com https://*.ingest.de.sentry.io https://www.google-analytics.com https://*.analytics.google.com https://*.google-analytics.com https://*.googletagmanager.com`,
   "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",

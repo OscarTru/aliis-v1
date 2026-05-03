@@ -37,11 +37,10 @@ export default async function DiarioPage() {
       .eq('user_id', uid)
       .order('last_seen_at', { ascending: false }),
     supabase.from('profiles').select('plan').eq('id', uid).single(),
-    supabase
-      .from('feature_flags')
-      .select('enabled, rollout_pct, user_ids, plan_restriction')
-      .eq('flag_name', 'adherence_checklist')
-      .single(),
+    supabase.rpc('is_feature_enabled_for', {
+      p_flag_name: 'adherence_checklist',
+      p_user_id: uid,
+    }),
     supabase
       .from('adherence_logs')
       .select('*')
@@ -74,17 +73,10 @@ export default async function DiarioPage() {
   const trackedSymptoms: TrackedSymptom[] = (trackedResult.data ?? []) as TrackedSymptom[]
 
   const userPlan: string = profileResult.data?.plan ?? 'free'
-  const flag = adherenceFlagResult.data
   const adherenceLogs: AdherenceLog[] = (adherenceLogsResult.data ?? []) as AdherenceLog[]
 
-  const showAdherence = (() => {
-    if (!flag?.enabled) return false
-    if (flag.plan_restriction && userPlan !== flag.plan_restriction) return false
-    if (flag.user_ids?.includes(uid)) return true
-    if (flag.rollout_pct >= 100) return true
-    const hash = parseInt(uid.replace(/-/g, '').slice(-4), 16) % 100
-    return hash < flag.rollout_pct
-  })()
+  // RPC returns boolean — server-side check that doesn't leak the user_ids[] allowlist.
+  const showAdherence = adherenceFlagResult.data === true
 
   // Cápsula del tiempo — most recent this month
   const thisMonth = new Date().toISOString().slice(0, 7)

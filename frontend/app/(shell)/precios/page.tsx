@@ -162,7 +162,7 @@ export default function PreciosPage() {
                 className={cn(
                   'px-5 py-[13px] rounded-[12px] font-sans text-[15px] font-medium flex items-center justify-center gap-2 border transition-opacity',
                   tier.highlight
-                    ? 'bg-foreground text-background border-foreground'
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 border-secondary'
                     : 'bg-transparent text-foreground border-border hover:bg-muted',
                   tier.highlight && isPending && 'opacity-70 cursor-default'
                 )}

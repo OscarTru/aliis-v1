@@ -342,7 +342,7 @@ function IngresoPageInner() {
                   className={cn(
                     'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                     dxText.trim()
-                      ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
+                      ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                       : 'bg-border text-muted-foreground cursor-not-allowed'
                   )}
                 >
@@ -383,7 +383,7 @@ function IngresoPageInner() {
                 className={cn(
                   'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                   para
-                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
@@ -452,7 +452,7 @@ function IngresoPageInner() {
                 className={cn(
                   'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                   emocionFinal()
-                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >
@@ -521,7 +521,7 @@ function IngresoPageInner() {
                 className={cn(
                   'w-full py-[14px] h-auto rounded-[12px] font-sans text-[15px] font-medium transition-[background,box-shadow] duration-150',
                   dudasFinal()
-                    ? 'bg-foreground text-background cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
+                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90 cursor-pointer shadow-[var(--c-btn-primary-shadow)]'
                     : 'bg-border text-muted-foreground cursor-not-allowed'
                 )}
               >

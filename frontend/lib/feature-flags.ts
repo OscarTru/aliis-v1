@@ -1,30 +1,26 @@
 import { createClient } from '@/lib/supabase'
 
-interface FeatureFlagRow {
-  enabled: boolean
-  rollout_pct: number
-  user_ids: string[]
-  plan_restriction: string | null
-}
-
+/**
+ * Returns true iff the feature flag is enabled for this user.
+ *
+ * Calls the SECURITY DEFINER RPC `is_feature_enabled_for` which does the
+ * allowlist + rollout + plan checks server-side. The RPC never returns the
+ * raw `user_ids[]` array, so the beta user list is not leaked to the client.
+ *
+ * userPlan is no longer needed — the RPC reads `profiles.plan` itself.
+ */
 export async function isFeatureEnabled(
   flagName: string,
-  userId: string,
-  userPlan: string
+  userId: string
 ): Promise<boolean> {
   const supabase = createClient()
-  const { data } = await supabase
-    .from('feature_flags')
-    .select('enabled, rollout_pct, user_ids, plan_restriction')
-    .eq('flag_name', flagName)
-    .single<FeatureFlagRow>()
-
-  if (!data || !data.enabled) return false
-  if (data.plan_restriction && userPlan !== data.plan_restriction) return false
-  if (data.user_ids?.includes(userId)) return true
-  if (data.rollout_pct >= 100) return true
-
-  // Deterministic bucket: last 4 hex chars of UUID → 0-99
-  const hash = parseInt(userId.replace(/-/g, '').slice(-4), 16) % 100
-  return hash < data.rollout_pct
+  const { data, error } = await supabase.rpc('is_feature_enabled_for', {
+    p_flag_name: flagName,
+    p_user_id: userId,
+  })
+  if (error) {
+    console.error('[feature-flags] RPC error:', error.message)
+    return false
+  }
+  return data === true
 }

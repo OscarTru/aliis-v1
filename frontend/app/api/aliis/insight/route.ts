@@ -1,7 +1,9 @@
 import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
+import { logLlmUsage } from '@/lib/llm-usage'
 import type { SymptomLog } from '@/lib/types'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 export async function GET() {
   const supabase = await createServerSupabaseClient()
@@ -27,7 +29,13 @@ export async function GET() {
 
   const [profileRes, logsRes, packRes] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', user.id).single(),
-    supabase.from('symptom_logs').select('*').eq('user_id', user.id).gte('logged_at', since30).order('logged_at', { ascending: false }),
+    supabase
+      .from('symptom_logs')
+      .select('logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
+      .eq('user_id', user.id)
+      .gte('logged_at', since30)
+      .order('logged_at', { ascending: false })
+      .limit(500),
     supabase.from('packs').select('dx').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single(),
   ])
 
@@ -39,10 +47,17 @@ export async function GET() {
   const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
 
   const message = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: HAIKU_4_5,
     max_tokens: 150,
     system: cachedSystem(system),
     messages: [{ role: 'user', content: userMessage }],
+  })
+
+  await logLlmUsage({
+    userId: user.id,
+    endpoint: 'aliis_insight',
+    model: HAIKU_4_5,
+    usage: message.usage,
   })
 
   const content = (message.content[0] as { type: string; text: string }).text.trim()

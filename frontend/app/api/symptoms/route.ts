@@ -2,6 +2,7 @@ import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 function parseNumeric(v: unknown, label: string, lo: number, hi: number): number | null {
   if (v === undefined || v === null) return null
@@ -75,7 +76,7 @@ No incluyas texto adicional fuera del JSON.`
     symptoms = JSON.parse(rawText) as ExtractedSymptom[]
     if (!Array.isArray(symptoms)) symptoms = []
   } catch {
-    console.error('extractAndUpsertSymptoms: failed to parse JSON:', rawText)
+    logger.error({ rawTextSample: rawText.slice(0, 200) }, 'extractAndUpsertSymptoms: failed to parse JSON')
     return
   }
 
@@ -119,7 +120,7 @@ No incluyas texto adicional fuera del JSON.`
 export async function POST(req: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError) console.error('auth error:', authError)
+  if (authError) logger.error({ err: authError }, 'symptoms auth error')
   if (!user) {
     return Response.json({ error: 'No autorizado' }, { status: 401 })
   }
@@ -178,7 +179,7 @@ export async function POST(req: Request) {
     .single()
 
   if (error) {
-    console.error('supabase error:', error)
+    logger.error({ err: error }, 'symptoms supabase error')
     return Response.json({ error: 'Error al guardar' }, { status: 500 })
   }
 
@@ -188,7 +189,7 @@ export async function POST(req: Request) {
     noteStr,
     { glucose, bp_systolic, bp_diastolic, heart_rate, weight, temperature },
     supabase
-  ).catch(console.error)
+  ).catch((err) => logger.error({ err }, 'extractAndUpsertSymptoms async failed'))
 
   return Response.json(data)
 }

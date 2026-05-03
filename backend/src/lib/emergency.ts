@@ -13,5 +13,5 @@ Aliis no puede reemplazar la atención médica de urgencia.`
 export const BLOCKED_MESSAGES = {
   DOSE: 'Aliis no puede recomendar dosis de medicamentos. Consulta con tu médico o farmacéutico.',
   DIAGN: 'Aliis no puede hacer diagnósticos. Solo puede explicar diagnósticos que ya realizó un médico.',
-  OOD: 'Esto está fuera del ámbito de Aliis. Somos especialistas en explicar diagnósticos neurológicos.',
+  OOD: 'Esto está fuera del ámbito de Aliis. Estamos hechos para explicarte diagnósticos médicos.',
 }

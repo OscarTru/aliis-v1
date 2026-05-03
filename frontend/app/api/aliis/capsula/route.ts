@@ -2,6 +2,7 @@ import { generateText } from 'ai'
 import { createClient } from '@supabase/supabase-js'
 import { models } from '@/lib/ai-providers'
 import { sendPushNotification } from '@/lib/web-push'
+import { verifyCronAuth } from '@/lib/cron-auth'
 import type { SymptomLog } from '@/lib/types'
 
 const SYSTEM_PROMPT = `Eres Aliis, el agente de salud personal. Una vez al mes generas una "cápsula del tiempo": un mensaje cálido que compara los signos vitales del último mes con el mes anterior.
@@ -18,11 +19,8 @@ Reglas:
 - Responde siempre en español`
 
 export async function GET(req: Request) {
-  const isVercelCron = req.headers.get('x-vercel-cron') === '1'
-  const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
-  if (!isVercelCron && !hasSecret) {
-    return Response.json({ error: 'No autorizado' }, { status: 401 })
-  }
+  const authError = verifyCronAuth(req)
+  if (authError) return authError
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,7 +55,7 @@ export async function GET(req: Request) {
     supabase.from('profiles').select('id, name').in('id', toProcess),
     supabase
       .from('symptom_logs')
-      .select('*')
+      .select('user_id, logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
       .in('user_id', toProcess)
       .gte('logged_at', since60)
       .order('logged_at', { ascending: false }),

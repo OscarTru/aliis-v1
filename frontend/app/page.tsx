@@ -38,8 +38,8 @@ function InputPreview({ onCTA }: { onCTA: () => void }) {
         ] as const).map((t) => (
           <button key={t.id} onClick={() => setMode(t.id)}
             style={{
-              background: mode === t.id ? '#0F1923' : 'transparent',
-              color: mode === t.id ? '#fff' : 'var(--c-text-muted)',
+              background: mode === t.id ? 'hsl(var(--secondary))' : 'transparent',
+              color: mode === t.id ? 'hsl(var(--secondary-foreground))' : 'var(--c-text-muted)',
               boxShadow: mode === t.id ? '0 0 0 1px rgba(31,138,155,.3)' : 'none',
               border: `1px solid ${mode === t.id ? 'transparent' : 'var(--c-border)'}`,
               padding: '6px 12px', borderRadius: 999, fontSize: 12, cursor: 'pointer',
@@ -57,10 +57,14 @@ function InputPreview({ onCTA }: { onCTA: () => void }) {
         <button onClick={onCTA}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', background: '#0F1923', color: '#fff',
+            padding: '10px 20px', background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))',
             boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
             border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 14, cursor: 'pointer',
-          }}>
+            transition: 'opacity .15s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+        >
           Pedir explicación
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </button>
@@ -87,10 +91,14 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
             <button onClick={onCTA}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '14px 28px', background: '#0F1923', color: '#fff',
+                padding: '14px 28px', background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))',
                 boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
                 border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: 15, cursor: 'pointer',
-              }}>
+                transition: 'opacity .15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
               Entender mi diagnóstico →
             </button>
             <button onClick={onVerEjemplo}
@@ -450,7 +458,7 @@ function LiveExample() {
                     transition={{ duration: 1.4, repeat: Infinity }}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 8,
-                      padding: '11px 22px', background: '#0F1923', color: '#fff',
+                      padding: '11px 22px', background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))',
                       boxShadow: '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)',
                       border: 'none', borderRadius: 999, fontFamily: 'var(--font-sans)',
                       fontWeight: 500, fontSize: 14, cursor: 'default',
@@ -850,8 +858,8 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
             {(['EUR', 'USD', 'MXN'] as const).map((c) => (
               <button key={c} onClick={() => setCurrency(c)}
                 style={{
-                  background: currency === c ? '#0F1923' : 'transparent',
-                  color: currency === c ? '#fff' : 'var(--c-text-muted)',
+                  background: currency === c ? 'hsl(var(--secondary))' : 'transparent',
+                  color: currency === c ? 'hsl(var(--secondary-foreground))' : 'var(--c-text-muted)',
                   border: 'none', padding: '7px 16px', borderRadius: 999,
                   fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.15em', cursor: 'pointer',
                 }}>
@@ -906,13 +914,17 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
               <button onClick={onCTA}
                 style={{
                   padding: '13px 20px', borderRadius: 12,
-                  background: tier.highlight ? '#0F1923' : 'transparent',
-                  color: tier.highlight ? '#fff' : 'var(--c-text)',
+                  background: tier.highlight ? 'hsl(var(--secondary))' : 'transparent',
+                  color: tier.highlight ? 'hsl(var(--secondary-foreground))' : 'var(--c-text)',
                   boxShadow: tier.highlight ? '0 0 0 1px rgba(31,138,155,.3), 0 4px 16px rgba(31,138,155,.15)' : 'none',
                   border: `1px solid ${tier.highlight ? 'transparent' : 'rgba(31,138,155,.35)'}`,
                   fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                  transition: 'opacity .15s ease',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
                 {tier.cta}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>

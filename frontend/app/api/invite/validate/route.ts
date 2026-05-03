@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   let body: unknown
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 })
+  }
+
+  const ip = getClientIp(req)
+  const rl = await rateLimit(`ip:${ip}:invite-validate`, 10, 60)
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes — espera un minuto' },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    )
   }
 
   const code = typeof (body as Record<string, unknown>).code === 'string'

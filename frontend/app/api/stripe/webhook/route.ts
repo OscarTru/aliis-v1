@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail } from '@/lib/resend'
 import { paymentConfirmationEmail } from '@/lib/emails'
+import { logger } from '@/lib/logger'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -73,23 +74,35 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', userId)
 
-          // Send payment confirmation email.
-          // Note: checkout.session.completed can re-fire on Stripe retries — duplicate
-          // emails are possible but acceptable at MVP scale.
+          // Send payment confirmation email — idempotent against Stripe retries.
           try {
             const email = session.customer_details?.email ?? null
             if (email) {
-              const { data: profile } = await admin
-                .from('profiles')
-                .select('name')
-                .eq('id', userId)
-                .single()
-              const name: string | null = profile?.name ?? null
-              const { subject, html } = paymentConfirmationEmail(name)
-              await sendEmail({ to: email, subject, html })
+              const { error: insertErr } = await admin
+                .from('email_sends')
+                .insert({
+                  event_source: 'stripe',
+                  event_id: event.id,
+                  kind: 'payment_confirmation',
+                })
+
+              if (insertErr && insertErr.code === '23505') {
+                // UNIQUE conflict — this event was already processed, skip silently
+              } else if (insertErr) {
+                logger.error({ err: insertErr, eventId: event.id }, 'email_sends insert failed')
+              } else {
+                const { data: profile } = await admin
+                  .from('profiles')
+                  .select('name')
+                  .eq('id', userId)
+                  .single()
+                const name: string | null = profile?.name ?? null
+                const { subject, html } = paymentConfirmationEmail(name)
+                await sendEmail({ to: email, subject, html })
+              }
             }
           } catch (emailErr) {
-            console.error('Payment confirmation email error:', emailErr)
+            logger.error({ err: emailErr, kind: 'payment_confirmation' }, 'Payment confirmation email failed')
           }
         }
         break
@@ -97,6 +110,11 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
+        if (!customerId) {
+          console.warn('[stripe webhook] subscription.deleted with null customer — skipping')
+          break
+        }
         await admin
           .from('profiles')
           .update({
@@ -105,7 +123,7 @@ export async function POST(request: NextRequest) {
             stripe_subscription_id: null,
             subscription_status: 'canceled',
           })
-          .eq('stripe_customer_id', sub.customer as string)
+          .eq('stripe_customer_id', customerId)
         break
       }
 
@@ -133,6 +151,11 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
+        if (!customerId) {
+          console.warn('[stripe webhook] subscription.updated with null customer — skipping')
+          break
+        }
         const status = sub.status
         const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
         const trialEnd = sub.trial_end
@@ -147,7 +170,7 @@ export async function POST(request: NextRequest) {
             trial_end: trialEnd,
             subscription_status: status,
           })
-          .eq('stripe_customer_id', sub.customer as string)
+          .eq('stripe_customer_id', customerId)
         break
       }
 

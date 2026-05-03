@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
+import { verifyCronAuth } from '@/lib/cron-auth'
 
 // Called by Vercel Cron on the 1st of each month at 9am
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = verifyCronAuth(request)
+  if (authError) return authError
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

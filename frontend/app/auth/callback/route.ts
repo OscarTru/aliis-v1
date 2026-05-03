@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { getPostAuthRedirect } from '@/lib/auth-redirect'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -60,19 +61,64 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Consume invite code if present (Google OAuth new signup)
+  // Atomic invite consume: UPDATE only succeeds if used=false right now.
+  // Two concurrent signups with same code: only one UPDATE returns a row.
   if (inviteCode) {
     const normalized = inviteCode.trim().toUpperCase()
-    const { data: invite } = await admin
+    const { data: claimed } = await admin
       .from('invite_codes')
-      .select('id, used')
+      .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
       .eq('code', normalized)
-      .single()
-    if (invite && !invite.used) {
-      await admin
-        .from('invite_codes')
-        .update({ used: true, used_by: user.id, used_at: new Date().toISOString() })
-        .eq('id', invite.id)
+      .eq('used', false)
+      .select('id')
+      .maybeSingle()
+
+    if (!claimed) {
+      logger.warn({ code: normalized }, 'invite code already consumed or invalid')
+    }
+  }
+
+  // Replay any pending consent records collected at signup form into consents table.
+  // Idempotent: we look up existing consents first to avoid duplicates on reconfirm.
+  const pending = (user.user_metadata?.consents_pending ?? null) as null | {
+    terms?: { granted: boolean; at: string }
+    medical_data?: { granted: boolean; at: string }
+    policy_version?: string
+  }
+  if (pending) {
+    const { data: existing } = await admin
+      .from('consents')
+      .select('kind')
+      .eq('user_id', user.id)
+      .in('kind', ['terms', 'medical_data_processing'])
+    const have = new Set((existing ?? []).map((r) => r.kind))
+    const rows: Array<{
+      user_id: string
+      kind: string
+      granted: boolean
+      policy_version: string | null
+      created_at: string
+    }> = []
+    if (pending.terms && !have.has('terms')) {
+      rows.push({
+        user_id: user.id,
+        kind: 'terms',
+        granted: pending.terms.granted,
+        policy_version: pending.policy_version ?? null,
+        created_at: pending.terms.at,
+      })
+    }
+    if (pending.medical_data && !have.has('medical_data_processing')) {
+      rows.push({
+        user_id: user.id,
+        kind: 'medical_data_processing',
+        granted: pending.medical_data.granted,
+        policy_version: pending.policy_version ?? null,
+        created_at: pending.medical_data.at,
+      })
+    }
+    if (rows.length > 0) {
+      await admin.from('consents').insert(rows)
     }
   }
 

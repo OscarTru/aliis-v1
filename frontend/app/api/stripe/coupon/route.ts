@@ -25,8 +25,7 @@ export async function POST(req: Request) {
     if (!promoCode) return NextResponse.json({ error: 'Cupón no válido o expirado' }, { status: 404 })
 
     // Fetch coupon details — .coupon is missing from types in this API version
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawCoupon = (promoCode as any).coupon
+    const rawCoupon = (promoCode as { coupon?: string | { id: string } }).coupon
     const couponId: string = typeof rawCoupon === 'string' ? rawCoupon : rawCoupon?.id ?? ''
     const coupon = couponId ? await stripe.coupons.retrieve(couponId) : null
 

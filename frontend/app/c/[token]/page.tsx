@@ -1,5 +1,12 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import type { Metadata } from 'next'
+
+// Block search engines from indexing token-shared medical summaries.
+// These pages contain patient data and must never appear in search results.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, noarchive: true, nosnippet: true },
+}
 
 export default async function ConsultPage({
   params,

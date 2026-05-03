@@ -1,6 +1,9 @@
 import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { logLlmUsage } from '@/lib/llm-usage'
 import type { SymptomLog } from '@/lib/types'
+import { logger } from '@/lib/logger'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 const SYSTEM_PROMPT = `Eres un extractor de síntomas médicos. Dado un conjunto de registros de salud de un paciente, extrae todos los síntomas únicos mencionados o implícitos en todos los registros.
 
@@ -69,17 +72,23 @@ export async function POST() {
   let extracted: ExtractedSymptom[] = []
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: HAIKU_4_5,
       max_tokens: 1024,
       system: cachedSystem(SYSTEM_PROMPT),
       messages: [{ role: 'user', content: buildBatchMessage(logs) }],
+    })
+    await logLlmUsage({
+      userId: user.id,
+      endpoint: 'symptoms_backfill',
+      model: HAIKU_4_5,
+      usage: response.usage,
     })
     let raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) extracted = parsed
   } catch (err) {
-    console.error('[backfill] claude error:', err)
+    logger.error({ err, route: 'aliis_symptoms_backfill' }, 'Claude API error')
     return Response.json({ processed: 0, symptoms: [] })
   }
 
@@ -102,7 +111,7 @@ export async function POST() {
       created_at: now,
     })
     if (insertError && insertError.code !== '23505') {
-      console.error('[backfill] insert error:', insertError)
+      logger.error({ err: insertError }, 'symptoms insert failed')
     }
   }
 

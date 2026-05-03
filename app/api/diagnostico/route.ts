@@ -1,5 +1,31 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Inline rate-limit helper for root app (no shared lib)
+const _rlAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+)
+
+async function checkDiagnosticoRateLimit(req: Request): Promise<boolean> {
+  const forwarded = req.headers.get('x-forwarded-for')
+  const ip = forwarded ? forwarded.split(',')[0].trim() : (req.headers.get('x-real-ip') ?? 'unknown')
+  const windowSec = 60
+  const limit = 5
+  const windowStart = new Date(Math.floor(Date.now() / (windowSec * 1000)) * windowSec * 1000)
+  try {
+    const { data, error } = await _rlAdmin.rpc('increment_rate_limit', {
+      p_key: `ip:${ip}:diagnostico`,
+      p_window_start: windowStart.toISOString(),
+    })
+    if (error) return true  // fail open
+    return (data as number) <= limit
+  } catch {
+    return true  // fail open
+  }
+}
 
 const SYSTEM_PROMPT = `Eres el agente educativo de Cerebros Esponjosos — un proyecto de divulgación neurológica creado por médicos residentes que hablan con sus pacientes como lo haría un amigo muy informado.
 
@@ -80,6 +106,13 @@ const client = new Anthropic({
 })
 
 export async function POST(request: NextRequest) {
+  if (!(await checkDiagnosticoRateLimit(request))) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes — espera un minuto antes de generar otro pack' },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    )
+  }
+
   let body: unknown
   try {
     body = await request.json()

@@ -1,5 +1,8 @@
 import { anthropic } from '@/lib/anthropic'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { logLlmUsage } from '@/lib/llm-usage'
+import { logger } from '@/lib/logger'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 const NOTES_SYSTEM = `Eres el asistente educativo de Aliis. Tu tarea es generar un resumen de apuntes personales a partir de una conversación entre un paciente y el asistente de Aliis sobre su diagnóstico.
 
@@ -118,16 +121,22 @@ ${conversationText}`
   let noteContent: string
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: HAIKU_4_5,
       max_tokens: 600,
       system: [{ type: 'text', text: NOTES_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userPrompt }],
+    })
+    await logLlmUsage({
+      userId: user.id,
+      endpoint: 'notes_generate',
+      model: HAIKU_4_5,
+      usage: response.usage,
     })
     const textBlock = response.content.find((b) => b.type === 'text')
     if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response')
     noteContent = textBlock.text.trim()
   } catch (err) {
-    console.error('[notes/generate] Claude API error:', err)
+    logger.error({ err, route: 'notes_generate' }, 'Claude API error')
     return new Response(JSON.stringify({ error: 'Error al generar apuntes' }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },

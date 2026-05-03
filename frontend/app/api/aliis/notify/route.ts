@@ -1,20 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { buildAliisPrompt } from '@/lib/aliis-prompt'
+import { logLlmUsage } from '@/lib/llm-usage'
 import { sendPushNotification } from '@/lib/web-push'
+import { verifyCronAuth } from '@/lib/cron-auth'
 import type { SymptomLog } from '@/lib/types'
+import { HAIKU_4_5 } from '@/lib/ai-models'
 
 export async function GET(req: Request) {
+  const authError = verifyCronAuth(req)
+  if (authError) return authError
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-
-  const isVercelCron = req.headers.get('x-vercel-cron') === '1'
-  const hasSecret = req.headers.get('x-cron-secret') === process.env.CRON_SECRET
-  if (!isVercelCron && !hasSecret) {
-    return Response.json({ error: 'No autorizado' }, { status: 401 })
-  }
 
   const today = new Date().toISOString().slice(0, 10)
   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -50,13 +50,21 @@ export async function GET(req: Request) {
     .gte('logged_at', since30)
 
   const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
-  if (userIds.length === 0) return Response.json({ sent: 0, skipped: 0 })
+
+  // Sharding: read from query string (?shard=N&total=M); defaults to no sharding.
+  const url = new URL(req.url)
+  const shard = parseInt(url.searchParams.get('shard') ?? '0', 10)
+  const total = parseInt(url.searchParams.get('total') ?? '1', 10)
+  const { filterShard } = await import('@/lib/cron-shard')
+  const shardedUserIds = filterShard(userIds, shard, total)
+
+  if (shardedUserIds.length === 0) return Response.json({ sent: 0, skipped: 0, shard, total })
 
   // Batched: who already received an insight notification today?
   const { data: existingNotifs } = await supabase
     .from('notifications')
     .select('user_id')
-    .in('user_id', userIds)
+    .in('user_id', shardedUserIds)
     .gte('created_at', todayStart)
     .eq('type', 'insight')
   const alreadyNotified = new Set((existingNotifs ?? []).map(r => r.user_id))
@@ -65,14 +73,14 @@ export async function GET(req: Request) {
   const { data: cachedInsights } = await supabase
     .from('aliis_insights')
     .select('user_id, content')
-    .in('user_id', userIds)
+    .in('user_id', shardedUserIds)
     .gte('generated_at', todayStart)
   const cacheByUser = new Map(
     (cachedInsights ?? []).map(r => [r.user_id, r.content as string])
   )
 
   // Users that still need an insight generated
-  const toGenerate = userIds.filter(
+  const toGenerate = shardedUserIds.filter(
     id => !alreadyNotified.has(id) && !cacheByUser.has(id)
   )
 
@@ -81,7 +89,7 @@ export async function GET(req: Request) {
     supabase.from('profiles').select('id, name').in('id', toGenerate),
     supabase
       .from('symptom_logs')
-      .select('*')
+      .select('user_id, logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
       .in('user_id', toGenerate)
       .gte('logged_at', since30)
       .order('logged_at', { ascending: false }),
@@ -93,7 +101,7 @@ export async function GET(req: Request) {
     supabase
       .from('push_subscriptions')
       .select('user_id, endpoint, p256dh, auth')
-      .in('user_id', userIds),
+      .in('user_id', shardedUserIds),
   ])
 
   const profileByUser = new Map(
@@ -125,7 +133,7 @@ export async function GET(req: Request) {
   }> = []
   const expiredEndpoints: string[] = []
 
-  for (const userId of userIds) {
+  for (const userId of shardedUserIds) {
     if (alreadyNotified.has(userId)) { skipped++; continue }
 
     let content = cacheByUser.get(userId) ?? null
@@ -138,10 +146,16 @@ export async function GET(req: Request) {
       const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
       try {
         const message = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model: HAIKU_4_5,
           max_tokens: 150,
           system: cachedSystem(system),
           messages: [{ role: 'user', content: userMessage }],
+        })
+        await logLlmUsage({
+          userId,
+          endpoint: 'aliis_notify_cron',
+          model: HAIKU_4_5,
+          usage: message.usage,
         })
         content = (message.content[0] as { type: string; text: string }).text.trim()
       } catch {
@@ -199,5 +213,5 @@ export async function GET(req: Request) {
     await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints)
   }
 
-  return Response.json({ sent, skipped })
+  return Response.json({ sent, skipped, shard, total })
 }
