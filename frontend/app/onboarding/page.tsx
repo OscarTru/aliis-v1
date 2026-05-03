@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { TagInput } from '@/components/ui/TagInput'
-import { saveMedicalProfile } from '@/app/actions/medical-profile'
+import { saveMedicalProfile, syncOnboardingCondiciones } from '@/app/actions/medical-profile'
 import { syncOnboardingMedications } from '@/app/actions/treatments'
 
 const PROMISES = [
@@ -82,6 +82,9 @@ export default function OnboardingPage() {
         edad: medProfile.edad ? parseInt(medProfile.edad) : null,
         sexo: (medProfile.sexo as 'masculino' | 'femenino' | 'otro' | 'prefiero_no_decir') || null,
       })
+
+      // Sync conditions → normalize names against library + AI, then update medical_profiles
+      await syncOnboardingCondiciones(medProfile.condiciones_previas)
 
       // Sync medications → treatments table (best-effort, non-blocking UX)
       await syncOnboardingMedications(medProfile.medicamentos)
