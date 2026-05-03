@@ -142,13 +142,13 @@ function WhatAliisDoes() {
   return (
     <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
-        <div style={{ marginBottom: 64, maxWidth: '46rem' }}>
-          <Eyebrow style={{ marginBottom: 18 }}>· Lo que viene gratis ·</Eyebrow>
+        <div style={{ marginBottom: 64, maxWidth: '46rem', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Lo que viene gratis ·</Eyebrow>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
             Todo esto, sin pagar nada{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>desde el primer día.</em>
           </h2>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', marginTop: 18 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', marginTop: 18, marginLeft: 'auto', marginRight: 'auto' }}>
             Crea tu cuenta y empieza con una explicación esta semana. Tu diario, tus tratamientos y tu asistente IA están incluidos para siempre.
           </p>
         </div>
@@ -247,8 +247,8 @@ function DemoSection() {
       style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}
     >
       <div className="max-w-[72rem] mx-auto">
-        <div style={{ marginBottom: 48, maxWidth: '46rem' }}>
-          <Eyebrow style={{ marginBottom: 18 }}>· Cómo se ve por dentro ·</Eyebrow>
+        <div style={{ marginBottom: 48, maxWidth: '46rem', textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Cómo se ve por dentro ·</Eyebrow>
           <h2
             style={{
               fontFamily: 'var(--font-serif)',
@@ -269,6 +269,8 @@ function DemoSection() {
               color: 'var(--c-text-muted)',
               maxWidth: '54ch',
               marginTop: 16,
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}
           >
             Un recorrido de la app real: cómo escribes tu diagnóstico, cómo se ve tu expediente, la explicación capítulo a capítulo, el asistente IA y tu diario de salud.
@@ -896,13 +898,13 @@ function ProPowerTools({ onCTA }: { onCTA: () => void }) {
       }} />
 
       <div className="relative max-w-[72rem] mx-auto">
-        <div className="mb-14 max-w-[48rem]">
-          <Eyebrow style={{ marginBottom: 18 }}>· Pro · Acompañamiento real ·</Eyebrow>
+        <div className="mb-14 max-w-[48rem] mx-auto" style={{ textAlign: 'center' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· Pro · Acompañamiento real ·</Eyebrow>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: 0 }}>
             Para quien convive con su diagnóstico,{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>no solo para quien lo entiende.</em>
           </h2>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '54ch', marginTop: 18 }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '54ch', marginTop: 18, marginLeft: 'auto', marginRight: 'auto' }}>
             Pro convierte Aliis en un acompañante longitudinal: aprende de tu perfil, cruza tus datos, detecta lo que no cuadra y te prepara la próxima visita. Lo que te daría un médico que tuviera tiempo para ti.
           </p>
         </div>

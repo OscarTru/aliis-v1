@@ -83,12 +83,12 @@ function ChapterCard({
 
   return (
     <div className="h-full overflow-y-auto px-4 py-6 pb-28 md:px-12 md:py-10 md:pb-8">
-      {/* Mobile: meta + buttons stacked, all left-aligned with symmetric horizontal padding */}
-      <div className="flex flex-col gap-3 mb-3 md:flex-row md:items-center md:justify-between md:gap-4 md:mb-2.5 md:pr-12">
+      {/* Meta on the left, action buttons pinned to the right */}
+      <div className="flex items-center justify-between gap-3 mb-3 md:gap-4 md:mb-2.5 md:pr-12">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 shrink-0">
           {chapter.n} · {chapter.readTime}
         </div>
-        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+        <div className="flex items-center gap-2 shrink-0">
           {userPlan === 'pro'
             ? <PreConsultButton packId={packId} iconOnly="mobile" />
             : (
@@ -242,7 +242,7 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
           items.push({ id: '__refs', label: 'Referencias', targetIdx: pack.chapters.length + (pack.tools.length > 0 ? 1 : 0) })
         }
         return (
-          <div className="flex md:hidden items-center gap-2 px-4 py-2.5 border-b border-border bg-background sticky top-0 z-10">
+          <div className="flex md:hidden items-center justify-center gap-2 px-4 py-2.5 border-b border-border/70 bg-foreground/[0.06] sticky top-0 z-10 backdrop-blur-sm">
             {items.map((it) => {
               const isActive = activeIdx === it.targetIdx
               return (
@@ -255,7 +255,7 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
                     'shrink-0 flex items-center justify-center border-none cursor-pointer overflow-hidden',
                     isActive
                       ? 'h-7 px-3 rounded-full bg-primary text-white font-sans text-xs font-medium'
-                      : 'h-2 w-2 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50 transition-colors'
+                      : 'h-2 w-2 rounded-full bg-foreground/30 hover:bg-foreground/55 transition-colors'
                   )}
                   aria-label={isActive ? undefined : it.label}
                 >
