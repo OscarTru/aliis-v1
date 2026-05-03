@@ -380,11 +380,33 @@ export function Sidebar({
           </div>
         )}
 
+        {/* Support link — opens /cuenta scrolled to support form */}
+        <Link
+          href="/cuenta#soporte"
+          className={cn(
+            'flex items-center shrink-0 hover:bg-muted transition-colors no-underline border-t border-border/60',
+            collapsed ? 'justify-center py-2.5' : 'gap-3 px-3 py-2.5'
+          )}
+          title="¿Necesitas ayuda?"
+        >
+          <div className="w-7 h-7 flex items-center justify-center text-muted-foreground/70 shrink-0">
+            <Icon icon="solar:question-circle-bold-duotone" width={18} />
+          </div>
+          <span
+            className={cn(
+              'font-sans text-[13px] text-muted-foreground/80 truncate transition-all duration-150',
+              collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+            )}
+          >
+            ¿Necesitas ayuda?
+          </span>
+        </Link>
+
         {/* User */}
         <Link
           href="/cuenta"
           className={cn(
-            'flex items-center shrink-0 hover:bg-muted transition-colors no-underline',
+            'flex items-center shrink-0 hover:bg-muted transition-colors no-underline border-t border-border/60',
             collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-3'
           )}
         >

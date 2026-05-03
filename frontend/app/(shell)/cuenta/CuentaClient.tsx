@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { saveNextAppointment } from '@/app/actions/appointment'
+import { SupportSection } from '@/components/SupportSection'
 
 type Profile = {
   name: string | null
@@ -509,6 +510,9 @@ export function CuentaClient({
             )}
           </div>
         </Section>
+
+        {/* Soporte */}
+        <SupportSection plan={initialProfile.plan} anchorId="soporte" />
 
         {/* Tus datos */}
         <Section title="Tus datos">

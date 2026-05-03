@@ -22,6 +22,7 @@ export function Footer() {
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#como-funciona">Cómo funciona</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#demo">Ver un ejemplo real</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/precios">Precios</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="mailto:hola@aliis.app?subject=Soporte%20Aliis">Soporte</a>
             </div>
             <div className="flex flex-col gap-2.5">
               <div className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
