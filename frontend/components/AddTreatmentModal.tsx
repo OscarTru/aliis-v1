@@ -161,10 +161,12 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
   const isBusy = isPending || isValidating
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center pb-[calc(64px+env(safe-area-inset-bottom))] sm:pb-0"
+    >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative w-full sm:max-w-[480px] bg-background rounded-t-2xl sm:rounded-2xl border border-border shadow-xl z-10 flex flex-col max-h-[calc(100dvh-env(safe-area-inset-bottom))] sm:max-h-[85vh]"
+        className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl z-10 flex flex-col max-h-[calc(100dvh-64px-env(safe-area-inset-bottom)-1rem)] sm:max-h-[85vh] mx-3 sm:mx-0"
       >
 
         {/* Header — fixed at top, doesn't scroll */}
