@@ -82,12 +82,13 @@ function ChapterCard({
   }, [chapter.id, packId, userId, onRead])
 
   return (
-    <div className="h-full overflow-y-auto px-12 py-10 pb-28 md:pb-8">
-      <div className="flex items-center justify-between gap-4 mb-2.5 pr-12">
+    <div className="h-full overflow-y-auto px-4 py-6 pb-28 md:px-12 md:py-10 md:pb-8">
+      {/* Mobile: meta + buttons stacked, all left-aligned with symmetric horizontal padding */}
+      <div className="flex flex-col gap-3 mb-3 md:flex-row md:items-center md:justify-between md:gap-4 md:mb-2.5 md:pr-12">
         <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 shrink-0">
           {chapter.n} · {chapter.readTime}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
           {userPlan === 'pro'
             ? <PreConsultButton packId={packId} iconOnly="mobile" />
             : (
@@ -191,6 +192,13 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
   const isLast = activeIdx === pack.chapters.length - 1
   const total = pack.chapters.length
   const hasTools = pack.tools.length > 0
+
+  // Track navigation direction for slide animation
+  const prevIdxRef = useRef(activeIdx)
+  const direction = activeIdx >= prevIdxRef.current ? 1 : -1
+  useEffect(() => {
+    prevIdxRef.current = activeIdx
+  }, [activeIdx])
   // refsIdx: where the references panel lives
   const refsIdx = pack.chapters.length + (hasTools ? 1 : 0)
   // Progress based on chapters the user has actually visited via Next (activeIdx + 1 as high-water mark)
@@ -222,48 +230,53 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
 
   return (
     <div className="flex flex-col h-full">
-      {/* Mobile chapter tabs */}
-      <div className="flex md:hidden overflow-x-auto gap-1 px-4 py-2 border-b border-border bg-background sticky top-0 z-10" style={{ scrollbarWidth: 'none' }}>
-        {pack.chapters.map((ch, i) => (
-          <button
-            key={ch.id}
-            onClick={() => setActiveIdx(i)}
-            className={cn(
-              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-              i === activeIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-            )}
-          >
-            {ch.kicker}
-          </button>
-        ))}
-        {pack.tools.length > 0 && (
-          <button
-            onClick={() => setActiveIdx(pack.chapters.length)}
-            className={cn(
-              'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-              activeIdx === pack.chapters.length ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-            )}
-          >
-            Herramientas
-          </button>
-        )}
-        {(() => {
-          const verifiedRefs = pack.references.filter((r) => r.verified !== false)
-          if (verifiedRefs.length === 0) return null
-          const refsIdx = pack.chapters.length + (pack.tools.length > 0 ? 1 : 0)
-          return (
-            <button
-              onClick={() => setActiveIdx(refsIdx)}
-              className={cn(
-                'flex-shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium whitespace-nowrap border-none cursor-pointer transition-colors',
-                activeIdx === refsIdx ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-              )}
-            >
-              Referencias
-            </button>
-          )
-        })()}
-      </div>
+      {/* Mobile chapter tabs — only active is expanded, others are dots */}
+      {(() => {
+        const verifiedRefsForTabs = pack.references.filter((r) => r.verified !== false)
+        type TabItem = { id: string; label: string; targetIdx: number }
+        const items: TabItem[] = [
+          ...pack.chapters.map((ch, i) => ({ id: ch.id, label: ch.kicker, targetIdx: i })),
+        ]
+        if (pack.tools.length > 0) items.push({ id: '__tools', label: 'Herramientas', targetIdx: pack.chapters.length })
+        if (verifiedRefsForTabs.length > 0) {
+          items.push({ id: '__refs', label: 'Referencias', targetIdx: pack.chapters.length + (pack.tools.length > 0 ? 1 : 0) })
+        }
+        return (
+          <div className="flex md:hidden items-center gap-2 px-4 py-2.5 border-b border-border bg-background sticky top-0 z-10">
+            {items.map((it) => {
+              const isActive = activeIdx === it.targetIdx
+              return (
+                <motion.button
+                  layout
+                  key={it.id}
+                  onClick={() => setActiveIdx(it.targetIdx)}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  className={cn(
+                    'shrink-0 flex items-center justify-center border-none cursor-pointer overflow-hidden',
+                    isActive
+                      ? 'h-7 px-3 rounded-full bg-primary text-white font-sans text-xs font-medium'
+                      : 'h-2 w-2 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50 transition-colors'
+                  )}
+                  aria-label={isActive ? undefined : it.label}
+                >
+                  {isActive && (
+                    <motion.span
+                      layout="position"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="whitespace-nowrap"
+                    >
+                      {it.label}
+                    </motion.span>
+                  )}
+                </motion.button>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       <ChatDrawer
         dx={pack.dx}
@@ -279,20 +292,31 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
 
       {activeIdx < pack.chapters.length ? (
         <>
-          <div className="flex-1 min-h-0">
-            <ChapterCard
-              key={chapter.id}
-              chapter={chapter}
-              packId={pack.id}
-              userId={userId}
-              dx={pack.dx}
-              onRead={markRead}
-              conditionSlug={pack.conditionSlug}
-              packContext={packContext}
-              onOpenChat={() => setChatOpen(true)}
-              chatOpen={chatOpen}
-              userPlan={userPlan}
-            />
+          <div className="flex-1 min-h-0 relative overflow-hidden">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={chapter.id}
+                custom={direction}
+                initial={{ x: direction * 24, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: direction * -24, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.22, 0.61, 0.36, 1] }}
+                className="absolute inset-0"
+              >
+                <ChapterCard
+                  chapter={chapter}
+                  packId={pack.id}
+                  userId={userId}
+                  dx={pack.dx}
+                  onRead={markRead}
+                  conditionSlug={pack.conditionSlug}
+                  packContext={packContext}
+                  onOpenChat={() => setChatOpen(true)}
+                  chatOpen={chatOpen}
+                  userPlan={userPlan}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           <div className="border-t border-border bg-background shrink-0">
@@ -304,12 +328,12 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
               />
             </div>
 
-            <div className="px-12 py-3.5 flex items-center justify-between">
+            <div className="px-4 py-3 md:px-12 md:py-3.5 flex items-center justify-between">
               <button
                 onClick={() => setActiveIdx(Math.max(0, activeIdx - 1))}
                 disabled={activeIdx === 0}
                 className={cn(
-                  'px-5 py-2.5 rounded-full border border-border bg-transparent font-sans text-[14px] flex items-center gap-1.5',
+                  'px-4 py-2 md:px-5 md:py-2.5 rounded-full border border-border bg-transparent font-sans text-[13px] md:text-[14px] flex items-center gap-1.5',
                   activeIdx === 0 ? 'cursor-not-allowed text-muted-foreground/60' : 'cursor-pointer text-foreground'
                 )}
               >
@@ -323,7 +347,7 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
               <button
                 onClick={() => setActiveIdx(Math.min(refsIdx, activeIdx + 1))}
                 className={cn(
-                  'px-5 py-2.5 rounded-full font-sans text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
+                  'px-4 py-2 md:px-5 md:py-2.5 rounded-full font-sans text-[13px] md:text-[14px] font-medium cursor-pointer flex items-center gap-1.5',
                   isLast
                     ? 'border border-border bg-transparent text-muted-foreground'
                     : 'border-none bg-foreground text-background shadow-[var(--c-btn-primary-shadow)]'
@@ -336,7 +360,7 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
         </>
       ) : hasTools && activeIdx === pack.chapters.length ? (
         /* Herramientas panel */
-        <div className="flex-1 overflow-y-auto px-12 py-10 pb-28 md:pb-20">
+        <div className="flex-1 overflow-y-auto px-4 py-6 pb-28 md:px-12 md:py-10 md:pb-20">
           <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
             Herramientas para tu cuidado
           </div>
@@ -367,7 +391,7 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
         </div>
       ) : (
         /* References panel */
-        <div className="flex-1 overflow-y-auto px-12 py-10 pb-28 md:pb-20">
+        <div className="flex-1 overflow-y-auto px-4 py-6 pb-28 md:px-12 md:py-10 md:pb-20">
           <div className="font-mono text-[11px] tracking-[.15em] uppercase text-muted-foreground/60 mb-5">
             Referencias verificadas
           </div>
