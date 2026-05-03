@@ -78,8 +78,8 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
   return (
     <section style={{ position: 'relative', padding: '80px 24px 100px', overflow: 'hidden' }}>
       <Glow />
-      <div className="relative max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[1.1fr_.9fr] gap-8 md:gap-14 items-center">
-        <div className="ce-fade">
+      <div className="relative max-w-[72rem] mx-auto">
+        <div className="ce-fade" style={{ maxWidth: '54rem' }}>
           <Eyebrow style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
             Saliste de tu consulta y no sabes qué sigue.{' '}
@@ -122,7 +122,6 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
             </span>
           </div>
         </div>
-        <InputPreview onCTA={onCTA} />
       </div>
     </section>
   )
@@ -1096,10 +1095,10 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
     <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       <Suspense><AppNav initialInitial={initialInitial} /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
+      <LiveExample />
       <WhatAliisDoes />
       <HowItWorks />
       <TrustSection />
-      <LiveExample />
       <ProPowerTools onCTA={handleMainCTA} />
       <Founders />
       <PricingSection onCTA={() => setShowLogin(true)} />
