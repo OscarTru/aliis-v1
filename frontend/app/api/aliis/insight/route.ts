@@ -10,7 +10,8 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
-  // 1. Check cache — 1 insight per user per day
+  // 1. Check cache — 1 insight per user per day. maybeSingle so no rows = null,
+  // not a 500 error. Order DESC + limit 1 in case multiple rows exist for today.
   const today = new Date().toISOString().slice(0, 10)
   const { data: cached } = await supabase
     .from('aliis_insights')
@@ -18,17 +19,20 @@ export async function GET() {
     .eq('user_id', user.id)
     .gte('generated_at', `${today}T00:00:00Z`)
     .lt('generated_at', `${today}T23:59:59Z`)
-    .single()
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
   if (cached) {
     return Response.json({ content: cached.content, cached: true })
   }
 
-  // 2. Fetch data
+  // 2. Fetch data — maybeSingle on profile and pack so users with no pack yet
+  // don't crash the endpoint. limit(500) on symptom_logs for safety.
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [profileRes, logsRes, packRes] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     supabase
       .from('symptom_logs')
       .select('logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
@@ -36,7 +40,7 @@ export async function GET() {
       .gte('logged_at', since30)
       .order('logged_at', { ascending: false })
       .limit(500),
-    supabase.from('packs').select('dx').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single(),
+    supabase.from('packs').select('dx').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ])
 
   const userName = profileRes.data?.name ?? 'tú'
@@ -46,28 +50,38 @@ export async function GET() {
   // 3. Build prompt and call Claude Haiku
   const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
 
-  const message = await anthropic.messages.create({
-    model: HAIKU_4_5,
-    max_tokens: 150,
-    system: cachedSystem(system),
-    messages: [{ role: 'user', content: userMessage }],
-  })
+  try {
+    const message = await anthropic.messages.create({
+      model: HAIKU_4_5,
+      max_tokens: 150,
+      system: cachedSystem(system),
+      messages: [{ role: 'user', content: userMessage }],
+    })
 
-  await logLlmUsage({
-    userId: user.id,
-    endpoint: 'aliis_insight',
-    model: HAIKU_4_5,
-    usage: message.usage,
-  })
+    await logLlmUsage({
+      userId: user.id,
+      endpoint: 'aliis_insight',
+      model: HAIKU_4_5,
+      usage: message.usage,
+    })
 
-  const content = (message.content[0] as { type: string; text: string }).text.trim()
+    const firstBlock = message.content[0]
+    const content =
+      firstBlock && firstBlock.type === 'text' ? firstBlock.text.trim() : ''
+    if (!content) {
+      return Response.json({ error: 'Sin contenido' }, { status: 502 })
+    }
 
-  // 4. Save to cache
-  await supabase.from('aliis_insights').insert({
-    user_id: user.id,
-    content,
-    data_window: { logs: logs.length, userName, recentDiagnosis },
-  })
+    // 4. Save to cache
+    await supabase.from('aliis_insights').insert({
+      user_id: user.id,
+      content,
+      data_window: { logs: logs.length, userName, recentDiagnosis },
+    })
 
-  return Response.json({ content, cached: false })
+    return Response.json({ content, cached: false })
+  } catch (err) {
+    console.error('[aliis/insight] generation failed:', err)
+    return Response.json({ error: 'No se pudo generar el insight' }, { status: 502 })
+  }
 }
