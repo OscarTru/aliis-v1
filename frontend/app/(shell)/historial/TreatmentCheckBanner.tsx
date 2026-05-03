@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Plus, ArrowRight } from 'lucide-react'
+import { AlertTriangle, Plus, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import type { Profile } from '@/lib/types'
 
 interface Item {
@@ -21,9 +22,12 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const isPro = userPlan === 'pro'
 
   async function load(force = false) {
-    if (userPlan !== 'pro') return
+    if (!isPro) return
     setLoading(true)
     try {
       const url = force ? '/api/aliis/treatment-check?refresh=1' : '/api/aliis/treatment-check'
@@ -41,7 +45,53 @@ export function TreatmentCheckBanner({ userPlan }: Props) {
 
   useEffect(() => { load() }, [userPlan])
 
-  if (userPlan !== 'pro') return null
+  // Free users: show upsell card
+  if (!isPro) {
+    return (
+      <>
+        <div className="mb-6">
+          <div className="mb-2">
+            <p className="font-mono text-[10px] tracking-[.16em] uppercase text-muted-foreground/50">
+              Revisión de tratamientos
+            </p>
+          </div>
+          <button
+            onClick={() => setShowUpgrade(true)}
+            className="w-full text-left px-4 py-3.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[13px] font-medium text-foreground leading-tight">
+                  Detectar inconsistencias en mis tratamientos
+                </p>
+                <p className="font-sans text-[11px] text-muted-foreground/60 mt-0.5">
+                  Aliis revisa que tus diagnósticos y medicamentos cuadren
+                </p>
+              </div>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none shrink-0">
+                Pro
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {showUpgrade && (
+          <UpgradeModal
+            onClose={() => setShowUpgrade(false)}
+            feature={{
+              title: 'Revisión inteligente de tratamientos',
+              description: 'Con Aliis Pro detecta si algún diagnóstico no tiene tratamiento registrado o viceversa, y recibe sugerencias concretas.',
+            }}
+          />
+        )}
+      </>
+    )
+  }
+
+  // Pro users: normal behavior
   if (!loading && !loaded) return null
 
   return (

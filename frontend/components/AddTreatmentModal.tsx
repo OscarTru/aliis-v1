@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { X, Pill, AlertTriangle } from 'lucide-react'
 import { createTreatment, updateTreatment } from '@/app/actions/treatments'
 import { DatePicker } from '@/components/ui/date-picker'
+import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
 import type { Treatment, TreatmentFrequency } from '@/lib/types'
 
 const SCHEDULE_OPTIONS: { label: string; value: TreatmentFrequency }[] = [
@@ -161,13 +162,13 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
   const isBusy = isPending || isValidating
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 pb-[calc(64px+env(safe-area-inset-bottom)+1rem)] sm:pb-4"
-    >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl z-10 flex flex-col max-h-full"
-      >
+    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogPortal>
+        <DialogOverlay />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(64px+env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div
+          className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] pointer-events-auto"
+        >
 
         {/* Header — fixed at top, doesn't scroll */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0 border-b border-border/40">
@@ -364,7 +365,9 @@ export function AddTreatmentModal({ treatment, onClose, onCreated }: Props) {
           </div>
         )}
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
+      </DialogPortal>
+    </Dialog>
   )
 }

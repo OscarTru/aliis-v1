@@ -158,6 +158,51 @@ export function Sidebar({
 
   return (
     <TooltipProvider delayDuration={100}>
+      {/* Toggle button — rendered OUTSIDE <aside> as a fixed sibling so it
+          sits in the root stacking context. Inside the aside, the page
+          content next to it created its own stacking context that captured
+          hover/click on the button's right half. Uses the SAME spring as
+          the aside width animation so the two stay perfectly in sync. */}
+      <motion.button
+        type="button"
+        onClick={() => setCollapsed(c => !c)}
+        aria-label="Toggle sidebar"
+        initial={false}
+        animate={{ left: collapsed ? 44 : 204 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        style={{
+          cursor: 'pointer',
+          position: 'fixed',
+          top: '48px',
+          width: '40px',
+          height: '40px',
+          zIndex: 40,
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        className="md:!flex"
+      >
+        <span
+          aria-hidden="true"
+          style={{ pointerEvents: 'none' }}
+          className="flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 shadow-sm transition-transform duration-150 hover:scale-110"
+        >
+          <motion.span
+            initial={false}
+            animate={{ rotate: collapsed ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex"
+            style={{ pointerEvents: 'none' }}
+          >
+            <ChevronLeft size={12} />
+          </motion.span>
+        </span>
+      </motion.button>
+
       {/* initial={false} prevents width animation on first mount / route changes */}
       <motion.aside
         initial={false}
@@ -165,16 +210,6 @@ export function Sidebar({
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className="relative hidden md:flex flex-col shrink-0 border-r border-border bg-background overflow-visible h-screen sticky top-0 select-none"
       >
-        {/* Floating toggle button */}
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          aria-label="Toggle sidebar"
-          className="absolute -right-3 top-14 z-50 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background text-muted-foreground/50 hover:text-foreground hover:border-border shadow-sm transition-all duration-150 hover:scale-110"
-        >
-          <motion.div initial={false} animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronLeft size={12} />
-          </motion.div>
-        </button>
 
         {/* Logo */}
         <div className="flex items-center justify-center shrink-0 w-full px-3 pt-5 pb-2">
@@ -216,6 +251,13 @@ export function Sidebar({
               {pack.chapters.map((ch, i) => {
                 const isActive = i === activeIdx
                 const isRead = readChapters.has(ch.id)
+                // Match mobile tabLabel logic: close the question mark if needed
+                const k = ch.kicker.trim()
+                const ki = ch.kickerItalic.trim()
+                const wordsAfterMark = k.replace(/^¿/, '').trim().split(/\s+/)
+                const tooShort = k.startsWith('¿') && wordsAfterMark.length <= 1 && ki
+                const label = tooShort ? `${k} ${ki}` : k
+                const sidebarLabel = !label.startsWith('¿') ? label : label.endsWith('?') ? label : `${label}?`
                 return (
                   <button
                     key={ch.id}
@@ -232,7 +274,7 @@ export function Sidebar({
                       'font-sans text-[12px] truncate leading-[1.2] flex-1',
                       isActive ? 'font-medium text-primary' : 'text-muted-foreground'
                     )}>
-                      {ch.kicker}
+                      {sidebarLabel}
                     </span>
                     {isRead && !isActive && <div className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />}
                   </button>

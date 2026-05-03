@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { HelpCircle, MessageCircle, BookOpen } from 'lucide-react'
+import { HelpCircle, MessageCircle, BookOpen, ClipboardList } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import type { Pack, Chapter } from '@/lib/types'
 import { createClient } from '@/lib/supabase'
 import { ChatDrawer } from '@/components/ChatDrawer'
 import { PreConsultButton } from '@/components/PreConsultButton'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
 
@@ -63,6 +64,7 @@ function ChapterCard({
   chapter: Chapter; packId: string; userId?: string; dx: string; onRead?: (id: string) => void; conditionSlug?: string | null; packContext: string; onOpenChat: () => void; chatOpen: boolean; userPlan?: string
 }) {
   const markedRef = useRef(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     markedRef.current = false
@@ -86,7 +88,31 @@ function ChapterCard({
           {chapter.n} · {chapter.readTime}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {userPlan === 'pro' && <PreConsultButton packId={packId} iconOnly="mobile" />}
+          {userPlan === 'pro'
+            ? <PreConsultButton packId={packId} iconOnly="mobile" />
+            : (
+              <motion.button
+                onClick={() => setShowUpgrade(true)}
+                whileTap={{ scale: 0.96 }}
+                className="btn-ai-border flex items-center gap-1.5 px-3 h-[30px] rounded-full bg-background font-sans text-[12px] text-foreground cursor-pointer relative overflow-visible"
+              >
+                <ClipboardList className="w-[13px] h-[13px] shrink-0" />
+                <span className="hidden md:inline">Preparar consulta</span>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-secondary/20 font-mono text-[9px] text-secondary tracking-wide leading-none">
+                  Pro
+                </span>
+              </motion.button>
+            )
+          }
+          {showUpgrade && (
+            <UpgradeModal
+              onClose={() => setShowUpgrade(false)}
+              feature={{
+                title: 'Prepara tu próxima consulta',
+                description: 'Con Aliis Pro genera un resumen listo para compartir con tu médico, con tus diagnósticos y preguntas clave.',
+              }}
+            />
+          )}
           {!chatOpen && <AskAliisButton onClick={onOpenChat} />}
         </div>
       </div>
