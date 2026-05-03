@@ -85,7 +85,7 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
             Saliste de tu consulta y no sabes qué sigue.{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>Aliis te acompaña.</em>
           </h1>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '40ch', margin: '0 0 28px' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: '0 0 28px' }}>
             Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
