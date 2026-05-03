@@ -32,6 +32,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
   const [inviteCode, setInviteCode] = useState('')
   const [inviteValidated, setInviteValidated] = useState(false)
   const [inviteChecking, setInviteChecking] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedMedicalData, setAcceptedMedicalData] = useState(false)
   const [error, setError] = useState<string | null>(initialError ?? null)
@@ -50,9 +51,10 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
   useEffect(() => {
     if (view !== 'signup') return
     const code = inviteCode.trim().toUpperCase()
-    if (code.length < 6) { setInviteValidated(false); return }
+    if (code.length < 6) { setInviteValidated(false); setInviteError(null); return }
     setInviteChecking(true)
     setInviteValidated(false)
+    setInviteError(null)
     const timer = setTimeout(async () => {
       const res = await fetch('/api/invite/validate', {
         method: 'POST',
@@ -61,6 +63,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
       }).catch(() => null)
       const data = res ? await res.json().catch(() => ({})) : {}
       setInviteValidated(!!data.valid)
+      setInviteError(data.valid ? null : (data.error ?? 'Código no válido'))
       setInviteChecking(false)
     }, 500)
     return () => clearTimeout(timer)
@@ -92,6 +95,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
     setFirstName('')
     setLastName('')
     setInviteValidated(false)
+    setInviteError(null)
     setAcceptedTerms(false)
     setAcceptedMedicalData(false)
   }
@@ -321,11 +325,15 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
                     autoComplete="off"
                   />
                   {inviteCode.trim().length >= 6 && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px]">
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-mono font-medium ${inviteChecking ? 'text-muted-foreground/50' : inviteValidated ? 'text-emerald-500' : 'text-destructive'}`}>
                       {inviteChecking ? '…' : inviteValidated ? '✓' : '✗'}
                     </span>
                   )}
                 </div>
+
+                {inviteError && inviteCode.trim().length >= 6 && !inviteChecking && (
+                  <p className="font-sans text-[12px] text-destructive -mt-1">{inviteError}</p>
+                )}
 
                 {/* Google — only active when invite is valid */}
                 <button
