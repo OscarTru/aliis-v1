@@ -6,7 +6,7 @@ import { supportTicketEmail } from '@/lib/emails'
 import { rateLimit } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 
-const SUPPORT_INBOX = 'hola@aliis.app'
+const SUPPORT_INBOX = 'hola@cerebrosesponjosos.com'
 const MAX_SUBJECT = 120
 const MAX_MESSAGE = 4000
 const MIN_MESSAGE = 10

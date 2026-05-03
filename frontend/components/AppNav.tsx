@@ -91,7 +91,7 @@ export function AppNav({ initialInitial = null }: { initialInitial?: string | nu
                 </button>
               ))}
               <Link href="/precios" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">Precios</Link>
-              <a href="mailto:hola@aliis.app" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">Contacto</a>
+              <a href="mailto:hola@cerebrosesponjosos.com" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline">Contacto</a>
             </nav>
           )}
 
@@ -150,7 +150,7 @@ export function AppNav({ initialInitial = null }: { initialInitial?: string | nu
             <Link href="/precios" onClick={() => setMenuOpen(false)} className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline py-2.5">
               Precios
             </Link>
-            <a href="mailto:hola@aliis.app" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline py-2.5">
+            <a href="mailto:hola@cerebrosesponjosos.com" className="font-sans text-sm text-muted-foreground hover:text-foreground no-underline py-2.5">
               Contacto
             </a>
           </div>

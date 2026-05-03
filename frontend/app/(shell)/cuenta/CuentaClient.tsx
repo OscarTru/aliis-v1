@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { saveNextAppointment } from '@/app/actions/appointment'
-import { SupportSection } from '@/components/SupportSection'
 
 type Profile = {
   name: string | null
@@ -384,7 +383,7 @@ export function CuentaClient({
             <Row label="Email">
               <span className="font-sans text-[15px] text-foreground">{newEmail}</span>
               <p className="font-sans text-[12px] text-muted-foreground/60 mt-1">
-                Para cambiar tu email escríbenos a hola@aliis.app
+                Para cambiar tu email escríbenos a hola@cerebrosesponjosos.com
               </p>
             </Row>
             <Row label="Contraseña">
@@ -510,9 +509,6 @@ export function CuentaClient({
             )}
           </div>
         </Section>
-
-        {/* Soporte */}
-        <SupportSection plan={initialProfile.plan} anchorId="soporte" />
 
         {/* Tus datos */}
         <Section title="Tus datos">
