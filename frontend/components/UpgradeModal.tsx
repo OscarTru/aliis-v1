@@ -25,7 +25,7 @@ export function UpgradeModal({ onClose, feature }: Props) {
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogPortal>
         <DialogOverlay />
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           <div className="relative w-full sm:max-w-[380px] bg-background rounded-2xl border border-border shadow-xl p-8 text-center pointer-events-auto">
             <VisuallyHidden><DialogTitle>Actualiza tu plan</DialogTitle></VisuallyHidden>
 

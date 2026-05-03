@@ -95,8 +95,8 @@ export function DiaryEntryModal({ open, onClose, onSaved }: Props) {
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
       <DialogPortal>
         <DialogOverlay />
-        {/* Bottom-sheet on mobile, centered on sm+. Matches AddTreatmentModal pattern. */}
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        {/* Centered on all viewports. Unified modal pattern across the app. */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           <div className="relative w-full sm:max-w-[480px] bg-background rounded-2xl border border-border shadow-xl flex flex-col max-h-[85vh] pointer-events-auto">
 
             {/* Header */}

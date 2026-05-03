@@ -215,7 +215,7 @@ export function LoginModal({ onClose, initialView, initialError, initialInviteCo
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogPortal>
         <DialogOverlay />
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 pointer-events-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div className="relative w-full sm:max-w-[400px] bg-background rounded-2xl border border-border shadow-2xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 pointer-events-auto">
         <VisuallyHidden><DialogTitle>Iniciar sesión</DialogTitle></VisuallyHidden>
 
