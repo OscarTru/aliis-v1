@@ -164,13 +164,22 @@ export function CheckoutSignupForm({ priceKey }: { priceKey: string }) {
       {/* Top bar */}
       <div className="relative border-b border-white/10">
         <div className="max-w-[1080px] mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
-          <Link
-            href="/precios"
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-[13px] font-sans no-underline"
+          {/* Back — return wherever the user came from (landing, /precios,
+              /historial, etc). Falls back to /precios if no history. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back()
+              } else {
+                router.push('/precios')
+              }
+            }}
+            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-[13px] font-sans bg-transparent border-none cursor-pointer p-0"
           >
             <ArrowLeft size={15} />
-            Volver a precios
-          </Link>
+            Volver
+          </button>
           <Image
             src="/assets/aliis-original.png"
             alt="Aliis"

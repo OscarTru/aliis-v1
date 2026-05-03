@@ -274,6 +274,7 @@ export function CheckoutForm({
   initialPriceKey: string
   publishableKey: string
 }) {
+  const router = useRouter()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -306,14 +307,23 @@ export function CheckoutForm({
 
       {/* Left — editorial, dark bg */}
       <div className="bg-[#0a0a0a] flex flex-col px-10 py-12 lg:px-16 lg:py-16">
-        {/* Back */}
-        <Link
-          href="/precios"
-          className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[.12em] uppercase text-white/30 hover:text-white/60 transition-colors no-underline mb-12"
+        {/* Back — uses router.back() so the user returns to wherever they
+            came from (landing, /precios, /historial, /cuenta...). Falls back
+            to /precios if there's no prior history (direct nav, refresh). */}
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back()
+            } else {
+              router.push('/precios')
+            }
+          }}
+          className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[.12em] uppercase text-white/30 hover:text-white/60 transition-colors bg-transparent border-none cursor-pointer p-0 self-start mb-12"
         >
           <ArrowLeft size={11} />
-          Volver a precios
-        </Link>
+          Volver
+        </button>
 
         <div className="flex flex-col gap-8 flex-1">
           {/* Logo */}
