@@ -20,6 +20,7 @@ CAPA 1 — Datos (Supabase, ya existe)
   symptom_logs · adherence_logs · packs · treatments · medical_profiles
 
 CAPA 2 — Patient Context Layer (nuevo)
+
   lib/patient-context.ts
   → Resumen persistente semanal (aliis_insights type='patient_summary')
   → RAG on-demand con 4 tools
@@ -32,6 +33,73 @@ CAPA 4 — Superficies (web + mobile consumen la misma API)
   → Botón "Pregúntale a Aliis" (ya existe, potenciado)
   → Notificaciones proactivas con acción sugerida
 ```
+
+---
+
+## Capa 1 — Datos del paciente (Supabase)
+
+Tablas existentes que alimentan el Patient Context Layer. Se listan solo los campos que el agente consume — no el schema completo.
+
+### `symptom_logs`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `logged_at` | timestamptz | Ordenar cronológicamente |
+| `glucose` | float | Vital — glucosa (mg/dL) |
+| `bp_systolic` / `bp_diastolic` | int | Vital — presión arterial |
+| `heart_rate` | int | Vital — frecuencia cardíaca |
+| `temperature` | float | Vital — temperatura (°C) |
+| `weight` | float | Vital — peso (kg) |
+| `note` | text | Nota breve del registro |
+| `free_text` | text | Texto libre extraído por IA |
+
+### `tracked_symptoms`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `name` | text | Nombre del síntoma normalizado |
+| `occurrences` | int | Frecuencia acumulada |
+| `resolved` | boolean | Filtrar síntomas activos |
+| `needs_medical_attention` | boolean | Señales de alarma |
+| `attention_reason` | text | Razón de la alarma |
+
+### `adherence_logs`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `taken_date` | date | Fecha de la dosis |
+| `medication` | text | Nombre del medicamento |
+| `status` | text | `taken` \| `missed` \| `skipped` |
+
+### `treatments`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `name` | text | Nombre del medicamento |
+| `dose` | text | Dosis (ej: "50mg") |
+| `frequency` | text | Frecuencia interna (ej: `once_daily`) |
+| `frequency_label` | text | Frecuencia legible (ej: "Una vez al día") |
+| `active` | boolean | Filtrar solo tratamientos activos |
+| `indefinite` | boolean | Si es tratamiento crónico |
+
+### `medical_profiles`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `condiciones_previas` | jsonb | Lista de condiciones neurológicas del paciente |
+| `medicamentos` | jsonb | Medicamentos capturados en onboarding |
+| `alergias` | jsonb | Alergias conocidas |
+| `edad` | int | Edad del paciente |
+| `sexo` | text | Sexo biológico |
+| `updated_at` | timestamptz | Invalidar resumen si es más reciente que `patient_summary.generated_at` |
+
+### `packs`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `dx` | text | Diagnóstico original ingresado |
+| `created_at` | timestamptz | Ordenar cronológicamente |
+
+### `profiles`
+| Campo | Tipo | Uso |
+|-------|------|-----|
+| `name` | text | Nombre del paciente para personalizar respuestas |
+| `next_appointment` | date | Próxima cita médica |
+| `plan` | text | `free` \| `pro` — para gate de features |
 
 ---
 
