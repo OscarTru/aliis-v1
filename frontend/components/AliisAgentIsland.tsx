@@ -1,12 +1,17 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { AliisAgentProvider, useAliisAgentContext } from '@/lib/aliis-agent-context'
 import { AliisAgentDrawer } from '@/components/AliisAgentDrawer'
 import { Icon } from '@iconify/react'
 
+const FAB_HIDDEN_PATHS = ['/pack/', '/condiciones/']
+
 function AliisAgentFAB() {
   const { open, setOpen } = useAliisAgentContext()
+  const pathname = usePathname()
   if (open) return null
+  if (FAB_HIDDEN_PATHS.some(p => pathname.startsWith(p))) return null
   return (
     <button
       onClick={() => setOpen(true)}
