@@ -5,7 +5,7 @@ import { AliisAgentProvider, useAliisAgentContext } from '@/lib/aliis-agent-cont
 import { AliisAgentDrawer } from '@/components/AliisAgentDrawer'
 import { Icon } from '@iconify/react'
 
-const FAB_HIDDEN_PATHS = ['/pack/', '/condiciones/']
+const FAB_HIDDEN_PATHS = ['/pack/', '/condiciones/', '/ingreso', '/compartir/']
 
 function AliisAgentFAB() {
   const { open, setOpen } = useAliisAgentContext()
