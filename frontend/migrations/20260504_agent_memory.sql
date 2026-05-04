@@ -22,4 +22,4 @@ create policy "Users see own memory" on agent_memory
   for select using (auth.uid() = user_id);
 
 create policy "Service role full access" on agent_memory
-  for all using (true);
+  for all using (true) with check (true);
