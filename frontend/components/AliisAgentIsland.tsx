@@ -26,7 +26,7 @@ function AliisAgentFAB() {
       aria-label="Pregúntale a Aliis"
       className="fixed bottom-[calc(64px+12px+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-50 flex items-center gap-1.5 h-11 rounded-full bg-foreground text-background border-none cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
       animate={{ paddingLeft: 12, paddingRight: hovered ? 16 : 12 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
     >
       <Icon icon="solar:chat-round-bold-duotone" width={20} className="shrink-0" />
       <AnimatePresence initial={false}>
@@ -36,7 +36,7 @@ function AliisAgentFAB() {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 'auto', opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
             className="hidden md:inline overflow-hidden whitespace-nowrap font-sans text-[13px] font-medium"
           >
             Pregúntale a Aliis
