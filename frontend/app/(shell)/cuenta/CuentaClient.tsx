@@ -232,16 +232,12 @@ export function CuentaClient({
     showToast(error ? error.message : 'Contraseña actualizada.', !error)
   }
 
-  async function handleUpgrade() {
+  function handleUpgrade() {
+    // Use the embedded Elements checkout (same flow as the landing CTA),
+    // not the hosted Stripe Checkout. Keeps the user on aliis.app domain
+    // and uses the SetupIntent + subscription path that the webhook handles.
     setBillingLoading(true)
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceKey: 'mxn-monthly' }),
-    })
-    const data = await res.json()
-    if (data.url) window.location.href = data.url
-    else { showToast('Error al iniciar el pago.', false); setBillingLoading(false) }
+    window.location.href = '/checkout?plan=eur_monthly'
   }
 
   async function handleManageBilling() {

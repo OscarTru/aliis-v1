@@ -47,66 +47,11 @@ export async function POST(request: NextRequest) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const userId = session.metadata?.userId
-
-        if (userId) {
-          const subscriptionId = session.subscription as string | null
-          let trialEnd: string | null = null
-          let subscriptionStatus: string | null = null
-          if (subscriptionId) {
-            const sub = await stripe.subscriptions.retrieve(subscriptionId)
-            subscriptionStatus = sub.status
-            if (sub.trial_end) {
-              trialEnd = new Date(sub.trial_end * 1000).toISOString()
-            }
-          }
-
-          await admin
-            .from('profiles')
-            .update({
-              plan: 'pro',
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: subscriptionId,
-              subscription_status: subscriptionStatus,
-              trial_end: trialEnd,
-            })
-            .eq('id', userId)
-
-          // Send payment confirmation email — idempotent against Stripe retries.
-          try {
-            const email = session.customer_details?.email ?? null
-            if (email) {
-              const { error: insertErr } = await admin
-                .from('email_sends')
-                .insert({
-                  event_source: 'stripe',
-                  event_id: event.id,
-                  kind: 'payment_confirmation',
-                })
-
-              if (insertErr && insertErr.code === '23505') {
-                // UNIQUE conflict — this event was already processed, skip silently
-              } else if (insertErr) {
-                logger.error({ err: insertErr, eventId: event.id }, 'email_sends insert failed')
-              } else {
-                const { data: profile } = await admin
-                  .from('profiles')
-                  .select('name')
-                  .eq('id', userId)
-                  .single()
-                const name: string | null = profile?.name ?? null
-                const { subject, html } = paymentConfirmationEmail(name)
-                await sendEmail({ to: email, subject, html })
-              }
-            }
-          } catch (emailErr) {
-            logger.error({ err: emailErr, kind: 'payment_confirmation' }, 'Payment confirmation email failed')
-          }
-        }
-        break
-      }
+      // Note: we do NOT handle `checkout.session.completed` because the app
+      // uses SetupIntent + stripe.subscriptions.create() directly (see
+      // /api/stripe/subscribe). That path emits `customer.subscription.created`
+      // instead. If you ever switch to Stripe Checkout (hosted), restore the
+      // session.completed handler.
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
@@ -128,23 +73,80 @@ export async function POST(request: NextRequest) {
       }
 
       case 'customer.subscription.created': {
+        // This is the canonical "subscription is live" event for our flow
+        // (SetupIntent + subscriptions.create). It updates the profile AND
+        // sends the payment confirmation email. Idempotent: email_sends has
+        // a UNIQUE constraint on (event_source, event_id, kind) so retries
+        // from Stripe don't double-send.
         const sub = event.data.object as Stripe.Subscription
         const userId = sub.metadata?.userId
-        if (userId) {
-          const status = sub.status
-          const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
-          const trialEnd = sub.trial_end
-            ? new Date(sub.trial_end * 1000).toISOString()
-            : null
-          await admin
-            .from('profiles')
-            .update({
-              plan,
-              stripe_subscription_id: sub.id,
-              subscription_status: status,
-              trial_end: trialEnd,
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
+        if (!userId || !customerId) {
+          logger.warn({ subId: sub.id, userId, customerId }, '[stripe webhook] subscription.created missing metadata')
+          break
+        }
+        const status = sub.status
+        const plan = status === 'active' || status === 'trialing' ? 'pro' : 'free'
+        const trialEnd = sub.trial_end
+          ? new Date(sub.trial_end * 1000).toISOString()
+          : null
+
+        await admin
+          .from('profiles')
+          .update({
+            plan,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: sub.id,
+            subscription_status: status,
+            trial_end: trialEnd,
+          })
+          .eq('id', userId)
+
+        // Send payment confirmation email — idempotent against Stripe retries.
+        try {
+          const { error: insertErr } = await admin
+            .from('email_sends')
+            .insert({
+              event_source: 'stripe',
+              event_id: event.id,
+              kind: 'payment_confirmation',
             })
-            .eq('id', userId)
+
+          if (insertErr && insertErr.code === '23505') {
+            // UNIQUE conflict — this event was already processed, skip silently
+          } else if (insertErr) {
+            logger.error({ err: insertErr, eventId: event.id }, 'email_sends insert failed')
+          } else {
+            // Resolve recipient email from the Stripe customer (subscription
+            // events don't carry customer_details). Fall back to profile.email.
+            let recipientEmail: string | null = null
+            try {
+              const customer = await stripe.customers.retrieve(customerId)
+              if (customer && !('deleted' in customer && customer.deleted)) {
+                recipientEmail = (customer as Stripe.Customer).email ?? null
+              }
+            } catch (custErr) {
+              logger.warn({ err: custErr, customerId }, 'Failed to retrieve Stripe customer for email lookup')
+            }
+
+            const { data: profile } = await admin
+              .from('profiles')
+              .select('name, email')
+              .eq('id', userId)
+              .single()
+
+            recipientEmail = recipientEmail ?? profile?.email ?? null
+
+            if (recipientEmail) {
+              const name: string | null = profile?.name ?? null
+              const { subject, html } = paymentConfirmationEmail(name)
+              await sendEmail({ to: recipientEmail, subject, html })
+            } else {
+              logger.warn({ userId, eventId: event.id }, 'No email address available for payment confirmation')
+            }
+          }
+        } catch (emailErr) {
+          logger.error({ err: emailErr, kind: 'payment_confirmation' }, 'Payment confirmation email failed')
         }
         break
       }
