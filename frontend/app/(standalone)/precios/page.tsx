@@ -368,8 +368,8 @@ export default function PreciosPage() {
         {/* Trust pillars */}
         <div className="grid gap-8 p-10 bg-muted border border-border rounded-[20px] mb-16 grid-cols-1 sm:grid-cols-3">
           {TRUST_PILLARS.map((p, i) => (
-            <div key={i}>
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div key={i} className="text-center">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
                 <Icon icon={p.icon} width={20} className="text-primary/70" />
               </div>
               <div className="font-mono text-[10px] tracking-[.22em] uppercase text-primary/60 mb-2">· {p.eyebrow} ·</div>
