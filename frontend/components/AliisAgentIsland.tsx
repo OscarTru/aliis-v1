@@ -33,9 +33,9 @@ function AliisAgentFAB() {
         {hovered && (
           <motion.span
             key="label"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 'auto', opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
+            initial={{ maxWidth: 0, opacity: 0 }}
+            animate={{ maxWidth: 140, opacity: 1 }}
+            exit={{ maxWidth: 0, opacity: 0 }}
             transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
             className="hidden md:inline overflow-hidden whitespace-nowrap font-sans text-[13px] font-medium"
           >
