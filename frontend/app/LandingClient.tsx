@@ -170,7 +170,7 @@ function WhatAliisDoes() {
     { n: '06', t: 'Biblioteca con', i: '60+ condiciones', d: 'Diagnósticos revisados por residentes de neurología. Si tu médico te mencionó algo y quieres explorarlo antes, está aquí.' },
   ]
   return (
-    <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
+    <section id="que-hace" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ marginBottom: 64, maxWidth: '46rem', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>
           <Eyebrow centered style={{ marginBottom: 18 }}>· Lo que viene gratis ·</Eyebrow>
@@ -217,7 +217,7 @@ function HowItWorks() {
     { n: 'Sigues con Aliis', t: 'cada día', d: 'Tu diario, tus tratamientos y el agente que ya te conoce. Aliis analiza tus datos cada mañana y te encuentra si algo merece atención — sin que tengas que preguntar.' },
   ]
   return (
-    <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
+    <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '60rem', margin: '0 auto', textAlign: 'center' }}>
         <Eyebrow centered style={{ marginBottom: 22 }}>· Cómo funciona ·</Eyebrow>
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,4.4vw,3.25rem)', lineHeight: 1.08, letterSpacing: '-.02em', margin: '0 0 72px' }}>
@@ -249,7 +249,7 @@ function TrustSection() {
     { eyebrow: 'Origen', title: 'Por médicos que ya conoces', body: 'Oscar y Stephanie son residentes de neurología que llevan años traduciendo medicina difícil para 575k personas en Cerebros Esponjosos. Aliis es la misma voz — disponible cuando no tienes un médico al lado.', stat: '575k', statLabel: 'personas que ya confían en cómo explicamos medicina' },
   ]
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: '44rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <Eyebrow centered style={{ marginBottom: 18 }}>· Por qué confiar ·</Eyebrow>
@@ -359,7 +359,7 @@ function AIFirstSection() {
     },
   ]
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: '46rem', marginLeft: 'auto', marginRight: 'auto' }}>
           <Eyebrow centered style={{ marginBottom: 18 }}>· AI-First ·</Eyebrow>
@@ -1088,7 +1088,7 @@ function ProPowerTools() {
 
 function Founders() {
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
       <div className="max-w-[72rem] mx-auto grid grid-cols-1 md:grid-cols-[.8fr_1.2fr] gap-10 md:gap-[60px] items-center">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={{ aspectRatio: '4/5', borderRadius: 20, overflow: 'hidden', background: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
@@ -1127,7 +1127,7 @@ function PricingSection({ onCTA }: { onCTA: () => void }) {
   const t = PRICING_TIERS
 
   return (
-    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)' }}>
       <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <Eyebrow centered style={{ marginBottom: 22 }}>· Precios · transparentes ·</Eyebrow>
