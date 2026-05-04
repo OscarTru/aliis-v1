@@ -16,7 +16,6 @@ import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
 import AliisDemo from '../components/AliisDemo'
 import { GlareHover } from '../components/ui/GlareHover'
-import { ScribbleBrain } from '../components/ui/ScribbleBrain'
 
 // ─── LazySection ──────────────────────────────────────────────
 // Defers mounting of below-the-fold sections until they approach
@@ -386,7 +385,7 @@ function AIFirstSection() {
                 <div aria-hidden style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: 'radial-gradient(circle, rgba(31,138,155,.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginLeft: 'auto', marginRight: 'auto' }}>
                   {i === 1
-                    ? <ScribbleBrain size={22} color="var(--c-brand-teal-deep)" />
+                    ? <Icon icon="lucide:brain" width={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
                     : <Icon icon={p.icon} width={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
                   }
                 </div>
