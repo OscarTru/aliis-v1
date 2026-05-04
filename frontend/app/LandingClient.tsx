@@ -111,11 +111,11 @@ function Hero({ onCTA, onVerEjemplo }: { onCTA: () => void; onVerEjemplo: () => 
         <div className="ce-fade" style={{ maxWidth: '54rem', margin: '0 auto', textAlign: 'center' }}>
           <Eyebrow centered style={{ marginBottom: 22 }}>· Hecho por médicos · IA con evidencia ·</Eyebrow>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.75rem,5.8vw,4.75rem)', lineHeight: .98, letterSpacing: '-.028em', margin: '0 0 24px' }}>
-            Saliste de tu consulta y no sabes qué sigue.{' '}
+            Saliste de la consulta con más dudas que antes.{' '}
             <em style={{ color: 'var(--c-text-faint)' }}>Aliis te acompaña.</em>
           </h1>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 17, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', margin: '0 auto 28px' }}>
-            Una explicación clara de tu diagnóstico, capítulo a capítulo, con fuentes que puedes comprobar. Después: diario de síntomas, control de tratamientos y un asistente IA al lado de cada capítulo. Tu primera explicación en menos de un minuto.
+            Tu explicación clara en menos de un minuto. Y después Aliis se queda contigo: conoce tu historial, analiza tus patrones y te avisa antes de que tú lo notes.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20, justifyContent: 'center' }}>
             <button onClick={onCTA}
@@ -162,8 +162,8 @@ function WhatAliisDoes() {
   const items = [
     { n: '01', t: 'Explicaciones claras', i: 'capítulo a capítulo', d: 'Qué es, cómo funciona, qué esperar, señales de alarma y preguntas para tu médico. Estructurado, sin paja, en lenguaje que entiendes.' },
     { n: '02', t: 'Cada afirmación', i: 'con su referencia', d: 'PubMed, DOI, guías clínicas. Antes de responder, un verificador comprueba que la fuente exista. Si no la encuentra, no escribe la frase.' },
-    { n: '03', t: 'Asistente IA', i: 'al lado de cada capítulo', d: 'Pregunta lo que no quedó claro con tus palabras. Responde en contexto del capítulo que estás leyendo, sin volver a explicar todo de cero.' },
-    { n: '04', t: 'Tus tratamientos', i: 'siempre a mano', d: 'Añade dosis y horario. Aliis valida la dosis con IA al añadirla y marca tus tomas del día con racha de adherencia.' },
+    { n: '03', t: 'Aliis responde', i: 'en cualquier pantalla', d: 'Pregúntale desde tu diario, tus tratamientos o tu historial. Aliis conoce tu caso completo y responde desde ahí — no desde cero cada vez.' },
+    { n: '04', t: 'Tus tratamientos,', i: 'con validación IA', d: 'Añade dosis y horario. Aliis valida la dosis al añadirla y marca tus tomas del día. Racha de adherencia incluida.' },
     { n: '05', t: 'Diario de síntomas', i: 'y signos vitales', d: 'Escribe cómo te sientes y registra glucosa, presión, FC o peso. Aliis extrae los síntomas automáticamente y los ordena para tu próxima consulta.' },
     { n: '06', t: 'Biblioteca con', i: '60+ condiciones', d: 'Diagnósticos revisados por residentes de neurología. Si tu médico te mencionó algo y quieres explorarlo antes, está aquí.' },
   ]
@@ -202,7 +202,7 @@ function HowItWorks() {
   const steps = [
     { n: 'Describes', t: 'tu diagnóstico', d: 'Pega lo que te dijo el médico, escribe el nombre o busca en la biblioteca. Aliis lo identifica y prepara tu explicación.' },
     { n: 'Recibes', t: 'tu explicación', d: 'Seis capítulos con referencias verificables: qué es, cómo funciona, qué esperar, señales de alarma, preguntas para el médico y un mito frecuente.' },
-    { n: 'Sigues desde ahí', t: 'cada día', d: 'Tu diario, tus tratamientos y tu asistente IA por capítulo. Aliis aprende contigo y te prepara para tu próxima consulta.' },
+    { n: 'Sigues con Aliis', t: 'cada día', d: 'Tu diario, tus tratamientos y el agente que ya te conoce. Aliis analiza tus datos cada mañana y te encuentra si algo merece atención — sin que tengas que preguntar.' },
   ]
   return (
     <section id="como-funciona" className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
@@ -233,7 +233,7 @@ function HowItWorks() {
 function TrustSection() {
   const pillars = [
     { eyebrow: 'Evidencia', title: 'Con fuente o no lo decimos', body: 'Cada capítulo cita su referencia — PubMed, DOI, guías clínicas. Despliégala cuando quieras. Si algo no tiene evidencia sólida, Aliis te lo dice antes que inventarse una respuesta.', stat: '+60', statLabel: 'condiciones con revisión especializada' },
-    { eyebrow: 'Límite', title: 'Aliis no diagnostica. Explica.', body: 'Aliis es acompañamiento, no diagnóstico. En cada explicación viene lo que deberías preguntarle a tu médico — para que cada cita valga más y no salgas con más dudas que antes.', stat: '100%', statLabel: 'explicaciones con preguntas para tu médico' },
+    { eyebrow: 'Límite', title: 'Aliis no diagnostica. Explica.', body: 'Aliis es acompañamiento, no diagnóstico. Nunca te dice qué medicamento tomar ni cambia lo que te recetó tu médico. En cada conversación viene lo que deberías preguntarle — para que cada cita valga más.', stat: '100%', statLabel: 'explicaciones con preguntas para tu médico' },
     { eyebrow: 'Origen', title: 'Por médicos que ya conoces', body: 'Oscar y Stephanie son residentes de neurología que llevan años traduciendo medicina difícil para 575k personas en Cerebros Esponjosos. Aliis es la misma voz — disponible cuando no tienes un médico al lado.', stat: '575k', statLabel: 'personas que ya confían en cómo explicamos medicina' },
   ]
   return (
@@ -305,6 +305,65 @@ function DemoSection() {
           </p>
         </div>
         <AliisDemo />
+      </div>
+    </section>
+  )
+}
+
+// ─── AI-First section ─────────────────────────────────────────
+
+function AIFirstSection() {
+  const pillars = [
+    {
+      icon: 'solar:eye-bold-duotone',
+      kicker: 'Observa',
+      title: 'Registra lo que sientes',
+      italic: 'sin que tengas que analizarlo tú',
+      body: 'Escribe un síntoma, registra tu presión o tu glucosa. Aliis extrae patrones automáticamente y los ordena para cuando los necesites.',
+    },
+    {
+      icon: 'solar:brain-bold-duotone',
+      kicker: 'Aprende',
+      title: 'Te conoce de verdad,',
+      italic: 'no solo tu nombre',
+      body: 'Aliis recuerda tus condiciones, tus tratamientos y cómo has evolucionado. Cada respuesta parte de tu historial real, no de una plantilla genérica.',
+    },
+    {
+      icon: 'solar:bell-bing-bold-duotone',
+      kicker: 'Avisa',
+      title: 'Te encuentra antes',
+      italic: 'de que notes algo raro',
+      body: 'Cada mañana, AliisCore analiza tus datos y te manda una señal si algo merece atención. No espera a que preguntes.',
+    },
+  ]
+  return (
+    <section className="px-6 py-16 md:py-[120px]" style={{ borderTop: '1px solid var(--c-border)', background: 'var(--c-surface)' }}>
+      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 72, maxWidth: '46rem', marginLeft: 'auto', marginRight: 'auto' }}>
+          <Eyebrow centered style={{ marginBottom: 18 }}>· AI-First ·</Eyebrow>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.25rem,4.6vw,3.5rem)', lineHeight: 1.04, letterSpacing: '-.02em', margin: '0 0 16px' }}>
+            Y después Aliis{' '}
+            <em style={{ color: 'var(--c-text-faint)' }}>se queda contigo.</em>
+          </h2>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '52ch', margin: '0 auto' }}>
+            La explicación es el primer día. Lo que viene después es lo que cambia cómo vives con tu diagnóstico.
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
+          {pillars.map((p, i) => (
+            <article key={i} style={{ padding: '36px 32px 40px', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 20, position: 'relative', overflow: 'hidden' }}>
+              <div aria-hidden style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: 'radial-gradient(circle, rgba(31,138,155,.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                <Icon icon={p.icon} width={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 12 }}>· {p.kicker} ·</div>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 10px' }}>
+                {p.title} <em style={{ color: 'var(--c-text-faint)' }}>{p.italic}</em>
+              </h3>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{p.body}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -887,6 +946,11 @@ function LiveExample() {
 function ProPowerTools() {
   const tools = [
     {
+      icon: 'solar:chat-round-bold-duotone',
+      title: 'Aliis en todas tus pantallas',
+      body: 'El agente que conoce tu historial completo, disponible desde el diario, los tratamientos, el expediente y tu cuenta. Pregunta lo que sea — responde desde tu caso, no desde un libro.',
+    },
+    {
       icon: 'solar:user-id-bold-duotone',
       title: 'Personalizadas con tu perfil',
       body: 'Tus explicaciones consideran tus medicamentos, alergias, condiciones previas, edad y sexo. Aliis no te explica un libro de texto: te explica tu caso.',
@@ -933,7 +997,7 @@ function ProPowerTools() {
             <em style={{ color: 'var(--c-text-faint)' }}>no solo para quien lo entiende.</em>
           </h2>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, lineHeight: 1.7, color: 'var(--c-text-muted)', maxWidth: '54ch', marginTop: 18, marginLeft: 'auto', marginRight: 'auto' }}>
-            Pro convierte Aliis en un acompañante longitudinal: aprende de tu perfil, cruza tus datos, detecta lo que no cuadra y te prepara la próxima visita. Lo que te daría un médico que tuviera tiempo para ti.
+            Pro convierte Aliis en un acompañante longitudinal: aprende de tu perfil, cruza tus datos, detecta lo que no cuadra y te prepara la próxima visita. Como tener un médico que sí tiene tiempo para ti.
           </p>
         </div>
 
@@ -1192,6 +1256,7 @@ export default function LandingClient({ initialInitial }: { initialInitial: stri
       <Suspense><AppNav initialInitial={initialInitial} /></Suspense>
       <Hero onCTA={handleMainCTA} onVerEjemplo={handleVerEjemplo} />
       <DemoSection />
+      <LazySection minHeight={500}><AIFirstSection /></LazySection>
       <LazySection minHeight={500}><WhatAliisDoes /></LazySection>
       <LazySection minHeight={400}><HowItWorks /></LazySection>
       <LazySection minHeight={200}><TrustSection /></LazySection>
