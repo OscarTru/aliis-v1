@@ -237,7 +237,7 @@ export function CuentaClient({
     // not the hosted Stripe Checkout. Keeps the user on aliis.app domain
     // and uses the SetupIntent + subscription path that the webhook handles.
     setBillingLoading(true)
-    window.location.href = '/checkout?plan=eur_monthly'
+    window.location.href = '/checkout?plan=mxn_monthly'
   }
 
   async function handleManageBilling() {

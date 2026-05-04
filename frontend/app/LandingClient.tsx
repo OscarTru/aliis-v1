@@ -1063,7 +1063,7 @@ function ProPowerTools() {
               Pruébalo gratis dos semanas. Si no es para ti, lo dejas y no pasa nada.
             </div>
           </div>
-          <Link href="/checkout/empezar?plan=eur_monthly"
+          <Link href="/checkout/empezar?plan=mxn_monthly"
             style={{
               flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -1123,7 +1123,7 @@ function Founders() {
 // ─── Pricing inline ───────────────────────────────────────────
 
 function PricingSection({ onCTA }: { onCTA: () => void }) {
-  const [currency, setCurrency] = useState<'EUR' | 'USD' | 'MXN'>('EUR')
+  const [currency, setCurrency] = useState<'EUR' | 'USD' | 'MXN'>('MXN')
   const t = PRICING_TIERS
 
   return (

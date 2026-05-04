@@ -117,7 +117,7 @@ const FAQ = [
 
 export default function PreciosPage() {
   const router = useRouter()
-  const [currency, setCurrency] = useState<Currency>('EUR')
+  const [currency, setCurrency] = useState<Currency>('MXN')
   const [cadence, setCadence] = useState<Cadence>('monthly')
   const [showLogin, setShowLogin] = useState(false)
   const [isPending, startTransition] = useTransition()
