@@ -4,6 +4,7 @@ import { models } from '@/lib/ai-providers'
 import { verifyCronAuth } from '@/lib/cron-auth'
 import { filterShard } from '@/lib/cron-shard'
 import { logger } from '@/lib/logger'
+import { writeMemory } from '@/lib/agent-memory'
 
 // Called by Vercel Cron on the 1st of each month at 9am.
 // Sharded the same way as /api/aliis/notify so we can process Pro cohorts in
@@ -80,6 +81,12 @@ Tratamientos activos: ${tratamientos.map((t: { name: string; dose?: string; freq
         content: JSON.stringify({ items }),
         data_window: { type: 'treatment_check' },
       })
+
+      await writeMemory(userId, 'AdherenceAgent', 'observation', {
+        date: new Date().toISOString().slice(0, 10),
+        activeTreatments: tratamientos.length,
+        hasDiscordance: items.length > 0,
+      }, 30)
 
       processed++
     } catch (err) {
