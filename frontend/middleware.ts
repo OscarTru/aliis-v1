@@ -18,6 +18,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/aliis/capsula',          // cron
   '/api/aliis/cleanup',          // cron
   '/api/invite/validate',        // public read-only check, has its own rate limit
+  '/api/health',                 // uptime monitor probe — must be reachable anonymously
 ]
 
 export async function middleware(request: NextRequest) {

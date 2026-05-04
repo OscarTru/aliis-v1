@@ -43,22 +43,37 @@ export async function GET(req: Request) {
       .in('id', appointmentUsers.map(u => u.id))
   }
 
-  // --- Insight + diary reminder flow ---
+  // --- Universe selection ---
+  // Reminder universe: every user who has finished onboarding. Otherwise we
+  // gated reminders behind "must already log symptoms", which is the exact
+  // population that doesn't need the nudge — new users who hadn't logged
+  // anything never received the prompt and stayed silent forever.
+  // Insight universe: subset of the above who actually have logs to talk
+  // about (no point generating an LLM insight from zero data).
+  const { data: onboardedUsers } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('onboarding_done', true)
+
+  const reminderUserIds = (onboardedUsers ?? []).map(u => u.id as string)
+
   const { data: activeUsers } = await supabase
     .from('symptom_logs')
     .select('user_id')
     .gte('logged_at', since30)
 
-  const userIds = [...new Set((activeUsers ?? []).map(r => r.user_id))]
+  const insightEligibleSet = new Set((activeUsers ?? []).map(r => r.user_id as string))
 
   // Sharding: read from query string (?shard=N&total=M); defaults to no sharding.
   const url = new URL(req.url)
   const shard = parseInt(url.searchParams.get('shard') ?? '0', 10)
   const total = parseInt(url.searchParams.get('total') ?? '1', 10)
   const { filterShard } = await import('@/lib/cron-shard')
-  const shardedUserIds = filterShard(userIds, shard, total)
+  const shardedReminderIds = filterShard(reminderUserIds, shard, total)
 
-  if (shardedUserIds.length === 0) return Response.json({ sent: 0, skipped: 0, shard, total })
+  if (shardedReminderIds.length === 0) {
+    return Response.json({ sent: 0, skipped: 0, reminders: 0, shard, total })
+  }
 
   // Two independent cadences:
   //  - insight: 1 per user every 7 days (LLM-backed, real spend, must dedupe)
@@ -67,24 +82,27 @@ export async function GET(req: Request) {
   // burning a fresh insight generation each day.
   const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
+  // Insight processing only for users who have data to analyze.
+  const shardedInsightIds = shardedReminderIds.filter(id => insightEligibleSet.has(id))
+
   // Insights already sent in the last 7 days (notifications + cache)
   const [insightNotifsRes, reminderNotifsRes, cachedInsightsRes] = await Promise.all([
     supabase
       .from('notifications')
       .select('user_id')
-      .in('user_id', shardedUserIds)
+      .in('user_id', shardedInsightIds)
       .gte('created_at', since7d)
       .eq('type', 'insight'),
     supabase
       .from('notifications')
       .select('user_id')
-      .in('user_id', shardedUserIds)
+      .in('user_id', shardedReminderIds)
       .gte('created_at', todayStart)
       .eq('type', 'reminder'),
     supabase
       .from('aliis_insights')
       .select('user_id, content')
-      .in('user_id', shardedUserIds)
+      .in('user_id', shardedInsightIds)
       .gte('generated_at', since7d),
   ])
 
@@ -94,8 +112,8 @@ export async function GET(req: Request) {
     (cachedInsightsRes.data ?? []).map(r => [r.user_id, r.content as string])
   )
 
-  // Users that still need an insight generated (no notif this week + no cache)
-  const toGenerate = shardedUserIds.filter(
+  // Users that still need an insight generated (eligible + no notif this week + no cache)
+  const toGenerate = shardedInsightIds.filter(
     id => !insightSentInWeek.has(id) && !cacheByUser.has(id)
   )
 
@@ -113,10 +131,12 @@ export async function GET(req: Request) {
       .select('user_id, dx, created_at')
       .in('user_id', toGenerate)
       .order('created_at', { ascending: false }),
+    // Push subscriptions for ALL onboarded users in this shard (we need them
+    // for both reminder pushes and insight pushes).
     supabase
       .from('push_subscriptions')
       .select('user_id, endpoint, p256dh, auth')
-      .in('user_id', shardedUserIds),
+      .in('user_id', shardedReminderIds),
   ])
 
   const profileByUser = new Map(
@@ -135,6 +155,7 @@ export async function GET(req: Request) {
   const subsByUser = new Map((subsRes.data ?? []).map(s => [s.user_id, s]))
 
   let sent = 0
+  let reminders = 0
   let skipped = 0
 
   // Accumulators for batched writes
@@ -147,28 +168,53 @@ export async function GET(req: Request) {
     url: string
   }> = []
   const expiredEndpoints: string[] = []
-  const pushPayloads: Array<{ endpoint: string; p256dh: string; auth: string; body: string }> = []
+  // Push payloads for the in-app notifications. Each payload knows whether
+  // it's a reminder (cheap, broadcast to onboarded universe) or an insight
+  // (LLM-backed, broadcast to active users only).
+  const pushPayloads: Array<{
+    endpoint: string
+    p256dh: string
+    auth: string
+    title: string
+    body: string
+    url: string
+  }> = []
 
   // ---- Phase 1: emit reminders (cheap, no LLM, daily cadence) ----
-  // Reminders go out for everyone who hasn't already received one today.
-  // No Anthropic call, no concurrency limit needed.
-  for (const userId of shardedUserIds) {
+  // Reminders go out for every onboarded user who hasn't already received
+  // one today. Crucial for user activation: a freshly registered user with
+  // zero symptom logs still gets the daily nudge inviting them to log.
+  const REMINDER_TITLE = '¿Cómo te sientes hoy?'
+  const REMINDER_BODY = 'Registra tus signos del día para que Aliis pueda seguir tu evolución.'
+  for (const userId of shardedReminderIds) {
     if (reminderSentToday.has(userId)) continue
     notificationsToInsert.push({
       user_id: userId,
-      title: '¿Cómo te sientes hoy?',
-      body: 'Registra tus signos del día para que Aliis pueda seguir tu evolución.',
+      title: REMINDER_TITLE,
+      body: REMINDER_BODY,
       type: 'reminder',
       url: '/diario?registrar=1',
     })
+    const sub = subsByUser.get(userId)
+    if (sub) {
+      pushPayloads.push({
+        endpoint: sub.endpoint,
+        p256dh: sub.p256dh,
+        auth: sub.auth,
+        title: REMINDER_TITLE,
+        body: REMINDER_BODY,
+        url: '/diario?registrar=1',
+      })
+    }
+    reminders++
   }
 
   // ---- Phase 2: generate insights with bounded concurrency (weekly cadence) ----
   // Each Anthropic call takes 1-3s. With concurrency 6, 200 generations finish
   // in ~30-90s, well under Vercel's 60s function timeout.
   const CONCURRENCY = 6
-  const usersToProcess = shardedUserIds.filter(id => !insightSentInWeek.has(id))
-  skipped = shardedUserIds.length - usersToProcess.length
+  const usersToProcess = shardedInsightIds.filter(id => !insightSentInWeek.has(id))
+  skipped = shardedInsightIds.length - usersToProcess.length
 
   async function processUser(userId: string): Promise<void> {
     let content = cacheByUser.get(userId) ?? null
@@ -215,7 +261,16 @@ export async function GET(req: Request) {
     sent++
 
     const sub = subsByUser.get(userId)
-    if (sub) pushPayloads.push({ ...sub, body: content.slice(0, 120) })
+    if (sub) {
+      pushPayloads.push({
+        endpoint: sub.endpoint,
+        p256dh: sub.p256dh,
+        auth: sub.auth,
+        title: 'Aliis',
+        body: content.slice(0, 120),
+        url: '/diario',
+      })
+    }
   }
 
   // Pool runner — keeps CONCURRENCY workers active until queue drains.
@@ -229,13 +284,15 @@ export async function GET(req: Request) {
     })
   )
 
-  // ---- Phase 2: fan out push notifications in parallel ----
+  // ---- Phase 3: fan out push notifications in parallel ----
   // Web push is network-bound; allSettled lets us tolerate partial failures.
+  // Each payload now carries its own title/body/url (reminders use the
+  // "¿Cómo te sientes hoy?" prompt, insights use the LLM-generated text).
   const pushResults = await Promise.allSettled(
     pushPayloads.map(p =>
       sendPushNotification(
         { endpoint: p.endpoint, p256dh: p.p256dh, auth: p.auth },
-        { title: 'Aliis', body: p.body, url: '/diario' }
+        { title: p.title, body: p.body, url: p.url }
       )
     )
   )
@@ -256,5 +313,13 @@ export async function GET(req: Request) {
     await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints)
   }
 
-  return Response.json({ sent, skipped, shard, total })
+  return Response.json({
+    insights: sent,
+    reminders,
+    skipped,
+    universeSize: shardedReminderIds.length,
+    insightUniverseSize: shardedInsightIds.length,
+    shard,
+    total,
+  })
 }
