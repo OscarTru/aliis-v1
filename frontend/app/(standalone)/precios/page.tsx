@@ -95,11 +95,23 @@ const FAQ = [
   },
   {
     q: '¿Qué gano de verdad con Pro?',
-    a: 'En Gratis, Aliis responde bien pero sin saber quién eres. En Pro, conoce tus condiciones, tus medicamentos, tus vitales y cómo has evolucionado. Además, detecta patrones en tus datos, te prepara para la consulta y te avisa si algo merece atención — sin que tengas que preguntar.',
+    a: 'En Gratis, Aliis responde bien pero sin saber quién eres. En Pro conoce tus condiciones, medicamentos, vitales y cómo has evolucionado. Puede prepararte para tu próxima consulta, detectar si algo no cuadra entre tus diagnósticos y tratamientos, y avisarte cada mañana si algo en tus datos merece atención — sin que tengas que preguntar.',
+  },
+  {
+    q: '¿Para qué sirve el diario de síntomas?',
+    a: 'Para registrar cómo te sientes día a día — glucosa, presión, peso, frecuencia cardíaca o simplemente una nota. Aliis extrae los síntomas automáticamente y los ordena. En Pro, además cruza esos datos con tus vitales para mostrarte patrones que a simple vista no se notan.',
+  },
+  {
+    q: '¿Cómo funciona lo de preparar la consulta?',
+    a: 'Aliis revisa tu historial, tu diario reciente y tus tratamientos activos, y te genera un resumen con las preguntas más relevantes para llevar a tu médico. Lo puedes compartir o simplemente llevarlo en el celular.',
+  },
+  {
+    q: '¿Qué hace Aliis con mis tratamientos?',
+    a: 'Puedes añadir tus medicamentos con dosis y horario. Aliis verifica la dosis cuando la añades y te avisa si algo no encaja. Después puedes marcar tus tomas del día y ver tu racha de adherencia.',
   },
   {
     q: '¿Las explicaciones de Gratis son buenas?',
-    a: 'Sí. Tienen la misma estructura, las mismas fuentes y la misma calidad editorial. La diferencia es que en Pro Aliis puede personalizarlas con tu historial y profundizar más en casos complejos.',
+    a: 'Sí. Tienen la misma estructura de seis capítulos y las mismas fuentes verificables. La diferencia es que en Pro Aliis las personaliza con tu historial médico y puede profundizar más en casos con varias condiciones.',
   },
   {
     q: '¿Qué pasa si cancelo Pro?',
