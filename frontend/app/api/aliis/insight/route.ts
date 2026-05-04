@@ -5,6 +5,7 @@ import { logLlmUsage } from '@/lib/llm-usage'
 import { rateLimit } from '@/lib/rate-limit'
 import type { SymptomLog } from '@/lib/types'
 import { HAIKU_4_5 } from '@/lib/ai-models'
+import { writeMemory, readMemory } from '@/lib/agent-memory'
 
 export async function GET() {
   const supabase = await createServerSupabaseClient()
@@ -45,7 +46,7 @@ export async function GET() {
   // don't crash the endpoint. limit(500) on symptom_logs for safety.
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [profileRes, logsRes, packRes] = await Promise.all([
+  const [profileRes, logsRes, packRes, recentMemory] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
     supabase
       .from('symptom_logs')
@@ -55,11 +56,15 @@ export async function GET() {
       .order('logged_at', { ascending: false })
       .limit(500),
     supabase.from('packs').select('dx').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    readMemory(user.id, 'InsightAgent', 'observation', 7),
   ])
 
   const userName = profileRes.data?.name ?? 'tú'
   const logs = (logsRes.data ?? []) as SymptomLog[]
   const recentDiagnosis = packRes.data?.dx ?? null
+  const recentAlertDays = recentMemory.filter(
+    m => (m.content as { signal?: string }).signal === 'alert'
+  ).length
 
   // 3. Build prompt and call Claude Haiku
   const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
@@ -92,6 +97,16 @@ export async function GET() {
       content,
       data_window: { logs: logs.length, userName, recentDiagnosis },
     })
+
+    const today = new Date().toISOString().slice(0, 10)
+    const since7dTs = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const last7Logs = logs.filter(l => new Date(l.logged_at) >= since7dTs)
+    await writeMemory(user.id, 'InsightAgent', 'observation', {
+      date: today,
+      signal: recentAlertDays > 0 ? 'alert' : last7Logs.length === 0 ? 'no_data' : 'normal',
+      alertCount: recentAlertDays,
+      logCount: last7Logs.length,
+    }, 90)
 
     return Response.json({ content, cached: false })
   } catch (err) {
