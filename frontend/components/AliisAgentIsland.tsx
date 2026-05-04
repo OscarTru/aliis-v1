@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'motion/react'
 import { AliisAgentProvider, useAliisAgentContext } from '@/lib/aliis-agent-context'
 import { AliisAgentDrawer } from '@/components/AliisAgentDrawer'
 import { Icon } from '@iconify/react'
@@ -10,16 +12,36 @@ const FAB_HIDDEN_PATHS = ['/pack/', '/condiciones/', '/ingreso', '/compartir/']
 function AliisAgentFAB() {
   const { open, setOpen } = useAliisAgentContext()
   const pathname = usePathname()
+  const [hovered, setHovered] = useState(false)
+
   if (open) return null
   if (FAB_HIDDEN_PATHS.some(p => pathname.startsWith(p))) return null
+
   return (
-    <button
+    <motion.button
       onClick={() => setOpen(true)}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      whileTap={{ scale: 0.94 }}
       aria-label="Pregúntale a Aliis"
-      className="fixed bottom-[calc(64px+12px+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-50 w-11 h-11 rounded-full bg-foreground text-background flex items-center justify-center shadow-[var(--c-btn-primary-shadow)] border-none cursor-pointer"
+      className="fixed bottom-[calc(64px+12px+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-50 flex items-center gap-1.5 pl-3 pr-3 h-11 rounded-full bg-foreground text-background border-none cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
     >
-      <Icon icon="solar:chat-round-bold-duotone" width={20} />
-    </button>
+      <Icon icon="solar:chat-round-bold-duotone" width={20} className="shrink-0" />
+      <AnimatePresence initial={false}>
+        {hovered && (
+          <motion.span
+            key="label"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 'auto', opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="hidden md:inline overflow-hidden whitespace-nowrap font-sans text-[13px] font-medium"
+          >
+            Pregúntale a Aliis
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   )
 }
 
