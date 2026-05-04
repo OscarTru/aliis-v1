@@ -24,7 +24,9 @@ function AliisAgentFAB() {
       onHoverEnd={() => setHovered(false)}
       whileTap={{ scale: 0.94 }}
       aria-label="Pregúntale a Aliis"
-      className="fixed bottom-[calc(64px+12px+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-50 flex items-center gap-1.5 pl-3 pr-3 h-11 rounded-full bg-foreground text-background border-none cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
+      className="fixed bottom-[calc(64px+12px+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-50 flex items-center gap-1.5 h-11 rounded-full bg-foreground text-background border-none cursor-pointer shadow-[var(--c-btn-primary-shadow)] overflow-hidden"
+      animate={{ paddingLeft: 12, paddingRight: hovered ? 16 : 12 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
     >
       <Icon icon="solar:chat-round-bold-duotone" width={20} className="shrink-0" />
       <AnimatePresence initial={false}>
