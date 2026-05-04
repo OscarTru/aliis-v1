@@ -24,6 +24,7 @@
     "app/api/aliis/consult/route.ts": { "maxDuration": 60 },
     "app/api/chat/route.ts": { "maxDuration": 60 },
     "app/api/notes/generate/route.ts": { "maxDuration": 60 },
-    "app/api/aliis/agent/summary/route.ts": { "maxDuration": 60 }
+    "app/api/aliis/agent/summary/route.ts": { "maxDuration": 60 },
+    "app/api/aliis/agent/route.ts": { "maxDuration": 60 }
   }
 }
