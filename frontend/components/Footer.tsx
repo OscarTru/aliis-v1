@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Icon } from '@iconify/react'
 
 export function Footer() {
   return (
@@ -20,7 +21,7 @@ export function Footer() {
                 Aliis
               </div>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#como-funciona">Cómo funciona</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#demo">Ver un ejemplo real</a>
+              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="#demo">Demo</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/precios">Precios</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="/faq">Preguntas frecuentes</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="mailto:hola@cerebrosesponjosos.com?subject=Soporte%20Aliis">Soporte</a>
@@ -40,9 +41,17 @@ export function Footer() {
               </div>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com/#nosotros" target="_blank" rel="noopener noreferrer">Quiénes somos</a>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com" target="_blank" rel="noopener noreferrer">Cerebros Esponjosos</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.instagram.com/cerebros.esponjosos" target="_blank" rel="noopener noreferrer">Instagram</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.tiktok.com/@cerebros.esponjosos" target="_blank" rel="noopener noreferrer">TikTok</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.youtube.com/@CerebrosEsponjosos" target="_blank" rel="noopener noreferrer">YouTube</a>
+              <div className="flex items-center gap-3 mt-1">
+                <a href="https://www.instagram.com/cerebros.esponjosos" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
+                  <Icon icon="solar:instagram-bold-duotone" width={18} />
+                </a>
+                <a href="https://www.tiktok.com/@cerebros.esponjosos" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="TikTok">
+                  <Icon icon="solar:tiktok-bold-duotone" width={18} />
+                </a>
+                <a href="https://www.youtube.com/@CerebrosEsponjosos" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="YouTube">
+                  <Icon icon="solar:youtube-bold-duotone" width={18} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
