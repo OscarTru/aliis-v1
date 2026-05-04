@@ -37,32 +37,33 @@ const FREE_FEATURES = [
 ]
 
 const PRO_FEATURES = [
-  { text: 'Explicaciones ilimitadas', sub: 'sin contadores, sin fricción', icon: 'solar:infinity-bold-duotone' },
-  { text: 'Personalizadas con tu perfil médico', sub: 'usa tus medicamentos, alergias y condiciones previas', icon: 'solar:user-id-bold-duotone' },
-  { text: 'Asistente IA con memoria y streaming', sub: 'modelo más rápido, recuerda tu contexto entre capítulos', icon: 'solar:chat-round-dots-bold-duotone' },
-  { text: 'Preparar consulta con tu médico', sub: 'resumen listo para imprimir o llevar al móvil', icon: 'solar:stethoscope-bold-duotone' },
-  { text: 'Detector de inconsistencias', sub: 'avisa si un diagnóstico no tiene tratamiento, o un tratamiento sin diagnóstico', icon: 'solar:danger-triangle-bold-duotone' },
-  { text: 'Análisis de correlación', sub: 'cruza síntomas con presión, glucosa, peso, FC', icon: 'solar:graph-new-bold-duotone' },
-  { text: 'El Hilo: análisis longitudinal', sub: 'tu diario convertido en un resumen mensual narrativo', icon: 'solar:book-2-bold-duotone' },
-  { text: 'Cápsula del tiempo', sub: 'comparativa mensual de vitales con notificación', icon: 'solar:calendar-mark-bold-duotone' },
-  { text: 'Todo lo de Gratis incluido', sub: 'diario, tratamientos, biblioteca, compartir, historial', icon: 'solar:check-circle-bold-duotone' },
+  { text: 'Modelos Anthropic de mayor capacidad', sub: 'explicaciones más profundas, matices clínicos que los modelos pequeños pierden', icon: 'solar:cpu-bold-duotone' },
+  { text: 'Explicaciones ilimitadas', sub: 'sin contadores ni fricción — cuando las necesites', icon: 'solar:infinity-bold-duotone' },
+  { text: 'Personalizadas con tu perfil médico', sub: 'usa tus condiciones, medicamentos y alergias al generar cada explicación', icon: 'solar:user-id-bold-duotone' },
+  { text: 'Agente Aliis con contexto completo', sub: 'recuerda tu historial, tus vitales y tus tratamientos activos en cada conversación', icon: 'solar:chat-round-bold-duotone' },
+  { text: 'Notificaciones proactivas', sub: 'AliisCore analiza tus datos cada mañana y te avisa si algo merece atención', icon: 'solar:bell-bing-bold-duotone' },
+  { text: 'Preparar consulta con tu médico', sub: 'resumen listo para llevar a la cita — en formato de preguntas concretas', icon: 'solar:stethoscope-bold-duotone' },
+  { text: 'Análisis de correlación síntoma-vital', sub: 'cruza tu diario con glucosa, presión, FC y peso para ver patrones', icon: 'solar:graph-new-bold-duotone' },
+  { text: 'El Hilo: análisis longitudinal mensual', sub: 'tu diario convertido en un resumen narrativo que evoluciona mes a mes', icon: 'solar:book-2-bold-duotone' },
+  { text: 'Detector de inconsistencias dx ↔ tratamiento', sub: 'avisa si hay una condición sin tratamiento o un medicamento sin diagnóstico', icon: 'solar:danger-triangle-bold-duotone' },
 ]
 
 const COMPARISON_ROWS: { label: string; free: string; pro: string }[] = [
+  { label: 'Modelo de IA', free: 'Haiku (rápido)', pro: 'Sonnet — mayor capacidad' },
   { label: 'Explicaciones por semana', free: '1', pro: 'Ilimitadas' },
-  { label: 'Personalización con tu perfil médico', free: '—', pro: '✓' },
+  { label: 'Personalización con perfil médico', free: '—', pro: '✓' },
   { label: 'Referencias verificables (PubMed, DOI)', free: '✓', pro: '✓' },
+  { label: 'Agente Aliis conversacional', free: '✓ básico', pro: '✓ con contexto completo' },
+  { label: 'Notificaciones proactivas', free: '—', pro: '✓' },
   { label: 'Historial de explicaciones', free: 'Permanente', pro: 'Permanente' },
-  { label: 'Asistente IA por capítulo', free: '✓', pro: '✓ con memoria + streaming' },
   { label: 'Diario de síntomas y vitales', free: '✓', pro: '✓' },
   { label: 'Control de tratamientos', free: '✓', pro: '✓' },
   { label: 'Validación IA de dosis', free: '✓', pro: '✓' },
   { label: 'Compartir tu explicación', free: '✓', pro: '✓' },
   { label: 'Preparar consulta con tu médico', free: '—', pro: '✓' },
-  { label: 'Detector de inconsistencias dx ↔ tratamiento', free: '—', pro: '✓' },
+  { label: 'Detector de inconsistencias', free: '—', pro: '✓' },
   { label: 'Análisis de correlación síntoma-vital', free: '—', pro: '✓' },
   { label: 'El Hilo: análisis longitudinal mensual', free: '—', pro: '✓' },
-  { label: 'Cápsula del tiempo', free: '—', pro: '✓' },
 ]
 
 const TRUST_PILLARS = [
@@ -93,11 +94,11 @@ const FAQ = [
   },
   {
     q: '¿Qué diferencia hay realmente entre Gratis y Pro?',
-    a: 'En Pro tus explicaciones se generan considerando tu perfil médico (medicamentos, alergias, condiciones previas), tienes asistente IA con memoria, herramientas de seguimiento longitudinal (El Hilo, correlaciones, Cápsula del tiempo) y el detector de inconsistencias entre diagnósticos y tratamientos.',
+    a: 'La diferencia principal es el modelo de IA. Gratis usa Claude Haiku (rápido, bueno para explicaciones directas). Pro usa Claude Sonnet, que maneja mejor los matices clínicos, condiciones complejas y la personalización con tu perfil médico. Además, Pro desbloquea el análisis longitudinal: correlaciones síntoma-vital, El Hilo mensual y las notificaciones proactivas.',
   },
   {
     q: '¿Las explicaciones de Gratis son peores?',
-    a: 'No, ambas usan las mismas fuentes y la misma estructura. La diferencia es la cantidad (1/semana vs ilimitadas), la personalización con tu perfil médico y las herramientas que rodean a la explicación.',
+    a: 'Son sólidas y con las mismas fuentes, pero generadas por un modelo más pequeño. La diferencia se nota en diagnósticos complejos con comorbilidades, donde Sonnet profundiza más y Haiku puede quedarse en la superficie.',
   },
   {
     q: '¿Qué pasa si cancelo Pro?',
@@ -156,11 +157,11 @@ export default function PreciosPage() {
             <Capsule tone="teal">14 días gratis · sin tarjeta hasta que decidas</Capsule>
           </div>
           <h1 className="font-serif text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] mb-4">
-            Acompañamiento médico real{' '}
-            <em className="text-muted-foreground/55">por menos que un café al mes.</em>
+            Entiende mejor.{' '}
+            <em className="text-muted-foreground/55">Con modelos más potentes.</em>
           </h1>
           <p className="font-sans text-[16px] text-muted-foreground max-w-[54ch] mx-auto leading-relaxed">
-            Gratis ya incluye explicaciones con referencias, diario, tratamientos y asistente IA. Pro añade personalización con tu perfil médico y herramientas para convivir con tu diagnóstico cada día.
+            Gratis te da lo esencial: tu explicación, tu diario y tu asistente. Pro activa los modelos más avanzados de Anthropic y el análisis longitudinal que detecta lo que tú no ves aún.
           </p>
         </div>
 
@@ -220,7 +221,7 @@ export default function PreciosPage() {
               <h2 className="font-serif text-[26px] tracking-[-0.02em] leading-[1.05] m-0">Gratis</h2>
               <span className="font-mono text-[9px] tracking-[.18em] uppercase text-muted-foreground/50 px-2 py-[3px] rounded-full border border-border">Empieza aquí</span>
             </div>
-            <p className="font-serif italic text-[14px] text-muted-foreground mb-6 leading-snug">Para entender un diagnóstico puntual.</p>
+            <p className="font-serif italic text-[14px] text-muted-foreground mb-6 leading-snug">Para entender tu diagnóstico hoy.</p>
 
             <div className="flex items-baseline gap-2 mb-1">
               <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">€0</span>
@@ -268,7 +269,7 @@ export default function PreciosPage() {
               <Icon icon="solar:crown-bold-duotone" width={22} className="text-secondary" />
             </div>
             <p className="font-serif italic text-[15px] text-muted-foreground mb-6 leading-snug">
-              Acompañamiento completo para quien convive con su diagnóstico cada día.
+              Para quien quiere profundidad real y que Aliis aprenda de sus datos.
             </p>
 
             <motion.div
