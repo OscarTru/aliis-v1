@@ -6,6 +6,7 @@ import { PageWrapper } from '@/components/PageWrapper'
 import { NotificationBellWrapper } from '@/components/NotificationBellWrapper'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { AliisAgentIsland } from '@/components/AliisAgentIsland'
+import { MainArea } from '@/components/MainArea'
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -38,12 +39,12 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               initialPlan={initialPlan}
               initialInitial={initialInitial}
             />
-            <main className="flex-1 overflow-y-auto relative">
+            <MainArea>
               <NotificationBellWrapper />
               <PageWrapper>
                 {children}
               </PageWrapper>
-            </main>
+            </MainArea>
           </div>
           <BottomNav />
         </ConditionProvider>
