@@ -15,6 +15,7 @@ import { Icon } from '@iconify/react'
 import { PRICING_TIERS } from '../lib/mock-data'
 import { createClient } from '../lib/supabase'
 import AliisDemo from '../components/AliisDemo'
+import { GlareHover } from '../components/ui/GlareHover'
 
 // ─── LazySection ──────────────────────────────────────────────
 // Defers mounting of below-the-fold sections until they approach
@@ -182,13 +183,23 @@ function WhatAliisDoes() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', borderTop: '1px solid var(--c-border)' }}>
           {items.map((it, i) => (
-            <article key={i} style={{ padding: '32px 28px 36px', borderBottom: '1px solid var(--c-border)', borderRight: (i + 1) % 3 !== 0 ? '1px solid var(--c-border)' : 'none' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', marginBottom: 18 }}>{it.n}</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
-                {it.t} <em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
-              </h3>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
-            </article>
+            <GlareHover
+              key={i}
+              glareColor="#ffffff"
+              glareOpacity={0.06}
+              glareAngle={-30}
+              glareSize={260}
+              transitionDuration={700}
+              style={{ borderBottom: '1px solid var(--c-border)', borderRight: (i + 1) % 3 !== 0 ? '1px solid var(--c-border)' : 'none' }}
+            >
+              <article style={{ padding: '32px 28px 36px' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', color: 'var(--c-text-faint)', marginBottom: 18 }}>{it.n}</div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.15, letterSpacing: '-.015em', margin: '0 0 14px' }}>
+                  {it.t} <em style={{ color: 'var(--c-text-faint)' }}>{it.i}</em>
+                </h3>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{it.d}</p>
+              </article>
+            </GlareHover>
           ))}
         </div>
       </div>
@@ -249,15 +260,25 @@ function TrustSection() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
           {pillars.map((p, i) => (
-            <article key={i} style={{ padding: '36px 32px 40px', background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 20 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 20 }}>· {p.eyebrow} ·</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 14px' }}>{p.title}</h3>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: '0 0 28px' }}>{p.body}</p>
-              <div style={{ paddingTop: 20, borderTop: '1px solid var(--c-border)' }}>
-                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 32, letterSpacing: '-.02em', lineHeight: 1 }}>{p.stat}</div>
-                <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-faint)', marginTop: 4 }}>{p.statLabel}</div>
-              </div>
-            </article>
+            <GlareHover
+              key={i}
+              glareColor="#ffffff"
+              glareOpacity={0.08}
+              glareAngle={-35}
+              glareSize={280}
+              transitionDuration={700}
+              style={{ borderRadius: 20, border: '1px solid var(--c-border)', background: 'var(--c-surface)' }}
+            >
+              <article style={{ padding: '36px 32px 40px', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 20 }}>· {p.eyebrow} ·</div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 14px' }}>{p.title}</h3>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: '0 0 28px' }}>{p.body}</p>
+                <div style={{ paddingTop: 20, borderTop: '1px solid var(--c-border)' }}>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 32, letterSpacing: '-.02em', lineHeight: 1 }}>{p.stat}</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 13, color: 'var(--c-text-faint)', marginTop: 4 }}>{p.statLabel}</div>
+                </div>
+              </article>
+            </GlareHover>
           ))}
         </div>
       </div>
@@ -351,17 +372,27 @@ function AIFirstSection() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
           {pillars.map((p, i) => (
-            <article key={i} style={{ padding: '36px 32px 40px', background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 20, position: 'relative', overflow: 'hidden' }}>
-              <div aria-hidden style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: 'radial-gradient(circle, rgba(31,138,155,.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
-                <Icon icon={p.icon} width={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
-              </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 12 }}>· {p.kicker} ·</div>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 10px' }}>
-                {p.title} <em style={{ color: 'var(--c-text-faint)' }}>{p.italic}</em>
-              </h3>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{p.body}</p>
-            </article>
+            <GlareHover
+              key={i}
+              glareColor="#1f8a9b"
+              glareOpacity={0.18}
+              glareAngle={-35}
+              glareSize={280}
+              transitionDuration={700}
+              style={{ borderRadius: 20, border: '1px solid var(--c-border)', background: 'var(--c-bg)' }}
+            >
+              <article style={{ padding: '36px 32px 40px', position: 'relative', textAlign: 'center' }}>
+                <div aria-hidden style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 999, background: 'radial-gradient(circle, rgba(31,138,155,.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(31,138,155,0.10)', border: '1px solid rgba(31,138,155,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginLeft: 'auto', marginRight: 'auto' }}>
+                  <Icon icon={p.icon} width={22} style={{ color: 'var(--c-brand-teal-deep)' }} />
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--c-brand-teal-deep)', marginBottom: 12 }}>· {p.kicker} ·</div>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 22, lineHeight: 1.2, letterSpacing: '-.015em', margin: '0 0 10px' }}>
+                  {p.title} <em style={{ color: 'var(--c-text-faint)' }}>{p.italic}</em>
+                </h3>
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--c-text-muted)', margin: 0 }}>{p.body}</p>
+              </article>
+            </GlareHover>
           ))}
         </div>
       </div>
