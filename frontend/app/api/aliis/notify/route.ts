@@ -1,11 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
-import { anthropic, cachedSystem } from '@/lib/anthropic'
-import { buildAliisPrompt } from '@/lib/aliis-prompt'
-import { logLlmUsage } from '@/lib/llm-usage'
 import { sendPushNotification } from '@/lib/web-push'
 import { verifyCronAuth } from '@/lib/cron-auth'
-import type { SymptomLog } from '@/lib/types'
-import { HAIKU_4_5 } from '@/lib/ai-models'
+import { runAliisCore } from '@/lib/aliis-core'
 
 export async function GET(req: Request) {
   const authError = verifyCronAuth(req)
@@ -112,46 +108,13 @@ export async function GET(req: Request) {
     (cachedInsightsRes.data ?? []).map(r => [r.user_id, r.content as string])
   )
 
-  // Users that still need an insight generated (eligible + no notif this week + no cache)
-  const toGenerate = shardedInsightIds.filter(
-    id => !insightSentInWeek.has(id) && !cacheByUser.has(id)
-  )
+  // Push subscriptions for ALL onboarded users in this shard (we need them
+  // for both reminder pushes and insight pushes).
+  const subsRes = await supabase
+    .from('push_subscriptions')
+    .select('user_id, endpoint, p256dh, auth')
+    .in('user_id', shardedReminderIds)
 
-  // Batched: profiles, symptom_logs, packs for users needing generation
-  const [profilesRes, logsRes, packsRes, subsRes] = await Promise.all([
-    supabase.from('profiles').select('id, name').in('id', toGenerate),
-    supabase
-      .from('symptom_logs')
-      .select('user_id, logged_at, glucose, bp_systolic, bp_diastolic, heart_rate, temperature, weight')
-      .in('user_id', toGenerate)
-      .gte('logged_at', since30)
-      .order('logged_at', { ascending: false }),
-    supabase
-      .from('packs')
-      .select('user_id, dx, created_at')
-      .in('user_id', toGenerate)
-      .order('created_at', { ascending: false }),
-    // Push subscriptions for ALL onboarded users in this shard (we need them
-    // for both reminder pushes and insight pushes).
-    supabase
-      .from('push_subscriptions')
-      .select('user_id, endpoint, p256dh, auth')
-      .in('user_id', shardedReminderIds),
-  ])
-
-  const profileByUser = new Map(
-    (profilesRes.data ?? []).map(p => [p.id, p.name as string | null])
-  )
-  const logsByUser = new Map<string, SymptomLog[]>()
-  for (const log of (logsRes.data ?? []) as SymptomLog[]) {
-    const arr = logsByUser.get(log.user_id) ?? []
-    arr.push(log)
-    logsByUser.set(log.user_id, arr)
-  }
-  const recentDxByUser = new Map<string, string>()
-  for (const p of packsRes.data ?? []) {
-    if (!recentDxByUser.has(p.user_id)) recentDxByUser.set(p.user_id, p.dx)
-  }
   const subsByUser = new Map((subsRes.data ?? []).map(s => [s.user_id, s]))
 
   let sent = 0
@@ -217,46 +180,38 @@ export async function GET(req: Request) {
   skipped = shardedInsightIds.length - usersToProcess.length
 
   async function processUser(userId: string): Promise<void> {
-    let content = cacheByUser.get(userId) ?? null
+    const cached = cacheByUser.get(userId) ?? null
 
-    if (!content) {
-      const userName = profileByUser.get(userId) ?? 'tú'
-      const logs = logsByUser.get(userId) ?? []
-      const recentDiagnosis = recentDxByUser.get(userId) ?? null
+    let title = 'Aliis'
+    let body = ''
+    let url = '/diario'
 
-      const { system, userMessage } = buildAliisPrompt({ userName, recentDiagnosis, logs })
-      try {
-        const message = await anthropic.messages.create({
-          model: HAIKU_4_5,
-          max_tokens: 150,
-          system: cachedSystem(system),
-          messages: [{ role: 'user', content: userMessage }],
+    try {
+      if (!cached) {
+        const signal = await runAliisCore(userId)
+        title = signal.title
+        body = signal.body
+        url = signal.url
+
+        insightsToInsert.push({
+          user_id: userId,
+          content: signal.insight,
+          data_window: { signalType: signal.type, priority: signal.priority },
         })
-        await logLlmUsage({
-          userId,
-          endpoint: 'aliis_notify_cron',
-          model: HAIKU_4_5,
-          usage: message.usage,
-        })
-        content = (message.content[0] as { type: string; text: string }).text.trim()
-      } catch {
-        skipped++
-        return
+      } else {
+        body = cached.slice(0, 120)
       }
-
-      insightsToInsert.push({
-        user_id: userId,
-        content,
-        data_window: { logs: logs.length, userName, recentDiagnosis },
-      })
+    } catch {
+      skipped++
+      return
     }
 
     notificationsToInsert.push({
       user_id: userId,
-      title: 'Aliis',
-      body: content.slice(0, 500),
+      title,
+      body: body.slice(0, 500),
       type: 'insight',
-      url: '/diario',
+      url,
     })
     sent++
 
@@ -266,9 +221,9 @@ export async function GET(req: Request) {
         endpoint: sub.endpoint,
         p256dh: sub.p256dh,
         auth: sub.auth,
-        title: 'Aliis',
-        body: content.slice(0, 120),
-        url: '/diario',
+        title,
+        body: body.slice(0, 120),
+        url,
       })
     }
   }
