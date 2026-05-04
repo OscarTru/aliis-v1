@@ -40,7 +40,6 @@ export function Footer() {
                 Cerebros Esponjosos
               </div>
               <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com/#nosotros" target="_blank" rel="noopener noreferrer">Quiénes somos</a>
-              <a className="text-muted-foreground no-underline hover:text-foreground transition-colors" href="https://www.cerebrosesponjosos.com" target="_blank" rel="noopener noreferrer">Cerebros Esponjosos</a>
               <div className="flex items-center gap-3 mt-1">
                 <a href="https://www.instagram.com/cerebros.esponjosos" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
                   <Icon icon="solar:instagram-bold-duotone" width={18} />
