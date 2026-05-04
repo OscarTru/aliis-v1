@@ -80,7 +80,8 @@ export default function CompartirPage() {
   const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share
 
   return (
-    <div className="max-w-[480px] mx-auto mt-20 px-6 text-center">
+    <div className="h-full flex items-center justify-center px-6">
+    <div className="w-full max-w-[480px] text-center">
       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
         <Icon icon="solar:share-circle-bold-duotone" width={24} className="text-primary" />
       </div>
@@ -159,6 +160,7 @@ export default function CompartirPage() {
           </p>
         </div>
       )}
+    </div>
     </div>
   )
 }
