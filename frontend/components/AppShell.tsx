@@ -5,6 +5,7 @@ import { ConditionProvider } from '@/lib/condition-context'
 import { PageWrapper } from '@/components/PageWrapper'
 import { NotificationBellWrapper } from '@/components/NotificationBellWrapper'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { AliisAgentIsland } from '@/components/AliisAgentIsland'
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -27,24 +28,26 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <PackProvider>
-      <ConditionProvider>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar
-            initialName={initialName}
-            initialEmail={initialEmail}
-            initialPlan={initialPlan}
-            initialInitial={initialInitial}
-          />
-          <main className="flex-1 overflow-y-auto relative">
-            <NotificationBellWrapper />
-            <PageWrapper>
-              {children}
-            </PageWrapper>
-          </main>
-        </div>
-        <BottomNav />
-      </ConditionProvider>
-    </PackProvider>
+    <AliisAgentIsland>
+      <PackProvider>
+        <ConditionProvider>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar
+              initialName={initialName}
+              initialEmail={initialEmail}
+              initialPlan={initialPlan}
+              initialInitial={initialInitial}
+            />
+            <main className="flex-1 overflow-y-auto relative">
+              <NotificationBellWrapper />
+              <PageWrapper>
+                {children}
+              </PageWrapper>
+            </main>
+          </div>
+          <BottomNav />
+        </ConditionProvider>
+      </PackProvider>
+    </AliisAgentIsland>
   )
 }

@@ -10,6 +10,7 @@ import { MedicalProfileSection } from './MedicalProfileSection'
 import { TreatmentCheckBanner } from './TreatmentCheckBanner'
 import { CondicionSugerida } from './CondicionSugerida'
 import type { Profile } from '@/lib/types'
+import { ScreenContextSetter } from '@/components/ScreenContextSetter'
 
 type FilterKey = 'todos' | 'sin-leer' | 'a-medias' | 'leido'
 
@@ -102,6 +103,7 @@ export default async function HistorialPage({
 
   return (
     <>
+      <ScreenContextSetter value="historial" />
       <Suspense fallback={null}>
         <UpgradeToast />
       </Suspense>
