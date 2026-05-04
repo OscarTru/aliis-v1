@@ -17,11 +17,13 @@ export function ChatDrawer({
   packId,
   userId,
   packContext,
+  screenContext,
 }: {
   dx: string
   packId: string
   userId?: string
   packContext: string
+  screenContext?: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
 }) {
   const { chatOpen, setChatOpen, notes, setNotes } = usePackContext()
   const [tab, setTab] = useState<Tab>('chat')
@@ -132,6 +134,7 @@ export function ChatDrawer({
           packContext,
           packId,
           chapterId: 'pack',
+          screen_context: screenContext ?? 'pack',
         }),
         signal: controller.signal,
       })

@@ -17,6 +17,7 @@ export function ChapterChat({
   packId,
   userId,
   chapterId,
+  screenContext,
 }: {
   dx: string
   chapterTitle: string
@@ -25,6 +26,7 @@ export function ChapterChat({
   packId?: string
   userId?: string
   chapterId?: string
+  screenContext?: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -84,6 +86,7 @@ export function ChapterChat({
           packContext,
           packId,
           chapterId,
+          screen_context: screenContext ?? 'pack',
         }),
       })
 
