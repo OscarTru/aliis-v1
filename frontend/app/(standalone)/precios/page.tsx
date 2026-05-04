@@ -225,7 +225,9 @@ export default function PreciosPage() {
             <p className="font-serif italic text-[14px] text-muted-foreground mb-6 leading-snug">Para entender tu diagnóstico hoy.</p>
 
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">€0</span>
+              <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">
+                {currency === 'EUR' ? '€0' : currency === 'USD' ? '$0' : '$0 MXN'}
+              </span>
               <span className="font-sans text-[13px] text-muted-foreground">para siempre</span>
             </div>
 
