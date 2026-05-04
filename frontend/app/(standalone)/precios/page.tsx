@@ -226,9 +226,11 @@ export default function PreciosPage() {
 
             <div className="flex items-baseline gap-2 mb-1">
               <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">
-                {currency === 'EUR' ? '€0' : currency === 'USD' ? '$0' : '$0 MXN'}
+                {currency === 'EUR' ? '€0' : '$0'}
               </span>
-              <span className="font-sans text-[13px] text-muted-foreground">para siempre</span>
+              <span className="font-sans text-[13px] text-muted-foreground">
+                {currency === 'MXN' ? 'para siempre · MXN' : 'para siempre'}
+              </span>
             </div>
 
             <div className="my-6 h-px bg-border" />
