@@ -269,3 +269,67 @@ export interface TreatmentInput {
   last_changed_at?: string
   notes?: string
 }
+
+// Agent Memory
+export type AgentName = 'InsightAgent' | 'MonitorAgent' | 'AdherenceAgent' | 'SymptomAgent' | 'CorrelationAgent'
+export type MemoryType = 'observation' | 'pattern' | 'alert' | 'recommendation'
+
+export interface AgentMemory {
+  id: string
+  user_id: string
+  agent_name: AgentName
+  memory_type: MemoryType
+  content: Record<string, unknown>
+  relevance: number
+  created_at: string
+  expires_at: string | null
+}
+
+// Patient Summary
+export interface PatientSummary {
+  condiciones: string[]
+  tratamientos_activos: string[]
+  adherencia_14d: number
+  sintomas_frecuentes: string[]
+  vitales_recientes: {
+    bp?: string
+    hr?: number
+    glucose?: number
+    weight?: number
+  }
+  proxima_cita: string | null
+  senales_alarma: string[]
+  patron_reciente: string | null
+  resumen_narrativo: string
+  generated_at: string
+}
+
+// AliisCore
+export type NotificationPriority = 'critical' | 'high' | 'medium' | 'low' | 'none'
+export type SignalType = 'pattern_alert' | 'red_flag' | 'adherence_miss' | 'routine_insight' | 'no_data'
+
+export interface AliisSignal {
+  priority: NotificationPriority
+  type: SignalType
+  title: string
+  body: string
+  url: string
+  insight: string
+}
+
+// Agent API
+export interface AgentRequest {
+  query: string
+  screen_context: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
+  mode: 'query' | 'contextual'
+}
+
+export interface AgentResponse {
+  message: string
+  action?: {
+    label: string
+    endpoint: string
+    method: 'POST' | 'GET'
+  }
+  source: 'summary' | 'rag' | 'both'
+}
