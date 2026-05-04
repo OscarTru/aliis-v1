@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { CuentaClient } from './CuentaClient'
+import { ScreenContextSetter } from '@/components/ScreenContextSetter'
 
 export default async function CuentaPage() {
   const supabase = await createServerSupabaseClient()
@@ -18,7 +19,9 @@ export default async function CuentaPage() {
   const googleName = user.user_metadata?.full_name ?? ''
 
   return (
-    <CuentaClient
+    <>
+      <ScreenContextSetter value="cuenta" />
+      <CuentaClient
       userId={user.id}
       isGoogleUser={isGoogleUser}
       googleName={googleName}
@@ -36,5 +39,6 @@ export default async function CuentaPage() {
         next_appointment: p?.next_appointment ?? null,
       }}
     />
+    </>
   )
 }

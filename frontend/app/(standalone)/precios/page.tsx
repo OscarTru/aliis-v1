@@ -26,43 +26,45 @@ const PRICES: Record<Cadence, Record<Currency, { display: string; sub: string }>
 }
 
 const FREE_FEATURES = [
-  { text: '1 explicación por semana', icon: 'solar:document-text-bold-duotone' },
-  { text: 'Asistente IA por capítulo', icon: 'solar:chat-round-dots-bold-duotone' },
-  { text: 'Diario de síntomas y vitales', icon: 'solar:notebook-bold-duotone' },
-  { text: 'Control de tratamientos', icon: 'solar:pill-bold-duotone' },
-  { text: 'Validación IA de dosis al añadir', icon: 'solar:shield-check-bold-duotone' },
-  { text: 'Biblioteca de diagnósticos', icon: 'solar:library-bold-duotone' },
-  { text: 'Compartir tu explicación', icon: 'solar:share-bold-duotone' },
-  { text: 'Historial permanente', icon: 'solar:archive-bold-duotone' },
+  { text: 'Tu explicación médica completa', sub: 'qué es, cómo funciona, señales de alarma y preguntas para tu médico', icon: 'solar:document-text-bold-duotone' },
+  { text: 'Todo con fuentes verificables', sub: 'cada afirmación cita PubMed, DOI o guías clínicas — desplegable', icon: 'solar:shield-check-bold-duotone' },
+  { text: 'Pregúntale a Aliis lo que no quedó claro', sub: 'un asistente que conoce tu explicación y responde sobre ella', icon: 'solar:chat-round-dots-bold-duotone' },
+  { text: 'Diario de síntomas y vitales', sub: 'anota cómo te sientes y registra glucosa, presión, peso o FC', icon: 'solar:notebook-bold-duotone' },
+  { text: 'Tus tratamientos en orden', sub: 'añade dosis y horarios, marca tus tomas y ve tu racha de adherencia', icon: 'solar:pill-bold-duotone' },
+  { text: 'Aliis verifica tus medicamentos', sub: 'revisa la dosis cuando la añades y te avisa si algo no encaja', icon: 'solar:verified-check-bold-duotone' },
+  { text: 'Biblioteca de más de 60 condiciones', sub: 'revisadas por residentes de neurología, disponibles siempre', icon: 'solar:library-bold-duotone' },
+  { text: 'Comparte tu explicación con quien quieras', sub: 'un enlace que cualquiera puede ver, sin necesidad de cuenta', icon: 'solar:share-bold-duotone' },
+  { text: 'Tu historial siempre disponible', sub: 'todas tus explicaciones guardadas, sin fecha de caducidad', icon: 'solar:archive-bold-duotone' },
 ]
 
 const PRO_FEATURES = [
-  { text: 'Explicaciones ilimitadas', sub: 'sin contadores, sin fricción', icon: 'solar:infinity-bold-duotone' },
-  { text: 'Personalizadas con tu perfil médico', sub: 'usa tus medicamentos, alergias y condiciones previas', icon: 'solar:user-id-bold-duotone' },
-  { text: 'Asistente IA con memoria y streaming', sub: 'modelo más rápido, recuerda tu contexto entre capítulos', icon: 'solar:chat-round-dots-bold-duotone' },
-  { text: 'Preparar consulta con tu médico', sub: 'resumen listo para imprimir o llevar al móvil', icon: 'solar:stethoscope-bold-duotone' },
-  { text: 'Detector de inconsistencias', sub: 'avisa si un diagnóstico no tiene tratamiento, o un tratamiento sin diagnóstico', icon: 'solar:danger-triangle-bold-duotone' },
-  { text: 'Análisis de correlación', sub: 'cruza síntomas con presión, glucosa, peso, FC', icon: 'solar:graph-new-bold-duotone' },
-  { text: 'El Hilo: análisis longitudinal', sub: 'tu diario convertido en un resumen mensual narrativo', icon: 'solar:book-2-bold-duotone' },
-  { text: 'Cápsula del tiempo', sub: 'comparativa mensual de vitales con notificación', icon: 'solar:calendar-mark-bold-duotone' },
-  { text: 'Todo lo de Gratis incluido', sub: 'diario, tratamientos, biblioteca, compartir, historial', icon: 'solar:check-circle-bold-duotone' },
+  { text: 'Explicaciones sin límite, y más profundas', sub: 'sin contadores — genera todas las que necesites, cuando las necesites', icon: 'solar:infinity-bold-duotone' },
+  { text: 'Aliis conoce tu caso completo', sub: 'usa tus condiciones, medicamentos, alergias e historial al responder', icon: 'solar:user-id-bold-duotone' },
+  { text: 'Te avisa antes de que notes algo', sub: 'cada mañana revisa tus datos y te manda una señal si algo merece atención', icon: 'solar:bell-bing-bold-duotone' },
+  { text: 'Prepara tu próxima consulta', sub: 'resumen con preguntas concretas, listo para llevar al médico', icon: 'solar:stethoscope-bold-duotone' },
+  { text: 'Ve los patrones que no ves solo', sub: 'cómo se relacionan tus síntomas con tu presión, glucosa, peso y FC', icon: 'solar:graph-new-bold-duotone' },
+  { text: 'Tu resumen mensual de salud', sub: 'cómo evolucionaste este mes — en lenguaje humano, no en tablas', icon: 'solar:book-2-bold-duotone' },
+  { text: 'Aliis responde desde cualquier pantalla', sub: 'en tu diario, en tus tratamientos, en tu historial — siempre con contexto', icon: 'solar:chat-round-bold-duotone' },
+  { text: 'Detecta lo que no cuadra', sub: 'si un tratamiento no tiene diagnóstico o al revés, Aliis lo marca', icon: 'solar:danger-triangle-bold-duotone' },
+  { text: 'Todo lo de Gratis, incluido', sub: 'diario, vitales, biblioteca, compartir, historial permanente', icon: 'solar:check-circle-bold-duotone' },
 ]
 
 const COMPARISON_ROWS: { label: string; free: string; pro: string }[] = [
   { label: 'Explicaciones por semana', free: '1', pro: 'Ilimitadas' },
-  { label: 'Personalización con tu perfil médico', free: '—', pro: '✓' },
-  { label: 'Referencias verificables (PubMed, DOI)', free: '✓', pro: '✓' },
-  { label: 'Historial de explicaciones', free: 'Permanente', pro: 'Permanente' },
-  { label: 'Asistente IA por capítulo', free: '✓', pro: '✓ con memoria + streaming' },
+  { label: 'Referencias verificables', free: '✓', pro: '✓' },
+  { label: 'Pregúntale a Aliis', free: '✓', pro: '✓ conoce todo tu historial' },
   { label: 'Diario de síntomas y vitales', free: '✓', pro: '✓' },
-  { label: 'Control de tratamientos', free: '✓', pro: '✓' },
-  { label: 'Validación IA de dosis', free: '✓', pro: '✓' },
+  { label: 'Tus tratamientos y adherencia', free: '✓', pro: '✓' },
+  { label: 'Verificación de medicamentos', free: '✓', pro: '✓' },
+  { label: 'Biblioteca de condiciones', free: '✓', pro: '✓' },
   { label: 'Compartir tu explicación', free: '✓', pro: '✓' },
-  { label: 'Preparar consulta con tu médico', free: '—', pro: '✓' },
-  { label: 'Detector de inconsistencias dx ↔ tratamiento', free: '—', pro: '✓' },
-  { label: 'Análisis de correlación síntoma-vital', free: '—', pro: '✓' },
-  { label: 'El Hilo: análisis longitudinal mensual', free: '—', pro: '✓' },
-  { label: 'Cápsula del tiempo', free: '—', pro: '✓' },
+  { label: 'Historial permanente', free: '✓', pro: '✓' },
+  { label: 'Personalización con tu perfil médico', free: '—', pro: '✓' },
+  { label: 'Avisos proactivos de salud', free: '—', pro: '✓' },
+  { label: 'Preparar consulta con el médico', free: '—', pro: '✓' },
+  { label: 'Patrones síntoma-vital', free: '—', pro: '✓' },
+  { label: 'Resumen mensual de evolución', free: '—', pro: '✓' },
+  { label: 'Detector de inconsistencias', free: '—', pro: '✓' },
 ]
 
 const TRUST_PILLARS = [
@@ -88,34 +90,46 @@ const TRUST_PILLARS = [
 
 const FAQ = [
   {
-    q: '¿Cómo sé que la IA no se inventa cosas?',
-    a: 'Cada afirmación va acompañada de su referencia. Antes de responder, un clasificador descarta preguntas fuera de dominio y un verificador comprueba que cada fuente exista. Si la evidencia no soporta una frase, el sistema no la incluye.',
+    q: '¿Cómo sé que Aliis no se inventa las cosas?',
+    a: 'Cada afirmación va con su fuente. Antes de escribir algo, el sistema verifica que la referencia exista — PubMed, DOI, guías clínicas. Si la evidencia no soporta una frase, Aliis no la incluye. Puedes desplegar cada cita cuando quieras.',
   },
   {
-    q: '¿Qué diferencia hay realmente entre Gratis y Pro?',
-    a: 'En Pro tus explicaciones se generan considerando tu perfil médico (medicamentos, alergias, condiciones previas), tienes asistente IA con memoria, herramientas de seguimiento longitudinal (El Hilo, correlaciones, Cápsula del tiempo) y el detector de inconsistencias entre diagnósticos y tratamientos.',
+    q: '¿Qué gano de verdad con Pro?',
+    a: 'En Gratis, Aliis responde bien pero sin saber quién eres. En Pro conoce tus condiciones, medicamentos, vitales y cómo has evolucionado. Puede prepararte para tu próxima consulta, detectar si algo no cuadra entre tus diagnósticos y tratamientos, y avisarte cada mañana si algo en tus datos merece atención — sin que tengas que preguntar.',
   },
   {
-    q: '¿Las explicaciones de Gratis son peores?',
-    a: 'No, ambas usan las mismas fuentes y la misma estructura. La diferencia es la cantidad (1/semana vs ilimitadas), la personalización con tu perfil médico y las herramientas que rodean a la explicación.',
+    q: '¿Para qué sirve el diario de síntomas?',
+    a: 'Para registrar cómo te sientes día a día — glucosa, presión, peso, frecuencia cardíaca o simplemente una nota. Aliis extrae los síntomas automáticamente y los ordena. En Pro, además cruza esos datos con tus vitales para mostrarte patrones que a simple vista no se notan.',
+  },
+  {
+    q: '¿Cómo funciona lo de preparar la consulta?',
+    a: 'Aliis revisa tu historial, tu diario reciente y tus tratamientos activos, y te genera un resumen con las preguntas más relevantes para llevar a tu médico. Lo puedes compartir o simplemente llevarlo en el celular.',
+  },
+  {
+    q: '¿Qué hace Aliis con mis tratamientos?',
+    a: 'Puedes añadir tus medicamentos con dosis y horario. Aliis verifica la dosis cuando la añades y te avisa si algo no encaja. Después puedes marcar tus tomas del día y ver tu racha de adherencia.',
+  },
+  {
+    q: '¿Las explicaciones de Gratis son buenas?',
+    a: 'Sí. Tienen la misma estructura de seis capítulos y las mismas fuentes verificables. La diferencia es que en Pro Aliis las personaliza con tu historial médico y puede profundizar más en casos con varias condiciones.',
   },
   {
     q: '¿Qué pasa si cancelo Pro?',
-    a: 'No pierdes nada. Tu historial, tu diario, tus tratamientos y tus explicaciones siguen ahí. Solo dejas de generar nuevas explicaciones ilimitadas y pierdes el acceso a las herramientas Pro.',
+    a: 'No pierdes nada. Tu historial, tu diario, tus tratamientos y todas tus explicaciones siguen ahí. Vuelves al plan Gratis sin perder un solo dato.',
   },
   {
     q: '¿Esto reemplaza a mi médico?',
-    a: 'Nunca. Es lo que te prepara para ir con mejores preguntas. Cada pantalla lo recuerda. No diagnostica, no recomienda dosis, no es para emergencias.',
+    a: 'No, y Aliis lo tiene claro. No diagnostica, no recomienda qué tomar ni en qué dosis, y no es para emergencias. Es lo que te ayuda a entender lo que ya te dijeron y a llegar mejor preparado a tu próxima cita.',
   },
   {
-    q: '¿Mis datos están seguros?',
-    a: 'Tu diario, tus síntomas y tu perfil médico son privados. No vendemos datos, no entrenamos modelos con ellos. Puedes exportar todo o borrar tu cuenta cuando quieras.',
+    q: '¿Mis datos son privados?',
+    a: 'Sí. Tu diario, tus síntomas y tu perfil médico son solo tuyos. No vendemos datos ni los usamos para entrenar modelos. Puedes borrar tu cuenta cuando quieras.',
   },
 ]
 
 export default function PreciosPage() {
   const router = useRouter()
-  const [currency, setCurrency] = useState<Currency>('EUR')
+  const [currency, setCurrency] = useState<Currency>('MXN')
   const [cadence, setCadence] = useState<Cadence>('monthly')
   const [showLogin, setShowLogin] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -156,11 +170,11 @@ export default function PreciosPage() {
             <Capsule tone="teal">14 días gratis · sin tarjeta hasta que decidas</Capsule>
           </div>
           <h1 className="font-serif text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] mb-4">
-            Acompañamiento médico real{' '}
-            <em className="text-muted-foreground/55">por menos que un café al mes.</em>
+            Todo lo que necesitas{' '}
+            <em className="text-muted-foreground/55">para no perderte en tu diagnóstico.</em>
           </h1>
           <p className="font-sans text-[16px] text-muted-foreground max-w-[54ch] mx-auto leading-relaxed">
-            Gratis ya incluye explicaciones con referencias, diario, tratamientos y asistente IA. Pro añade personalización con tu perfil médico y herramientas para convivir con tu diagnóstico cada día.
+            Gratis ya incluye todo lo esencial. Pro añade el acompañamiento continuo: Aliis aprende de tus datos, detecta patrones y te avisa antes de que tengas que preguntar.
           </p>
         </div>
 
@@ -220,22 +234,31 @@ export default function PreciosPage() {
               <h2 className="font-serif text-[26px] tracking-[-0.02em] leading-[1.05] m-0">Gratis</h2>
               <span className="font-mono text-[9px] tracking-[.18em] uppercase text-muted-foreground/50 px-2 py-[3px] rounded-full border border-border">Empieza aquí</span>
             </div>
-            <p className="font-serif italic text-[14px] text-muted-foreground mb-6 leading-snug">Para entender un diagnóstico puntual.</p>
+            <p className="font-serif italic text-[14px] text-muted-foreground mb-6 leading-snug">Para entender tu diagnóstico hoy.</p>
 
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">€0</span>
-              <span className="font-sans text-[13px] text-muted-foreground">para siempre</span>
+              <span className="font-serif text-[44px] tracking-[-0.03em] leading-none">
+                {currency === 'EUR' ? '€0' : '$0'}
+              </span>
+              <span className="font-sans text-[13px] text-muted-foreground">
+                {currency === 'MXN' ? 'para siempre · MXN' : 'para siempre'}
+              </span>
             </div>
 
             <div className="my-6 h-px bg-border" />
 
-            <ul className="list-none p-0 mb-7 flex flex-col gap-[11px] flex-1">
+            <ul className="list-none p-0 mb-7 flex flex-col gap-[13px] flex-1">
               {FREE_FEATURES.map((f, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
+                <li key={i} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
                     <Icon icon={f.icon} width={13} className="text-muted-foreground/60" />
                   </div>
-                  <span className="font-sans text-[13.5px] text-foreground/85">{f.text}</span>
+                  <div>
+                    <div className="font-sans text-[13.5px] text-foreground/85 leading-tight">{f.text}</div>
+                    {'sub' in f && f.sub && (
+                      <div className="font-serif italic text-[11.5px] text-muted-foreground/60 mt-[2px] leading-snug">{f.sub}</div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -268,7 +291,7 @@ export default function PreciosPage() {
               <Icon icon="solar:crown-bold-duotone" width={22} className="text-secondary" />
             </div>
             <p className="font-serif italic text-[15px] text-muted-foreground mb-6 leading-snug">
-              Acompañamiento completo para quien convive con su diagnóstico cada día.
+              Para quien convive con su diagnóstico cada día.
             </p>
 
             <motion.div
@@ -357,8 +380,8 @@ export default function PreciosPage() {
         {/* Trust pillars */}
         <div className="grid gap-8 p-10 bg-muted border border-border rounded-[20px] mb-16 grid-cols-1 sm:grid-cols-3">
           {TRUST_PILLARS.map((p, i) => (
-            <div key={i}>
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div key={i} className="text-center">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
                 <Icon icon={p.icon} width={20} className="text-primary/70" />
               </div>
               <div className="font-mono text-[10px] tracking-[.22em] uppercase text-primary/60 mb-2">· {p.eyebrow} ·</div>

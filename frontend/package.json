@@ -14,6 +14,7 @@
     "@ai-sdk/google": "^3.0.65",
     "@ai-sdk/groq": "^3.0.36",
     "@anthropic-ai/sdk": "^0.91.1",
+    "@iconify-json/lucide": "^1.2.105",
     "@iconify-json/solar": "^1.2.5",
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-accordion": "^1.2.12",

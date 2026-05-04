@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { X, ArrowUp, Sparkles, Loader2, BookText } from 'lucide-react'
+import { X, ArrowUp } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { createClient } from '@/lib/supabase'
 import { usePackContext } from '@/lib/pack-context'
 import { cn } from '@/lib/utils'
@@ -17,11 +18,13 @@ export function ChatDrawer({
   packId,
   userId,
   packContext,
+  screenContext,
 }: {
   dx: string
   packId: string
   userId?: string
   packContext: string
+  screenContext?: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
 }) {
   const { chatOpen, setChatOpen, notes, setNotes } = usePackContext()
   const [tab, setTab] = useState<Tab>('chat')
@@ -132,6 +135,7 @@ export function ChatDrawer({
           packContext,
           packId,
           chapterId: 'pack',
+          screen_context: screenContext ?? 'pack',
         }),
         signal: controller.signal,
       })
@@ -373,7 +377,7 @@ export function ChatDrawer({
             {notes ? (
               <>
                 <div className="flex items-center gap-2 mb-4">
-                  <BookText size={14} className="text-primary shrink-0" />
+                  <Icon icon="solar:notes-bold-duotone" width={14} className="text-primary shrink-0" />
                   <div className="font-mono text-[9px] tracking-[.18em] uppercase text-muted-foreground/60">
                     Mis apuntes · {dx}
                   </div>
@@ -388,7 +392,7 @@ export function ChatDrawer({
             ) : (
               <div className="flex flex-col items-center text-center pt-8 gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles size={20} className="text-primary" />
+                  <Icon icon="solar:magic-stick-3-bold-duotone" width={20} className="text-primary" />
                 </div>
                 <div>
                   <p className="font-serif text-[17px] text-foreground mb-2 leading-[1.3]">
@@ -417,12 +421,12 @@ export function ChatDrawer({
                 >
                   {generating ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
+                      <Icon icon="solar:refresh-bold-duotone" width={14} className="animate-spin" />
                       Generando…
                     </>
                   ) : (
                     <>
-                      <Sparkles size={14} />
+                      <Icon icon="solar:magic-stick-3-bold-duotone" width={14} />
                       Generar mis apuntes
                     </>
                   )}

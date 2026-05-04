@@ -18,7 +18,7 @@ export default async function CheckoutPage({
   if (!user) redirect('/login')
 
   const { plan } = await searchParams
-  const priceKey = VALID_PRICE_KEYS.includes(plan ?? '') ? plan! : 'eur_monthly'
+  const priceKey = VALID_PRICE_KEYS.includes(plan ?? '') ? plan! : 'mxn_monthly'
 
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
 

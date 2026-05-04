@@ -10,7 +10,8 @@
     { "path": "/api/aliis/treatment-check/cron?shard=2&total=4", "schedule": "0 9 1 * *" },
     { "path": "/api/aliis/treatment-check/cron?shard=3&total=4", "schedule": "0 9 1 * *" },
     { "path": "/api/aliis/cleanup", "schedule": "0 3 * * *" },
-    { "path": "/api/aliis/adherence-close", "schedule": "5 4 * * *" }
+    { "path": "/api/aliis/adherence-close", "schedule": "5 4 * * *" },
+    { "path": "/api/aliis/agent/summary", "schedule": "0 3 * * 1" }
   ],
   "functions": {
     "app/api/aliis/notify/[shard]/route.ts": { "maxDuration": 60 },
@@ -22,6 +23,8 @@
     "app/api/aliis/insight/route.ts": { "maxDuration": 60 },
     "app/api/aliis/consult/route.ts": { "maxDuration": 60 },
     "app/api/chat/route.ts": { "maxDuration": 60 },
-    "app/api/notes/generate/route.ts": { "maxDuration": 60 }
+    "app/api/notes/generate/route.ts": { "maxDuration": 60 },
+    "app/api/aliis/agent/summary/route.ts": { "maxDuration": 60 },
+    "app/api/aliis/agent/route.ts": { "maxDuration": 60 }
   }
 }

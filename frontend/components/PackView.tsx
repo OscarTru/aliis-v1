@@ -242,7 +242,8 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
           items.push({ id: '__refs', label: 'Referencias', targetIdx: pack.chapters.length + (pack.tools.length > 0 ? 1 : 0) })
         }
         return (
-          <div className="flex md:hidden items-center justify-center gap-2 px-4 py-2.5 border-b border-border/70 bg-foreground/[0.06] sticky top-0 z-10 backdrop-blur-sm">
+          <div className="flex md:hidden items-center gap-2 px-3 py-2.5 border-b border-border/70 bg-foreground/[0.06] sticky top-0 z-10 backdrop-blur-sm">
+            <div className="flex-1 flex items-center justify-center gap-2">
             {items.map((it) => {
               const isActive = activeIdx === it.targetIdx
               return (
@@ -274,6 +275,14 @@ export function PackView({ pack, userId, userPlan }: { pack: Pack; userId?: stri
                 </motion.button>
               )
             })}
+            </div>
+            <Link
+              href={`/compartir/${pack.id}`}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors no-underline"
+              aria-label="Compartir"
+            >
+              <Icon icon="solar:share-circle-bold-duotone" width={18} />
+            </Link>
           </div>
         )
       })()}

@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator'
 import { usePackContext } from '@/lib/pack-context'
 import { useConditionContext } from '@/lib/condition-context'
+import { useAliisAgentContext } from '@/lib/aliis-agent-context'
 import { cn } from '@/lib/utils'
 
 const SECTION_ICON_MAP: Record<string, React.ReactNode> = {
@@ -112,6 +113,7 @@ export function Sidebar({
   const pathname = usePathname()
   const { pack, activeIdx, readChapters, setActiveIdx, chatOpen } = usePackContext()
   const { condition, activeIdx: conditionActiveIdx, setActiveIdx: setConditionActiveIdx } = useConditionContext()
+  const { open: agentOpen } = useAliisAgentContext()
   const verifiedRefs = pack?.references.filter((r) => r.verified !== false) ?? []
   const [email, setEmail] = useState<string | null>(initialEmail)
   const [name, setName] = useState<string | null>(initialName)
@@ -132,8 +134,8 @@ export function Sidebar({
   }, [collapsed, mounted])
 
   useEffect(() => {
-    if (chatOpen) setCollapsed(true)
-  }, [chatOpen])
+    if (chatOpen || agentOpen) setCollapsed(true)
+  }, [chatOpen, agentOpen])
 
   useEffect(() => {
     const supabase = createClient()

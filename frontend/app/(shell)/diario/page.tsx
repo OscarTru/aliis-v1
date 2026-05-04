@@ -11,6 +11,7 @@ import { ElHilo } from '@/components/ElHilo'
 import { getTreatments } from '@/app/actions/treatments'
 import { TreatmentsWidget } from '@/components/TreatmentsWidget'
 import type { NoteWithPack, SymptomLog, TrackedSymptom, AdherenceLog } from '@/lib/types'
+import { ScreenContextSetter } from '@/components/ScreenContextSetter'
 
 export default async function DiarioPage() {
   const supabase = await createServerSupabaseClient()
@@ -100,6 +101,7 @@ export default async function DiarioPage() {
 
   return (
     <div className="px-4 md:px-8 pt-8 md:pt-10 pb-28 md:pb-20 max-w-[1200px] mx-auto">
+      <ScreenContextSetter value="diario" />
       {/* Page header */}
       <div className="mb-8">
         <p className="font-mono text-[10px] tracking-[.18em] uppercase text-muted-foreground/50 mb-1">
