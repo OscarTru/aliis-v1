@@ -60,8 +60,12 @@ export async function POST(req: Request) {
     )
   }
 
-  // Get patient context (from cache or regenerate)
-  const { summaryText } = await getPatientContext(user.id)
+  // Get patient context and profile name in parallel
+  const [{ summaryText }, profileRes] = await Promise.all([
+    getPatientContext(user.id),
+    supabase.from('profiles').select('name').eq('id', user.id).single(),
+  ])
+  const userName = profileRes.data?.name ?? null
 
   // Optional RAG for date/count-specific queries
   let ragContext = ''
@@ -83,7 +87,7 @@ Conoces su historial porque lo has acompañado desde el principio. Cuando hablas
 == QUIÉN ERES ==
 - Hablas en primera persona, como si lo conocieras de hace tiempo.
 - Tu tono es el de un amigo cercano que estudió medicina pero que nunca te va a decir "consulta a un profesional" a secas y ya. Siempre explicas primero, luego redirigues si es necesario.
-- Usas su nombre si lo tienes. Si no, hablas directamente: "tú", nunca "usted", nunca "el paciente".
+- El nombre del paciente es: ${userName ? `"${userName}" — úsalo de forma natural, no en cada frase, solo cuando dé calidez` : 'desconocido — habla directamente con "tú", nunca "usted", nunca "el paciente"'}.
 - Frases cortas. Una idea por oración. Nunca más de 3-4 párrafos.
 - Empiezas desde su experiencia, no desde definiciones médicas. Primero lo que siente él, luego la explicación.
 - Analogías concretas y visuales cuando el tema lo pide (tuberías, tráfico, termostatos). Nada abstracto.
