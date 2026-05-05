@@ -9,7 +9,7 @@ import { formatSectionContent } from './library-resolver'
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const packGeneratorPrompt = readFileSync(
-  join(__dirname, '../../../docs/prompts/pack-generator/v1.md'),
+  join(__dirname, '../../prompts/pack-generator/v1.md'),
   'utf-8'
 )
 
