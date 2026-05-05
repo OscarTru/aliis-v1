@@ -214,14 +214,25 @@ export function AliisAgentDrawer() {
                     )}
                   >
                     {m.role === 'assistant' && m.text === '' ? (
-                      <div className="flex gap-1 py-0.5">
-                        {[0, 1, 2].map((j) => (
-                          <div
-                            key={j}
-                            className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary"
-                            style={{ animationDelay: `${j * 0.2}s` }}
-                          />
-                        ))}
+                      <div className="flex items-center gap-2.5 py-0.5">
+                        <div className="flex gap-1">
+                          {[0, 1, 2].map((j) => (
+                            <div
+                              key={j}
+                              className="w-1.5 h-1.5 rounded-full bg-primary"
+                              style={{
+                                animation: 'aliis-bounce 1.2s ease-in-out infinite',
+                                animationDelay: `${j * 0.18}s`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span
+                          className="font-mono text-[10px] tracking-widest uppercase text-shimmer-ai"
+                          style={{ letterSpacing: '0.15em' }}
+                        >
+                          Pensando
+                        </span>
                       </div>
                     ) : m.role === 'user' ? (
                       <p className="font-sans text-[13px] leading-[1.65] m-0 text-background whitespace-pre-wrap">
