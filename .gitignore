@@ -17,3 +17,6 @@ out/
 # worktrees
 .worktrees/
 .superpowers/
+
+# Flutter env config (contains secrets — never commit)
+mobile/lib/core/env.dart
