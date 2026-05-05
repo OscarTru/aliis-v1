@@ -317,18 +317,19 @@ export function ChatDrawer({
                         ? 'bg-foreground rounded-[12px_12px_3px_12px] px-3 py-2'
                         : 'bg-muted border border-border rounded-[3px_12px_12px_12px] px-4 py-3'
                     )}>
-                      {m.role === 'assistant' && m.text === '' ? (
-                        <div className="flex gap-1 py-0.5">
-                          {[0, 1, 2].map((j) => (
-                            <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary" style={{ animationDelay: `${j * 0.2}s` }} />
-                          ))}
-                        </div>
-                      ) : m.role === 'user' ? (
+                      {m.role === 'user' ? (
                         <p className="font-sans text-[13px] leading-[1.65] m-0 text-background whitespace-pre-wrap">
                           {m.text}
                         </p>
+                      ) : m.text === '' ? (
+                        <span className="ai-cursor opacity-60" />
                       ) : (
-                        <FormattedText text={m.text} />
+                        <span>
+                          <FormattedText text={m.text} />
+                          {streaming && i === messages.length - 1 && (
+                            <span className="ai-cursor ml-0.5" />
+                          )}
+                        </span>
                       )}
                     </div>
                   </div>

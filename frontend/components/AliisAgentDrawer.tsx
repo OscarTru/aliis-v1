@@ -213,30 +213,19 @@ export function AliisAgentDrawer() {
                         : 'bg-muted border border-border rounded-[3px_12px_12px_12px] px-4 py-3'
                     )}
                   >
-                    {m.role === 'assistant' && m.text === '' ? (
-                      <div className="flex items-center gap-2 py-0.5">
-                        <div className="flex gap-[3px]">
-                          {[0, 1, 2].map((j) => (
-                            <div
-                              key={j}
-                              className="w-1 h-1 rounded-full bg-primary"
-                              style={{
-                                animation: 'aliis-bounce 1.2s ease-in-out infinite',
-                                animationDelay: `${j * 0.18}s`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <span className="font-mono text-[9px] tracking-widest text-shimmer-ai">
-                          pensando
-                        </span>
-                      </div>
-                    ) : m.role === 'user' ? (
+                    {m.role === 'user' ? (
                       <p className="font-sans text-[13px] leading-[1.65] m-0 text-background whitespace-pre-wrap">
                         {m.text}
                       </p>
+                    ) : m.text === '' ? (
+                      <span className="ai-cursor opacity-60" />
                     ) : (
-                      <FormattedText text={m.text} />
+                      <span>
+                        <FormattedText text={m.text} />
+                        {loading && i === messages.length - 1 && (
+                          <span className="ai-cursor ml-0.5" />
+                        )}
+                      </span>
                     )}
                   </div>
                 </div>
