@@ -332,6 +332,8 @@ export function ChatDrawer({
                 ))}
                 <div ref={bottomRef} />
               </div>
+              {/* Sticky shade — stays at the visible bottom of the scroll area regardless of transform */}
+              <div className="sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none -mt-10" />
             </div>
             </div>
 
