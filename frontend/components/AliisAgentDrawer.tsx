@@ -227,8 +227,8 @@ export function AliisAgentDrawer() {
                             />
                           ))}
                         </div>
-                        <span className="font-mono text-[9px] tracking-widest uppercase text-shimmer-ai">
-                          Pensando
+                        <span className="font-mono text-[9px] tracking-widest text-shimmer-ai">
+                          pensando
                         </span>
                       </div>
                     ) : m.role === 'user' ? (
