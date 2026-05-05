@@ -30,6 +30,9 @@ export function AliisAgentDrawer() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const accRef = useRef('')
 
   // Close on Escape
   useEffect(() => {
@@ -58,44 +61,62 @@ export function AliisAgentDrawer() {
     const q = input.trim()
     if (!q || loading) return
 
-    // 1. Append user message
-    const userMessage: Message = { role: 'user', text: q }
-    const next = [...messages, userMessage]
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    const next = [...messages, { role: 'user' as const, text: q }]
     setInput('')
-    setMessages([...next, { role: 'assistant', text: '' }])
     setLoading(true)
+    setMessages([...next, { role: 'assistant', text: '' }])
+    accRef.current = ''
 
     try {
-      // 3. POST /api/aliis/agent
       const res = await fetch('/api/aliis/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: q,
-          screen_context: screenContext,
-          mode: 'query',
-        }),
+        body: JSON.stringify({ query: q, screen_context: screenContext, mode: 'query' }),
+        signal: controller.signal,
       })
 
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         setMessages([...next, { role: 'assistant', text: 'Hubo un error. Intenta de nuevo.' }])
         return
       }
 
-      const data: AgentResponse = await res.json()
-      // 4. Replace placeholder with real response
-      setMessages([
-        ...next,
-        { role: 'assistant', text: data.message, action: data.action },
-      ])
-    } catch {
-      // 5. On error: replace placeholder with error text
-      setMessages([
-        ...next,
-        { role: 'assistant', text: 'Hubo un error de conexión. Intenta de nuevo.' },
-      ])
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+
+      const flush = (final = false) => {
+        let text = accRef.current
+        let action: AgentResponse['action'] | undefined
+
+        // Extract action sentinel from end of accumulated text
+        const sentinelIdx = text.indexOf('\n__ACTION__')
+        if (sentinelIdx !== -1) {
+          try { action = JSON.parse(text.slice(sentinelIdx + 11)) } catch { /* ignore */ }
+          text = text.slice(0, sentinelIdx)
+        }
+
+        setMessages([...next, { role: 'assistant', text: text || (final ? 'Sin respuesta. Intenta de nuevo.' : ''), action }])
+        if (final) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        accRef.current += decoder.decode(value, { stream: true })
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+        rafRef.current = requestAnimationFrame(() => flush())
+      }
+      accRef.current += decoder.decode()
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      flush(true)
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        setMessages([...next, { role: 'assistant', text: 'Hubo un error de conexión. Intenta de nuevo.' }])
+      }
     } finally {
-      // 6. loading = false
       setLoading(false)
       setTimeout(() => textareaRef.current?.focus(), 50)
     }

@@ -5,7 +5,6 @@ import { logLlmUsage } from '@/lib/llm-usage'
 import { rateLimit } from '@/lib/rate-limit'
 import { HAIKU_4_5 } from '@/lib/ai-models'
 import { readPrompt } from '@/lib/prompts'
-import { NextResponse } from 'next/server'
 import type { AgentRequest, AgentResponse } from '@/lib/types'
 
 const SCREEN_CONTEXT_PROMPTS: Record<string, string> = {
@@ -27,48 +26,56 @@ function needsRag(query: string): boolean {
   return RAG_KEYWORDS.some(kw => q.includes(kw))
 }
 
+function detectAction(text: string): AgentResponse['action'] | undefined {
+  const t = text.toLowerCase()
+  if (t.includes('resumen') && t.includes('consulta')) {
+    return { label: 'Preparar resumen de consulta', endpoint: '/api/aliis/consult', method: 'POST' }
+  }
+  if (t.includes('diario')) {
+    return { label: 'Ir al diario', endpoint: '/diario', method: 'GET' }
+  }
+  return undefined
+}
+
 export async function POST(req: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 })
   }
 
   let body: unknown
   try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 })
+    return new Response(JSON.stringify({ error: 'Solicitud inválida' }), { status: 400 })
   }
 
   const { query, screen_context, mode } = body as AgentRequest
 
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
-    return NextResponse.json({ error: 'query es requerido' }, { status: 400 })
+    return new Response(JSON.stringify({ error: 'query es requerido' }), { status: 400 })
   }
   if (query.length > 500) {
-    return NextResponse.json({ error: 'query demasiado largo (máx 500 chars)' }, { status: 400 })
+    return new Response(JSON.stringify({ error: 'query demasiado largo (máx 500 chars)' }), { status: 400 })
   }
 
-  // Rate limit: 20/h for query, 10/h for contextual
   const rlKey = mode === 'contextual'
     ? `user:${user.id}:agent:contextual`
     : `user:${user.id}:agent:query`
   const rlMax = mode === 'contextual' ? 10 : 20
   const rl = await rateLimit(rlKey, rlMax, 3600)
   if (!rl.ok) {
-    return NextResponse.json(
-      { error: 'Demasiadas solicitudes — espera un momento' },
-      { status: 429, headers: { 'Retry-After': '3600' } }
-    )
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes — espera un momento' }), {
+      status: 429,
+      headers: { 'Retry-After': '3600' },
+    })
   }
 
-  // Get patient context and profile name in parallel
   const [{ summaryText }, profileRes] = await Promise.all([
     getPatientContext(user.id),
     supabase.from('profiles').select('name').eq('id', user.id).single(),
   ])
   const userName = profileRes.data?.name ?? null
 
-  // Optional RAG for date/count-specific queries
   let ragContext = ''
   if (needsRag(query)) {
     const since90 = new Date(Date.now() - 90 * 86_400_000).toISOString()
@@ -80,7 +87,6 @@ export async function POST(req: Request) {
   }
 
   const screenHint = SCREEN_CONTEXT_PROMPTS[screen_context] ?? ''
-
   const userNameBlock = userName
     ? `"${userName}" — úsalo de forma natural, no en cada frase, solo cuando dé calidez`
     : 'desconocido — habla directamente con "tú", nunca "usted", nunca "el paciente"'
@@ -90,35 +96,54 @@ export async function POST(req: Request) {
     .replace('{{PATIENT_CONTEXT}}', summaryText)
     .replace('{{SCREEN_HINT}}', screenHint)
 
-  const message = await anthropic.messages.create({
-    model: HAIKU_4_5,
-    max_tokens: 500,
-    system: cachedSystem(systemPrompt),
-    messages: [{ role: 'user', content: query + ragContext }],
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enc = new TextEncoder()
+      let fullText = ''
+
+      try {
+        const anthropicStream = anthropic.messages.stream({
+          model: HAIKU_4_5,
+          max_tokens: 500,
+          system: cachedSystem(systemPrompt),
+          messages: [{ role: 'user', content: query + ragContext }],
+        })
+
+        for await (const event of anthropicStream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            const chunk = event.delta.text
+            fullText += chunk
+            controller.enqueue(enc.encode(chunk))
+          }
+        }
+
+        const finalMessage = await anthropicStream.finalMessage()
+        const action = detectAction(fullText)
+
+        // Send action as a final JSON sentinel line
+        if (action) {
+          controller.enqueue(enc.encode(`\n__ACTION__${JSON.stringify(action)}`))
+        }
+
+        // Log usage after stream completes
+        await logLlmUsage({
+          userId: user.id,
+          endpoint: 'aliis_agent',
+          model: HAIKU_4_5,
+          usage: finalMessage.usage,
+        })
+      } catch {
+        controller.enqueue(enc.encode('Hubo un error. Intenta de nuevo.'))
+      } finally {
+        controller.close()
+      }
+    },
   })
 
-  const responseText = (message.content[0] as { type: string; text: string }).text.trim()
-
-  // Detect if response suggests an action
-  let action: AgentResponse['action'] | undefined
-  if (responseText.toLowerCase().includes('resumen') && responseText.toLowerCase().includes('consulta')) {
-    action = { label: 'Preparar resumen de consulta', endpoint: '/api/aliis/consult', method: 'POST' }
-  } else if (responseText.toLowerCase().includes('diario')) {
-    action = { label: 'Ir al diario', endpoint: '/diario', method: 'GET' }
-  }
-
-  await logLlmUsage({
-    userId: user.id,
-    endpoint: 'aliis_agent',
-    model: HAIKU_4_5,
-    usage: message.usage,
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   })
-
-  const response: AgentResponse = {
-    message: responseText,
-    action,
-    source: ragContext ? 'both' : 'summary',
-  }
-
-  return NextResponse.json(response)
 }
