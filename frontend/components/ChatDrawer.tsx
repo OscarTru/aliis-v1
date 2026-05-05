@@ -228,7 +228,7 @@ export function ChatDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
+          'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none relative',
           'h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:h-[100dvh]',
           chatOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
@@ -272,6 +272,8 @@ export function ChatDrawer({
         {/* Chat tab */}
         {tab === 'chat' && (
           <>
+            {/* Fade-out overlay — fixed relative to drawer, above scroll area, below input */}
+            <div className="pointer-events-none absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10" />
             <div className="flex-1 overflow-y-auto px-4 py-4">
               {loadingHistory && (
                 <div className="flex gap-1.5 items-center mb-4">
