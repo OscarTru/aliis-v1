@@ -235,6 +235,21 @@ export function AliisAgentDrawer() {
                           pensando
                         </span>
                       </div>
+                    ) : loading && i === messages.length - 1 ? (
+                      (() => {
+                        const chunkSize = 18
+                        const tail = m.text.length % chunkSize
+                        const cutoff = m.text.length - (tail || chunkSize)
+                        const stable = m.text.slice(0, cutoff)
+                        const incoming = m.text.slice(cutoff)
+                        const chunkKey = Math.floor(m.text.length / chunkSize)
+                        return (
+                          <span className="whitespace-pre-wrap">
+                            {stable}
+                            <span key={chunkKey} className="ai-stream-text">{incoming}</span>
+                          </span>
+                        )
+                      })()
                     ) : (
                       <FormattedText text={m.text} />
                     )}
