@@ -229,7 +229,7 @@ export function ChatDrawer({
       <div
         className={cn(
           'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
-          'h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:h-[100dvh]',
+          'h-[100dvh]',
           chatOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
       >
@@ -349,7 +349,7 @@ export function ChatDrawer({
                   placeholder={`Pregunta sobre ${dx}…`}
                   rows={1}
                   disabled={streaming}
-                  className="flex-1 border-none bg-transparent outline-none font-sans text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
+                  className="flex-1 border-none bg-transparent outline-none font-sans text-[16px] md:text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
                   onInput={(e) => {
                     const t = e.currentTarget
                     t.style.height = 'auto'
