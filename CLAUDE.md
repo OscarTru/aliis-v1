@@ -1,119 +1,104 @@
-# CLAUDE.md
+# CLAUDE.md — Aliis
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía de referencia del repositorio. Actualizar conforme avanza el proyecto.
 
 ## gstack
 
-Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.
+Usar el skill `/browse` de gstack para navegación web. Nunca usar `mcp__claude-in-chrome__*`.
 
-Available gstack skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /setup-gbrain, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
+Skills disponibles: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /setup-gbrain, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
 
-## Project Overview
+## Qué es Aliis
 
-**Aliis** ("Entiende tu diagnóstico") is an AI-powered medical diagnosis translator for Spanish-speaking patients, built by medical residents ("Cerebros Esponjosos"). It converts complex neurological diagnoses into patient-friendly explanations using Claude.
+Aliis es el acompañante de salud personal para pacientes con enfermedades crónicas. Convierte diagnósticos médicos en explicaciones claras, sostiene el seguimiento entre consultas y mejora la adherencia al tratamiento.
 
-## Dual-App Architecture
+**Especialización inicial:** neurología (migraña, epilepsia, esclerosis múltiple, Parkinson, neuropatía, ECV) — respaldada por Cerebros Esponjosos (575K seguidores). Aliis ya cubre muchas más condiciones y seguirá expandiéndose a cardiovascular, metabólico, salud mental crónica y salud preventiva general.
 
-This repo contains **two separate Next.js apps** plus an Express backend:
+**Promesa al paciente:** entender su diagnóstico, no perderse entre consultas, llegar mejor preparado al médico.
 
-| Directory | Purpose | Port |
-|-----------|---------|------|
-| `/` (root) | Main public-facing app — landing page + `/api/diagnostico` API route | 3000 |
-| `/frontend/` | Marketing/SaaS shell — dashboard, pricing, auth UI (no real backend yet) | varies |
-| `/backend/` | Standalone Express API (alternative to Next.js API route) | 3001 |
+**No negociable:**
+- Aliis nunca diagnostica, ajusta dosis, ni opina sobre tratamientos.
+- Todas las decisiones clínicas regresan al médico tratante.
+- Datos médicos del paciente son privados — no se venden, no entrenan modelos externos.
 
-The root app and `/frontend/` are **independent Next.js projects** with separate `package.json`, `tsconfig.json`, and `tailwind.config.ts`. Running commands from the root only affects the root app.
+## Estado actual de producción
 
-## Commands
+| Directorio | Estado | Propósito |
+|---|---|---|
+| `frontend/` | **PRODUCCIÓN** — Next.js 15 en Vercel | App principal: auth, packs educativos, diario, tratamientos, agentes IA, Stripe |
+| `backend/` | **PRODUCCIÓN** — Express en Railway | Pipeline de generación de packs (6 capas), crons |
+| `/app/` (raíz) | **LEGACY** | Landing anterior. Pendiente de deprecación (ADR-0006) |
 
-### Root app
-```bash
-npm run dev        # Next.js dev server on :3000
-npm run build      # Production build
-npm run lint       # ESLint
-```
+## Roadmap activo
 
-### Frontend app
+- **Fase 0** (semana actual): AI-Native Foundation — docs, prompts versionados, subagentes
+- **Fase 1** (semanas 2-4): Brainstorming + diseño app Flutter
+- **Fase 2** (semanas 5-10): Build Flutter — HealthKit, push nativa, OCR recetas
+- **Fase 3** (semanas 11-13): Widgets, ASO, submission stores
+
+## Regla Vercel vs Railway
+
+- Endpoint **disparado por usuario** + necesita **cookie SSR de Supabase** + dura **<30s** → `frontend/app/api/`
+- Endpoint **disparado por cron**, **procesa múltiples usuarios**, o **tarda >30s** → `backend/src/routes/`
+
+Si dudas, lee `docs/decisions/0007-vercel-vs-railway.md`.
+
+## Hard Rules — sin excepciones
+
+1. **Modelo**: siempre importar desde `frontend/lib/ai-models.ts`. Nunca string hardcodeado `'claude-haiku-...'` en otro archivo.
+2. **Prompts**: todo system prompt > 5 líneas vive en `docs/prompts/<nombre>/v(N).md`. Nunca inline en route handlers.
+3. **Endpoints**: todo endpoint con auth requiere los tres: auth → rate limit → validación de input.
+4. **LLM usage**: toda llamada a Claude llama `logLlmUsage()` de `frontend/lib/llm-usage.ts`.
+5. **PHI**: rutas que manejan datos médicos deben estar en `frontend/lib/sentry-scrub.ts`.
+6. **Idioma**: español para strings al usuario. Inglés en código, comentarios y errores logueados.
+7. **Pagos móvil**: Stripe vive en web únicamente. No pagos dentro de la app Flutter (Apple 3.1.1).
+8. **Prompts inmutables**: nunca editar `v(N)` existente. Crear `v(N+1)` y actualizar CHANGELOG.
+
+## Subagentes disponibles
+
+Invocar con la tool `Agent` desde Claude Code:
+
+| Subagente | Cuándo usarlo |
+|---|---|
+| `aliis-route-builder` | Endpoint nuevo — genera plantilla auth+rate+validation completa |
+| `aliis-migration-writer` | Cambio de schema — genera SQL con RLS, índices y rollback |
+| `aliis-prompt-engineer` | Editar prompt — crea v(N+1), actualiza CHANGELOG, nunca toca v(N) |
+
+## Comandos
+
+### Frontend (Next.js en Vercel)
 ```bash
 cd frontend
-npm run dev        # Next.js dev server
+npm run dev        # :3000
 npm run build
 npm run lint
+npx tsc --noEmit   # typecheck
 ```
 
-### Backend (Express)
+### Backend (Express en Railway)
 ```bash
 cd backend
-npm run dev        # tsx watch — hot reload
-npm run build      # tsc → dist/
-npm start          # node dist/index.js
+npm run dev        # :3001 con hot reload
+npm run build
+npm start
 ```
 
-No test framework is configured.
-
-## Environment Variables
-
-Both root and backend require:
-```
-ANTHROPIC_API_KEY=...
-```
-
-Backend optionally accepts:
-```
-FRONTEND_URL=http://localhost:3000   # CORS origin (defaults to *)
-PORT=3001
+### Flutter (cuando exista)
+```bash
+cd mobile
+flutter run        # simulador
+flutter build ios --release
+flutter build apk --release
 ```
 
-## Core AI Flow
+## Variables de entorno
 
-The diagnosis explanation is generated in two places (functionally identical):
+Ver `frontend/.env.example` y `backend/.env.example`. Nunca commitear `.env*`.
 
-- **Root app**: `app/api/diagnostico/route.ts` — Next.js route handler
-- **Backend**: `backend/src/index.ts` — Express POST `/diagnostico`
+## Orientación rápida (leer en este orden)
 
-Both use `claude-haiku-4-5-20251001` with prompt caching (`cache_control: { type: "ephemeral" }`) on the system prompt. The system prompt is in Spanish and instructs Claude to act as a patient educator — "destilar, no simplificar."
-
-Input limits: diagnosis ≤ 500 chars, optional context ≤ 300 chars.
-
-Response shape (`DiagnosticoResponse` in `frontend/lib/types.ts`):
-```typescript
-{
-  diagnostico_recibido: string
-  que_es: string
-  como_funciona: string
-  que_esperar: string
-  preguntas_para_medico: string[]
-  senales_de_alarma: string[]
-  mito_frecuente: string
-  nota_final: string
-}
-```
-
-## Frontend Structure (root app)
-
-- `app/page.tsx` — Main landing page with inline diagnosis demo (932 lines, all-in-one)
-- `app/layout.tsx` — Root layout
-
-## Frontend Structure (`/frontend/`)
-
-- `app/page.tsx` — Redesigned landing (hero 2-col, HowItWorks, LiveExample, Founders, inline pricing)
-- `app/dashboard/page.tsx` — Pack history with filter chips
-- `app/dashboard/pack/[id]/page.tsx` — Pack detail with chapter sidebar + read tracking
-- `app/precios/page.tsx` — SaaS pricing with currency switcher and comparison table
-- `components/ui/` — Shared primitives: `Button`, `Capsule`, `Eyebrow`, `Glow`, `ScribbleBrain`
-- `lib/mock-data.ts` — All dashboard data is mocked here (no real API calls from frontend yet)
-- `lib/types.ts` — Shared TypeScript interfaces
-
-## Path Aliases
-
-Both apps use `@/*` mapped to the app root (e.g. `@/components/...`, `@/lib/...`).
-
-## Styling
-
-Tailwind CSS 3.x. No component library (shadcn/ui not installed). Custom UI primitives live in `components/ui/`. The design uses a distinctive branded aesthetic — avoid generic patterns.
-
-## Key Constraints
-
-- All user-facing copy is in **Spanish**.
-- The `/frontend/` dashboard is currently **read-only mock UI** — no auth, no real API integration yet.
-- Prompt caching must be preserved on Claude API calls (it's intentional for cost/latency).
+1. Este archivo
+2. `docs/architecture/00-overview.md` — diagrama del sistema
+3. `frontend/CLAUDE.md` — reglas específicas Next.js
+4. `backend/CLAUDE.md` — reglas específicas Railway
+5. El plan más reciente en `docs/superpowers/plans/`
