@@ -31,10 +31,23 @@ Aliis es el acompañante de salud personal para pacientes con enfermedades crón
 
 ## Roadmap activo
 
-- **Fase 0** (semana actual): AI-Native Foundation — docs, prompts versionados, subagentes
+- **Fase 0** ✅ COMPLETA: AI-Native Foundation — docs, prompts versionados, subagentes, agent_memory, patient_context, streaming agent con memoria en sesión y persistente Pro
 - **Fase 1** (semanas 2-4): Brainstorming + diseño app Flutter
 - **Fase 2** (semanas 5-10): Build Flutter — HealthKit, push nativa, OCR recetas
 - **Fase 3** (semanas 11-13): Widgets, ASO, submission stores
+
+### Próximos pasos — plan AI-First (Capas 2-5)
+
+Ver spec completo en `docs/superpowers/specs/2026-05-04-aliis-ai-first-design.md`.
+
+| Capa | Estado | Descripción |
+|---|---|---|
+| **Capa 1** — Datos del paciente | ✅ Producción | `symptom_logs`, `adherence_logs`, `treatments`, `medical_profiles` |
+| **Capa 2** — Agent Memory | ✅ Producción | `agent_memory` tabla + `lib/agent-memory.ts`. `ChatAgent` aprende de conversaciones Pro |
+| **Capa 3** — Patient Context | ✅ Producción | `lib/patient-context.ts` — resumen narrativo + invalidación por cambios |
+| **Capa 4** — AliisCore Orchestrator | ⏳ Pendiente | `lib/aliis-core.ts` — agrega señales, una notificación priorizada por día |
+| **Capa 5** — Agente Queryable | ✅ Producción | `/api/aliis/agent` — streaming, RAG, historial en sesión, memoria Pro |
+| **Capa 6** — Company OS | 🚫 Diferida | FinanceAgent, ProductAgent, ContentAgent — no antes de Flutter |
 
 ## Regla Vercel vs Railway
 
