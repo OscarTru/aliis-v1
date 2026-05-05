@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
+import { useAliisAgentContext } from '@/lib/aliis-agent-context'
+import { usePackContext } from '@/lib/pack-context'
 
 const NAV_ITEMS = [
   { href: '/ingreso',      label: 'Nuevo',        iconActive: 'solar:add-circle-bold-duotone',          iconIdle: 'solar:add-circle-linear' },
@@ -15,10 +17,16 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { open: agentOpen } = useAliisAgentContext()
+  const { chatOpen } = usePackContext()
+  const hidden = agentOpen || chatOpen
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t border-border bg-background/95 backdrop-blur-xl"
+      className={cn(
+        'fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t border-border bg-background/95 backdrop-blur-xl transition-transform duration-300',
+        hidden ? 'translate-y-full' : 'translate-y-0'
+      )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {NAV_ITEMS.map(({ href, label, iconActive, iconIdle }) => {
