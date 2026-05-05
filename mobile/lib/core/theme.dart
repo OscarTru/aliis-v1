@@ -40,7 +40,7 @@ ThemeData aliisLightTheme() {
       displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
       titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AliisColors.card,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -75,7 +75,7 @@ ThemeData aliisDarkTheme() {
       displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
       titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AliisColors.cardDark,
       elevation: 0,
       shape: RoundedRectangleBorder(
