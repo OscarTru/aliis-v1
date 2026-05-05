@@ -80,12 +80,12 @@ function calcStreak(logs: AdherenceLog[], treatments: Treatment[], todayDate: st
 
 interface Props {
   treatments: Treatment[]
-  initialTodayLogs: AdherenceLog[]
+  initialLogs: AdherenceLog[]
   todayDate: string
 }
 
-export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Props) {
-  const [logs, setLogs] = useState<AdherenceLog[]>(initialTodayLogs)
+export function TreatmentsWidget({ treatments, initialLogs, todayDate }: Props) {
+  const [logs, setLogs] = useState<AdherenceLog[]>(initialLogs)
   const [, startTransition] = useTransition()
 
   const missingDose = treatments.filter(t => !t.dose?.trim())
@@ -109,7 +109,9 @@ export function TreatmentsWidget({ treatments, initialTodayLogs, todayDate }: Pr
 
   if (treatments.length === 0) return null
 
-  const takenToday = new Set(logs.map(l => l.medication))
+  const takenToday = new Set(
+    logs.filter(l => l.taken_date === todayDate && l.status !== 'missed').map(l => l.medication)
+  )
 
   // Determine which columns are needed across all treatments
   const usedCols = new Set<number>()
