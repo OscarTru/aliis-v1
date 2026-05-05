@@ -29,9 +29,11 @@ class AuthNotifier {
     if (googleUser == null) return; // usuario canceló
 
     final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null) throw Exception('Google Sign-In: idToken is null');
     await supabase.auth.signInWithIdToken(
       provider: OAuthProvider.google,
-      idToken: googleAuth.idToken!,
+      idToken: idToken,
       accessToken: googleAuth.accessToken,
     );
   }
