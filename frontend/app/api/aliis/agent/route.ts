@@ -6,7 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { readMemory, writeMemory } from '@/lib/agent-memory'
 import { HAIKU_4_5 } from '@/lib/ai-models'
 import { readPrompt } from '@/lib/prompts'
-import type { AgentRequest, AgentResponse } from '@/lib/types'
+import type { AgentRequest, AgentResponse, PatientSummary } from '@/lib/types'
 
 const SCREEN_CONTEXT_PROMPTS: Record<string, string> = {
   diario:       'El usuario está revisando su diario de síntomas. Responde sobre síntomas, vitales y patrones recientes.',
@@ -20,6 +20,11 @@ const RAG_KEYWORDS = [
   'cuántos', 'cuántas', 'cuándo', 'en enero', 'en febrero', 'en marzo', 'en abril',
   'en mayo', 'en junio', 'la semana pasada', 'el mes pasado', 'hace', 'días',
   'veces', 'dosis', 'olvidé', 'registré',
+  // Personal data queries
+  'promedio', 'cuál es mi', 'mis síntomas', 'frecuencia', 'tendencia',
+  'cómo voy', 'qué tan seguido', 'mi nivel', 'mi presión', 'mi glucosa',
+  'mis registros', 'he tenido', 'cuánto tengo', 'mis datos', 'mis signos',
+  'mi ritmo', 'mi peso', 'con qué frecuencia', 'cuántas veces', 'mi historial',
 ]
 
 function needsRag(query: string): boolean {
@@ -36,6 +41,30 @@ function detectAction(text: string): AgentResponse['action'] | undefined {
     return { label: 'Ir al diario', endpoint: '/diario', method: 'GET' }
   }
   return undefined
+}
+
+function buildPatientContextBlock(summary: PatientSummary, narrativa: string, chatMemory: string): string {
+  const lines: string[] = [narrativa]
+
+  const p = summary.promedios_30d
+  if (p.n_registros > 0) {
+    const avgLines: string[] = [`Promedios últimos 30 días (${p.n_registros} registros):`]
+    if (p.glucose) avgLines.push(`  Glucosa: ${p.glucose} mg/dL`)
+    if (p.bp_systolic && p.bp_diastolic) avgLines.push(`  Presión arterial: ${p.bp_systolic}/${p.bp_diastolic} mmHg`)
+    if (p.heart_rate) avgLines.push(`  Frecuencia cardíaca: ${p.heart_rate} lpm`)
+    if (p.weight) avgLines.push(`  Peso: ${p.weight} kg`)
+    lines.push(avgLines.join('\n'))
+  }
+
+  if (summary.sintomas_con_frecuencia.length > 0) {
+    const sf = summary.sintomas_con_frecuencia
+      .map(s => `${s.nombre} (${s.ocurrencias} veces)`)
+      .join(', ')
+    lines.push(`Síntomas registrados: ${sf}`)
+  }
+
+  if (chatMemory) lines.push(chatMemory)
+  return lines.join('\n\n')
 }
 
 async function extractAndStorePatientLearning(userId: string, query: string, response: string): Promise<void> {
@@ -89,7 +118,7 @@ export async function POST(req: Request) {
     })
   }
 
-  const [{ summaryText }, profileRes] = await Promise.all([
+  const [{ summary, summaryText }, profileRes] = await Promise.all([
     getPatientContext(user.id),
     supabase.from('profiles').select('name, plan').eq('id', user.id).single(),
   ])
@@ -124,9 +153,11 @@ export async function POST(req: Request) {
     ? `"${userName}" — úsalo de forma natural, no en cada frase, solo cuando dé calidez`
     : 'desconocido — habla directamente con "tú", nunca "usted", nunca "el paciente"'
 
-  const systemPrompt = readPrompt('aliis-agent', 'v1')
+  const patientContextBlock = buildPatientContextBlock(summary, summaryText, chatMemoryBlock)
+
+  const systemPrompt = readPrompt('aliis-agent', 'v2')
     .replace('{{USER_NAME_BLOCK}}', userNameBlock)
-    .replace('{{PATIENT_CONTEXT}}', summaryText + chatMemoryBlock)
+    .replace('{{PATIENT_CONTEXT}}', patientContextBlock)
     .replace('{{SCREEN_HINT}}', screenHint)
 
   const stream = new ReadableStream({

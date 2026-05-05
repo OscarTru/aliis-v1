@@ -80,6 +80,7 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
   const adherencia14d = total > 0 ? Math.round((taken / total) * 100) : 0
 
   const sintomas_frecuentes = trackedSymptoms.map(s => s.name)
+  const sintomas_con_frecuencia = trackedSymptoms.map(s => ({ nombre: s.name, ocurrencias: s.occurrences }))
   const senales_alarma = trackedSymptoms
     .filter(s => s.needs_medical_attention)
     .map(s => s.name)
@@ -94,6 +95,20 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
     if (lastLog.weight) vitales_recientes.weight = lastLog.weight
   }
 
+  // Compute 30-day averages from all logs
+  const avg = (vals: (number | null | undefined)[]) => {
+    const nums = vals.filter((v): v is number => v != null && !isNaN(v))
+    return nums.length > 0 ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length * 10) / 10 : undefined
+  }
+  const promedios_30d: PatientSummary['promedios_30d'] = {
+    glucose: avg(logs.map(l => l.glucose)),
+    bp_systolic: avg(logs.map(l => l.bp_systolic)),
+    bp_diastolic: avg(logs.map(l => l.bp_diastolic)),
+    heart_rate: avg(logs.map(l => l.heart_rate)),
+    weight: avg(logs.map(l => l.weight)),
+    n_registros: logs.length,
+  }
+
   const alertDays = recentMemory.filter(m => (m.content as { level?: string }).level === 'high').length
   const patron_reciente = alertDays >= 3
     ? `${alertDays} días consecutivos con alertas de vitales esta semana`
@@ -102,14 +117,20 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
   const profileData = profileRes.data as { name: string | null; next_appointment: string | null } | null
 
   const systemPrompt = readPrompt('patient-context', 'v1')
+  const promediosBp = promedios_30d.bp_systolic && promedios_30d.bp_diastolic
+    ? `${promedios_30d.bp_systolic}/${promedios_30d.bp_diastolic} mmHg`
+    : null
   const userMsg = [
     `Paciente: ${profileData?.name ?? 'usuario'}`,
     `Condiciones: ${condiciones.join(', ') || 'no registradas'}`,
     `Tratamientos activos: ${treatments.map(t => `${t.name} ${t.dose ?? ''}`).join(', ') || 'ninguno'}`,
     `Adherencia 14d: ${adherencia14d}%`,
-    `Síntomas frecuentes: ${sintomas_frecuentes.join(', ') || 'ninguno'}`,
-    vitales_recientes.bp ? `TA: ${vitales_recientes.bp}` : '',
-    vitales_recientes.glucose ? `Glucosa: ${vitales_recientes.glucose} mg/dL` : '',
+    `Síntomas frecuentes: ${sintomas_con_frecuencia.map(s => `${s.nombre} (${s.ocurrencias}x)`).join(', ') || 'ninguno'}`,
+    vitales_recientes.bp ? `TA reciente: ${vitales_recientes.bp}` : '',
+    vitales_recientes.glucose ? `Glucosa reciente: ${vitales_recientes.glucose} mg/dL` : '',
+    promediosBp ? `Promedio TA 30d: ${promediosBp} (n=${promedios_30d.n_registros})` : '',
+    promedios_30d.glucose ? `Promedio glucosa 30d: ${promedios_30d.glucose} mg/dL` : '',
+    promedios_30d.heart_rate ? `Promedio FC 30d: ${promedios_30d.heart_rate} lpm` : '',
     profileData?.next_appointment ? `Próxima cita: ${profileData.next_appointment}` : '',
     patron_reciente ? `Patrón reciente: ${patron_reciente}` : '',
     senales_alarma.length > 0 ? `Señales de alarma: ${senales_alarma.join(', ')}` : '',
@@ -133,7 +154,9 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
     tratamientos_activos: treatments.map(t => `${t.name} ${t.dose ?? ''}`),
     adherencia_14d: adherencia14d,
     sintomas_frecuentes,
+    sintomas_con_frecuencia,
     vitales_recientes,
+    promedios_30d,
     proxima_cita: profileData?.next_appointment ?? null,
     senales_alarma,
     patron_reciente,
