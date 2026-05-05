@@ -75,7 +75,14 @@ export function AliisAgentDrawer() {
       const res = await fetch('/api/aliis/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, screen_context: screenContext, mode: 'query' }),
+        body: JSON.stringify({
+          query: q,
+          history: messages
+            .filter((m) => m.text !== '')
+            .map((m) => ({ role: m.role, content: m.text })),
+          screen_context: screenContext,
+          mode: 'query',
+        }),
         signal: controller.signal,
       })
 

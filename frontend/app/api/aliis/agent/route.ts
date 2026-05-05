@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: 'Solicitud inválida' }), { status: 400 })
   }
 
-  const { query, screen_context, mode } = body as AgentRequest
+  const { query, history = [], screen_context, mode } = body as AgentRequest
 
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return new Response(JSON.stringify({ error: 'query es requerido' }), { status: 400 })
@@ -102,11 +102,20 @@ export async function POST(req: Request) {
       let fullText = ''
 
       try {
+        // Build message history — last 10 turns max to avoid token bloat
+        const historyMessages = history.slice(-10).map((m) => ({
+          role: m.role,
+          content: m.content,
+        }))
+
         const anthropicStream = anthropic.messages.stream({
           model: HAIKU_4_5,
           max_tokens: 500,
           system: cachedSystem(systemPrompt),
-          messages: [{ role: 'user', content: query + ragContext }],
+          messages: [
+            ...historyMessages,
+            { role: 'user', content: query + ragContext },
+          ],
         })
 
         for await (const event of anthropicStream) {

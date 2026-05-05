@@ -320,6 +320,7 @@ export interface AliisSignal {
 // Agent API
 export interface AgentRequest {
   query: string
+  history: { role: 'user' | 'assistant'; content: string }[]
   screen_context: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
   mode: 'query' | 'contextual'
 }
