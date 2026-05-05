@@ -271,7 +271,7 @@ export interface TreatmentInput {
 }
 
 // Agent Memory
-export type AgentName = 'InsightAgent' | 'MonitorAgent' | 'AdherenceAgent' | 'SymptomAgent' | 'CorrelationAgent'
+export type AgentName = 'InsightAgent' | 'MonitorAgent' | 'AdherenceAgent' | 'SymptomAgent' | 'CorrelationAgent' | 'ChatAgent'
 export type MemoryType = 'observation' | 'pattern' | 'alert' | 'recommendation'
 
 export interface AgentMemory {

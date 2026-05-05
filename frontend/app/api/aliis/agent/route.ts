@@ -3,6 +3,7 @@ import { anthropic, cachedSystem } from '@/lib/anthropic'
 import { getPatientContext } from '@/lib/patient-context'
 import { logLlmUsage } from '@/lib/llm-usage'
 import { rateLimit } from '@/lib/rate-limit'
+import { readMemory, writeMemory } from '@/lib/agent-memory'
 import { HAIKU_4_5 } from '@/lib/ai-models'
 import { readPrompt } from '@/lib/prompts'
 import type { AgentRequest, AgentResponse } from '@/lib/types'
@@ -35,6 +36,24 @@ function detectAction(text: string): AgentResponse['action'] | undefined {
     return { label: 'Ir al diario', endpoint: '/diario', method: 'GET' }
   }
   return undefined
+}
+
+async function extractAndStorePatientLearning(userId: string, query: string, response: string): Promise<void> {
+  const prompt = `Eres un analista clínico. Se te da una conversación corta entre un paciente y un asistente de salud. Extrae UNA sola observación sobre el paciente que sea útil para conversaciones futuras: sus preocupaciones, síntomas mencionados, patrones de comportamiento, estado emocional, dudas recurrentes, o contexto de vida relevante. Sé conciso (máx 25 palabras). Solo el insight, sin prefijos.
+
+Conversación:
+Paciente: ${query}
+Asistente: ${response.slice(0, 400)}`
+
+  const msg = await anthropic.messages.create({
+    model: HAIKU_4_5,
+    max_tokens: 60,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const insight = (msg.content[0] as { type: string; text: string }).text.trim()
+  if (!insight || insight.length < 10) return
+
+  await writeMemory(userId, 'ChatAgent', 'pattern', { insight, date: new Date().toISOString().slice(0, 10) }, 90)
 }
 
 export async function POST(req: Request) {
@@ -72,9 +91,10 @@ export async function POST(req: Request) {
 
   const [{ summaryText }, profileRes] = await Promise.all([
     getPatientContext(user.id),
-    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase.from('profiles').select('name, plan').eq('id', user.id).single(),
   ])
   const userName = profileRes.data?.name ?? null
+  const isPro = profileRes.data?.plan === 'pro'
 
   let ragContext = ''
   if (needsRag(query)) {
@@ -86,6 +106,19 @@ export async function POST(req: Request) {
     ragContext = `\n\nDatos detallados (últimos 90 días):\nSíntomas/vitales: ${JSON.stringify(symptomsRes.data ?? [])}\nAdherencia: ${JSON.stringify(adherenceRes.data ?? [])}`
   }
 
+  // Pro: load learned patterns from past conversations
+  let chatMemoryBlock = ''
+  if (isPro) {
+    const patterns = await readMemory(user.id, 'ChatAgent', 'pattern', 30)
+    if (patterns.length > 0) {
+      const bullets = patterns
+        .slice(0, 5)
+        .map(m => `- ${(m.content as { insight: string }).insight}`)
+        .join('\n')
+      chatMemoryBlock = `\n\nLo que has aprendido sobre este paciente en conversaciones anteriores:\n${bullets}`
+    }
+  }
+
   const screenHint = SCREEN_CONTEXT_PROMPTS[screen_context] ?? ''
   const userNameBlock = userName
     ? `"${userName}" — úsalo de forma natural, no en cada frase, solo cuando dé calidez`
@@ -93,7 +126,7 @@ export async function POST(req: Request) {
 
   const systemPrompt = readPrompt('aliis-agent', 'v1')
     .replace('{{USER_NAME_BLOCK}}', userNameBlock)
-    .replace('{{PATIENT_CONTEXT}}', summaryText)
+    .replace('{{PATIENT_CONTEXT}}', summaryText + chatMemoryBlock)
     .replace('{{SCREEN_HINT}}', screenHint)
 
   const stream = new ReadableStream({
@@ -144,6 +177,11 @@ export async function POST(req: Request) {
           model: HAIKU_4_5,
           usage: finalMessage.usage,
         })
+
+        // Pro: persist this turn and extract a patient learning (fire-and-forget)
+        if (isPro && fullText) {
+          extractAndStorePatientLearning(user.id, query, fullText).catch(() => undefined)
+        }
       } catch {
         controller.enqueue(enc.encode('Hubo un error. Intenta de nuevo.'))
       } finally {
