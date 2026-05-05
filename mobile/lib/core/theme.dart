@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AliisColors {
+  const AliisColors._();
+
   static const background = Color(0xFFFAFAF7);
   static const foreground = Color(0xFF272730);
   static const primary = Color(0xFF1F8A9B);
@@ -33,14 +35,10 @@ ThemeData aliisLightTheme() {
     ),
     textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
       displayLarge: GoogleFonts.instrumentSerif(
-        fontSize: 32, color: AliisColors.foreground, fontStyle: FontStyle.italic,
+        fontSize: 32, fontStyle: FontStyle.italic,
       ),
-      displayMedium: GoogleFonts.instrumentSerif(
-        fontSize: 24, color: AliisColors.foreground,
-      ),
-      titleLarge: GoogleFonts.instrumentSerif(
-        fontSize: 20, color: AliisColors.foreground,
-      ),
+      displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
+      titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
     ),
     cardTheme: CardTheme(
       color: AliisColors.card,
@@ -51,14 +49,11 @@ ThemeData aliisLightTheme() {
       ),
     ),
     dividerColor: AliisColors.border,
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: AliisColors.background,
       foregroundColor: AliisColors.foreground,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: GoogleFonts.instrumentSerif(
-        fontSize: 20, color: AliisColors.foreground,
-      ),
     ),
   );
 }
@@ -75,14 +70,10 @@ ThemeData aliisDarkTheme() {
     ),
     textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
       displayLarge: GoogleFonts.instrumentSerif(
-        fontSize: 32, color: AliisColors.foregroundDark, fontStyle: FontStyle.italic,
+        fontSize: 32, fontStyle: FontStyle.italic,
       ),
-      displayMedium: GoogleFonts.instrumentSerif(
-        fontSize: 24, color: AliisColors.foregroundDark,
-      ),
-      titleLarge: GoogleFonts.instrumentSerif(
-        fontSize: 20, color: AliisColors.foregroundDark,
-      ),
+      displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
+      titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
     ),
     cardTheme: CardTheme(
       color: AliisColors.cardDark,
@@ -93,14 +84,11 @@ ThemeData aliisDarkTheme() {
       ),
     ),
     dividerColor: AliisColors.borderDark,
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: AliisColors.backgroundDark,
       foregroundColor: AliisColors.foregroundDark,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: GoogleFonts.instrumentSerif(
-        fontSize: 20, color: AliisColors.foregroundDark,
-      ),
     ),
   );
 }
