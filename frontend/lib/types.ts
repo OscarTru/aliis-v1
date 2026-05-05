@@ -271,7 +271,7 @@ export interface TreatmentInput {
 }
 
 // Agent Memory
-export type AgentName = 'InsightAgent' | 'MonitorAgent' | 'AdherenceAgent' | 'SymptomAgent' | 'CorrelationAgent'
+export type AgentName = 'InsightAgent' | 'MonitorAgent' | 'AdherenceAgent' | 'SymptomAgent' | 'CorrelationAgent' | 'ChatAgent'
 export type MemoryType = 'observation' | 'pattern' | 'alert' | 'recommendation'
 
 export interface AgentMemory {
@@ -320,6 +320,7 @@ export interface AliisSignal {
 // Agent API
 export interface AgentRequest {
   query: string
+  history: { role: 'user' | 'assistant'; content: string }[]
   screen_context: 'diario' | 'pack' | 'tratamientos' | 'historial' | 'cuenta'
   mode: 'query' | 'contextual'
 }

@@ -46,8 +46,8 @@ export default async function DiarioPage() {
       .from('adherence_logs')
       .select('*')
       .eq('user_id', uid)
-      .order('taken_date', { ascending: false })
-      .limit(90),
+      .gte('taken_date', new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10))
+      .order('taken_date', { ascending: false }),
   ])
 
   const todayDate = new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -143,7 +143,7 @@ export default async function DiarioPage() {
           {/* Treatments widget with inline adherence chips */}
           <TreatmentsWidget
             treatments={treatments}
-            initialTodayLogs={adherenceLogs.filter(l => l.taken_date === todayDate)}
+            initialLogs={adherenceLogs}
             todayDate={todayDate}
           />
 

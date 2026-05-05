@@ -3,6 +3,7 @@ import { anthropic, cachedSystem } from './anthropic'
 import { readMemory, writeMemory } from './agent-memory'
 import { evaluateThresholds } from './clinical-thresholds'
 import { HAIKU_4_5 } from './ai-models'
+import { readPrompt } from './prompts'
 import type { AliisSignal, NotificationPriority, SignalType, SymptomLog } from './types'
 
 const SIGNAL_TITLES: Record<SignalType, string> = {
@@ -71,7 +72,8 @@ export async function runAliisCore(userId: string): Promise<AliisSignal> {
 
   // Generate personalized body with a single Haiku call
   const userName = profileRes.data?.name ?? 'usuario'
-  const systemPrompt = `Eres Aliis. Genera UNA notificación para ${userName}. Máximo 2 oraciones. Tono cercano, no clínico. Segunda persona.`
+  const systemPrompt = readPrompt('aliis-core', 'v1')
+    .replace('{{USER_NAME}}', userName)
   const contextMsg = [
     hasAlerts ? `Alertas vitales: ${thresholdAlerts.map(a => `${a.vital} ${a.value} ${a.unit}`).join(', ')}` : '',
     adherenceGap ? 'Medicación sin registrar hoy' : '',

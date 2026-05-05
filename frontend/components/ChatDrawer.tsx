@@ -229,7 +229,7 @@ export function ChatDrawer({
       <div
         className={cn(
           'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
-          'h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:h-[100dvh]',
+          'h-[100dvh]',
           chatOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
       >
@@ -272,7 +272,11 @@ export function ChatDrawer({
         {/* Chat tab */}
         {tab === 'chat' && (
           <>
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="flex-1 min-h-0">
+              <div
+                className="h-full overflow-y-auto px-4 pt-4 pb-8"
+                style={{ maskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)' }}
+              >
               {loadingHistory && (
                 <div className="flex gap-1.5 items-center mb-4">
                   {[0, 1, 2].map((j) => (
@@ -313,16 +317,28 @@ export function ChatDrawer({
                         ? 'bg-foreground rounded-[12px_12px_3px_12px] px-3 py-2'
                         : 'bg-muted border border-border rounded-[3px_12px_12px_12px] px-4 py-3'
                     )}>
-                      {m.role === 'assistant' && m.text === '' ? (
-                        <div className="flex gap-1 py-0.5">
-                          {[0, 1, 2].map((j) => (
-                            <div key={j} className="ce-pulse w-1.5 h-1.5 rounded-full bg-primary" style={{ animationDelay: `${j * 0.2}s` }} />
-                          ))}
-                        </div>
-                      ) : m.role === 'user' ? (
+                      {m.role === 'user' ? (
                         <p className="font-sans text-[13px] leading-[1.65] m-0 text-background whitespace-pre-wrap">
                           {m.text}
                         </p>
+                      ) : m.text === '' ? (
+                        <div className="flex items-center gap-2 py-0.5">
+                          <div className="flex gap-[3px]">
+                            {[0, 1, 2].map((j) => (
+                              <div
+                                key={j}
+                                className="w-1 h-1 rounded-full bg-primary"
+                                style={{
+                                  animation: 'aliis-bounce 1.2s ease-in-out infinite',
+                                  animationDelay: `${j * 0.18}s`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <span className="font-mono text-[9px] tracking-widest text-shimmer-ai">
+                            pensando
+                          </span>
+                        </div>
                       ) : (
                         <FormattedText text={m.text} />
                       )}
@@ -331,6 +347,7 @@ export function ChatDrawer({
                 ))}
                 <div ref={bottomRef} />
               </div>
+            </div>
             </div>
 
             {/* Input */}
@@ -344,7 +361,7 @@ export function ChatDrawer({
                   placeholder={`Pregunta sobre ${dx}…`}
                   rows={1}
                   disabled={streaming}
-                  className="flex-1 border-none bg-transparent outline-none font-sans text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
+                  className="flex-1 border-none bg-transparent outline-none font-sans text-[16px] md:text-[13px] text-foreground placeholder:text-muted-foreground/50 resize-none leading-[1.5] min-h-[20px] max-h-[100px] overflow-y-auto"
                   onInput={(e) => {
                     const t = e.currentTarget
                     t.style.height = 'auto'

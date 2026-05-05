@@ -27,6 +27,11 @@ const csp = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
+  // Include docs/prompts/ in the Vercel serverless bundle so readPrompt() can
+  // access prompt files at runtime (they live outside the frontend/ root).
+  outputFileTracingIncludes: {
+    '/api/**': ['../docs/prompts/**'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },

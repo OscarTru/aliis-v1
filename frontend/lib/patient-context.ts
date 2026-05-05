@@ -1,10 +1,11 @@
 import { createServerSupabaseClient } from './supabase-server'
 import { anthropic, cachedSystem } from './anthropic'
 import { readMemory } from './agent-memory'
+import { HAIKU_4_5 } from './ai-models'
+import { readPrompt } from './prompts'
 import type { PatientSummary } from './types'
 
 const SUMMARY_MAX_AGE_DAYS = 7
-const HAIKU = 'claude-haiku-4-5-20251001'
 
 export async function getPatientContext(userId: string): Promise<{
   summary: PatientSummary
@@ -100,7 +101,7 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
 
   const profileData = profileRes.data as { name: string | null; next_appointment: string | null } | null
 
-  const systemPrompt = 'Eres Aliis. Genera un párrafo de contexto clínico conciso para uso interno. Máximo 3 oraciones. Solo datos objetivos, sin consejos.'
+  const systemPrompt = readPrompt('patient-context', 'v1')
   const userMsg = [
     `Paciente: ${profileData?.name ?? 'usuario'}`,
     `Condiciones: ${condiciones.join(', ') || 'no registradas'}`,
@@ -117,7 +118,7 @@ export async function generateAndCachePatientSummary(userId: string): Promise<{
   let resumen_narrativo = `Paciente con ${condiciones.join(', ') || 'historial no registrado'}.`
   try {
     const message = await anthropic.messages.create({
-      model: HAIKU,
+      model: HAIKU_4_5,
       max_tokens: 150,
       system: cachedSystem(systemPrompt),
       messages: [{ role: 'user', content: userMsg }],
