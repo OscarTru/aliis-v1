@@ -158,11 +158,9 @@ export function AliisAgentDrawer() {
           </button>
         </div>
 
-        {/* Messages area — wrapper is relative so shade anchors to it, not the transformed drawer */}
-        <div className="flex-1 relative min-h-0">
-          {/* Shade stays fixed at bottom of this wrapper, messages scroll underneath */}
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent z-10" />
-          <div className="h-full overflow-y-auto px-4 py-4">
+        {/* Messages area */}
+        <div className="flex-1 min-h-0">
+          <div className="h-full overflow-y-auto px-4 pt-4 pb-8">
           {messages.length === 0 && (
             <div className="text-center pt-8 pb-4">
               <p className="font-serif text-[16px] text-foreground mb-2 leading-[1.4]">
@@ -224,7 +222,7 @@ export function AliisAgentDrawer() {
             ))}
             <div ref={bottomRef} />
           </div>
-          </div>
+        </div>
         </div>
 
         {/* Input */}
