@@ -272,9 +272,9 @@ export function ChatDrawer({
         {/* Chat tab */}
         {tab === 'chat' && (
           <>
-            {/* Fade-out overlay — fixed relative to drawer, above scroll area, below input */}
-            <div className="pointer-events-none absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10" />
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="flex-1 relative min-h-0">
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent z-10" />
+              <div className="h-full overflow-y-auto px-4 py-4">
               {loadingHistory && (
                 <div className="flex gap-1.5 items-center mb-4">
                   {[0, 1, 2].map((j) => (
@@ -332,6 +332,7 @@ export function ChatDrawer({
                   </div>
                 ))}
                 <div ref={bottomRef} />
+              </div>
               </div>
             </div>
 
