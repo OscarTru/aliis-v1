@@ -130,7 +130,7 @@ export function AliisAgentDrawer() {
       {/* Drawer panel */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none relative',
+          'fixed top-0 right-0 z-40 w-full sm:w-[380px] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out shadow-xl md:shadow-none',
           'h-[calc(100dvh-64px-env(safe-area-inset-bottom))] md:h-[100dvh]',
           open ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         )}
