@@ -291,11 +291,20 @@ export interface PatientSummary {
   tratamientos_activos: string[]
   adherencia_14d: number
   sintomas_frecuentes: string[]
+  sintomas_con_frecuencia: { nombre: string; ocurrencias: number }[]
   vitales_recientes: {
     bp?: string
     hr?: number
     glucose?: number
     weight?: number
+  }
+  promedios_30d: {
+    glucose?: number
+    bp_systolic?: number
+    bp_diastolic?: number
+    heart_rate?: number
+    weight?: number
+    n_registros: number
   }
   proxima_cita: string | null
   senales_alarma: string[]
