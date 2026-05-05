@@ -244,11 +244,11 @@ body {
 .text-shimmer-ai {
   background: linear-gradient(
     90deg,
-    #8AC9D2 0%,
-    #ffffff 30%,
-    #1f8a9b 50%,
-    #ffffff 70%,
-    #8AC9D2 100%
+    #1f8a9b 0%,
+    #6ec6d0 30%,
+    #0d5c6b 50%,
+    #6ec6d0 70%,
+    #1f8a9b 100%
   );
   background-size: 200% auto;
   background-clip: text;

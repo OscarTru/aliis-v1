@@ -214,12 +214,12 @@ export function AliisAgentDrawer() {
                     )}
                   >
                     {m.role === 'assistant' && m.text === '' ? (
-                      <div className="flex items-center gap-2.5 py-0.5">
-                        <div className="flex gap-1">
+                      <div className="flex items-center gap-2 py-0.5">
+                        <div className="flex gap-[3px]">
                           {[0, 1, 2].map((j) => (
                             <div
                               key={j}
-                              className="w-1.5 h-1.5 rounded-full bg-primary"
+                              className="w-1 h-1 rounded-full bg-primary"
                               style={{
                                 animation: 'aliis-bounce 1.2s ease-in-out infinite',
                                 animationDelay: `${j * 0.18}s`,
@@ -227,10 +227,7 @@ export function AliisAgentDrawer() {
                             />
                           ))}
                         </div>
-                        <span
-                          className="font-mono text-[10px] tracking-widest uppercase text-shimmer-ai"
-                          style={{ letterSpacing: '0.15em' }}
-                        >
+                        <span className="font-mono text-[9px] tracking-widest uppercase text-shimmer-ai">
                           Pensando
                         </span>
                       </div>
