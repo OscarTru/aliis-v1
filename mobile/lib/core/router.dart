@@ -10,20 +10,22 @@ import '../features/perfil/perfil_screen.dart';
 import '../shared/widgets/shell_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final sessionAsync = ref.watch(sessionProvider);
+  final listenable = _SessionListenable(ref);
 
   return GoRouter(
     initialLocation: '/inicio',
+    refreshListenable: listenable,
     redirect: (context, state) {
-      final session = sessionAsync.valueOrNull;
-      final isAuth = session != null;
+      final sessionAsync = ref.read(sessionProvider);
+      if (sessionAsync.isLoading) return null;
+
+      final isAuth = sessionAsync.valueOrNull != null;
       final isLoginRoute = state.matchedLocation == '/login';
 
       if (!isAuth && !isLoginRoute) return '/login';
       if (isAuth && isLoginRoute) return '/inicio';
       return null;
     },
-    refreshListenable: _SessionListenable(ref),
     routes: [
       GoRoute(
         path: '/login',
@@ -54,7 +56,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Notifica a GoRouter cuando cambia la sesión
+// Notifica a GoRouter cuando cambia la sesión sin recrear el router
 class _SessionListenable extends ChangeNotifier {
   _SessionListenable(Ref ref) {
     ref.listen(sessionProvider, (_, __) => notifyListeners());

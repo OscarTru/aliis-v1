@@ -83,7 +83,7 @@ class _AliisBottomNav extends StatelessWidget {
                         color: AliisColors.foreground,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: AliisColors.primary.withOpacity(0.25),
+                          BoxShadow(color: AliisColors.primary.withValues(alpha: 0.25),
                             blurRadius: 12, offset: const Offset(0, 4)),
                         ],
                       ),
