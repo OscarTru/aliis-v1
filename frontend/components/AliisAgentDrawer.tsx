@@ -218,14 +218,25 @@ export function AliisAgentDrawer() {
                         {m.text}
                       </p>
                     ) : m.text === '' ? (
-                      <span className="ai-cursor opacity-60" />
+                      <div className="flex items-center gap-2 py-0.5">
+                        <div className="flex gap-[3px]">
+                          {[0, 1, 2].map((j) => (
+                            <div
+                              key={j}
+                              className="w-1 h-1 rounded-full bg-primary"
+                              style={{
+                                animation: 'aliis-bounce 1.2s ease-in-out infinite',
+                                animationDelay: `${j * 0.18}s`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-mono text-[9px] tracking-widest text-shimmer-ai">
+                          pensando
+                        </span>
+                      </div>
                     ) : (
-                      <span>
-                        <FormattedText text={m.text} />
-                        {loading && i === messages.length - 1 && (
-                          <span className="ai-cursor ml-0.5" />
-                        )}
-                      </span>
+                      <FormattedText text={m.text} />
                     )}
                   </div>
                 </div>
