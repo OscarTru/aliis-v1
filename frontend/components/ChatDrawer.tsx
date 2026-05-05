@@ -273,7 +273,10 @@ export function ChatDrawer({
         {tab === 'chat' && (
           <>
             <div className="flex-1 min-h-0">
-              <div className="h-full overflow-y-auto px-4 pt-4 pb-8">
+              <div
+                className="h-full overflow-y-auto px-4 pt-4 pb-8"
+                style={{ maskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)' }}
+              >
               {loadingHistory && (
                 <div className="flex gap-1.5 items-center mb-4">
                   {[0, 1, 2].map((j) => (
@@ -332,8 +335,6 @@ export function ChatDrawer({
                 ))}
                 <div ref={bottomRef} />
               </div>
-              {/* Sticky shade — stays at the visible bottom of the scroll area regardless of transform */}
-              <div className="sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none -mt-10" />
             </div>
             </div>
 

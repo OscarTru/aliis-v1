@@ -160,7 +160,10 @@ export function AliisAgentDrawer() {
 
         {/* Messages area */}
         <div className="flex-1 min-h-0">
-          <div className="h-full overflow-y-auto px-4 pt-4 pb-8">
+          <div
+            className="h-full overflow-y-auto px-4 pt-4 pb-8"
+            style={{ maskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)' }}
+          >
           {messages.length === 0 && (
             <div className="text-center pt-8 pb-4">
               <p className="font-serif text-[16px] text-foreground mb-2 leading-[1.4]">
@@ -222,8 +225,6 @@ export function AliisAgentDrawer() {
             ))}
             <div ref={bottomRef} />
           </div>
-          {/* Sticky shade — stays at the visible bottom of the scroll area regardless of transform */}
-          <div className="sticky bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none -mt-10" />
         </div>
         </div>
 
