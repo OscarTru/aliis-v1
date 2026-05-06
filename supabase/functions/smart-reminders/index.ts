@@ -94,6 +94,9 @@ async function processUser(userId: string) {
 
   if (!analysis.send) return;
 
+  // Clamp a 80 chars como especifica el prompt
+  const message = analysis.message.slice(0, 80);
+
   // 5. Verificar que el tipo analizado no fue enviado ya hoy
   if (analysis.type === 'medication' && medicationSent) return;
   if ((analysis.type === 'insight' || analysis.type === 'red_flag') && (insightSent || redFlagSent)) return;
@@ -112,7 +115,7 @@ async function processUser(userId: string) {
       token,
       {
         title: 'Aliis',
-        body: analysis.message,
+        body: message,
         data: {
           type: analysis.type,
           deep_link: analysis.deep_link,
@@ -131,6 +134,6 @@ async function processUser(userId: string) {
   await supabase.from('notification_log').insert({
     user_id: userId,
     type: analysis.type,
-    message: analysis.message,
+    message: message,
   });
 }

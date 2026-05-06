@@ -62,6 +62,9 @@ Responde ÚNICAMENTE con JSON válido:
   }
 
   const data = await response.json();
+  if (!data?.content?.[0]?.text) {
+    return { send: false, message: '', type: 'medication', deep_link: '/inicio' };
+  }
   const text = data.content[0].text.trim();
 
   // Parsear JSON — si falla, no enviar push

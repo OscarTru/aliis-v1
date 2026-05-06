@@ -12,8 +12,21 @@ interface ServiceAccount {
   project_id: string;
 }
 
+function base64url(input: string | ArrayBuffer): string {
+  const b64 = typeof input === 'string'
+    ? btoa(input)
+    : btoa(String.fromCharCode(...new Uint8Array(input as ArrayBuffer)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+let _tokenCache: { token: string; exp: number } | null = null;
+
 async function getAccessToken(serviceAccount: ServiceAccount): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
+  if (_tokenCache && _tokenCache.exp > now + 60) {
+    return _tokenCache.token;
+  }
+
   const claim = {
     iss: serviceAccount.client_email,
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
@@ -22,9 +35,9 @@ async function getAccessToken(serviceAccount: ServiceAccount): Promise<string> {
     iat: now,
   };
 
-  // Construir JWT header.payload
-  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = btoa(JSON.stringify(claim));
+  // Construir JWT header.payload con base64url
+  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = base64url(JSON.stringify(claim));
   const signingInput = `${header}.${payload}`;
 
   // Importar clave privada RSA
@@ -48,7 +61,7 @@ async function getAccessToken(serviceAccount: ServiceAccount): Promise<string> {
     cryptoKey,
     encoder.encode(signingInput),
   );
-  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+  const signature = base64url(signatureBuffer);
   const jwt = `${signingInput}.${signature}`;
 
   // Intercambiar JWT por access token
@@ -65,6 +78,7 @@ async function getAccessToken(serviceAccount: ServiceAccount): Promise<string> {
     throw new Error(`OAuth token error: ${tokenResponse.status}`);
   }
   const { access_token } = await tokenResponse.json();
+  _tokenCache = { token: access_token, exp: now + 3600 };
   return access_token;
 }
 
