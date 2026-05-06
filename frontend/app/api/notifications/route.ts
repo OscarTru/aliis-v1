@@ -31,7 +31,6 @@ export async function POST(req: Request) {
 
   if (provided !== null) {
     // Service-to-service path — authenticated with INTERNAL_API_SECRET.
-    // TODO: add INTERNAL_API_SECRET to Vercel environment variables.
     const expected = process.env.INTERNAL_API_SECRET
     if (!expected) {
       // Fail closed — if env var is not configured, reject all service-to-service calls.
