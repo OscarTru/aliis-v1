@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad · Aliis',
-  description: 'Política de Privacidad y Aviso de Privacidad de Aliis. Cómo tratamos tus datos bajo GDPR, LOPDGDD, LFPDPPP y Ley 1581 de Colombia.',
+  description: 'Política de Privacidad v1.1 de Aliis. Retención de datos de salud, cifrado AES-256-GCM, soft delete con 30 días de gracia. GDPR, LOPDGDD, LFPDPPP y Ley 1581.',
 }
 
 export default function PrivacidadPage() {
@@ -11,7 +11,7 @@ export default function PrivacidadPage() {
       <LegalHeader
         tag="Legal"
         title="Política de Privacidad — Aviso de Privacidad"
-        version="Versión 1.0 · 26 de abril de 2026"
+        version="Versión 1.1 · 6 de mayo de 2026"
       />
 
       <LegalCallout type="info">
@@ -51,10 +51,13 @@ export default function PrivacidadPage() {
           Datos de uso: historial de packs generados, fecha de creación, configuración de tu cuenta.
         </LegalSubsection>
         <LegalSubsection title="2.2 Datos de salud (categoría especial)">
-          El texto de diagnóstico que introduces para generar un pack educativo puede contener datos de
-          salud (categoría especial bajo Art. 9 GDPR). Tratamos estos datos con las salvaguardas adicionales
-          descritas en la sección 3. No almacenamos el texto original del diagnóstico más allá del tiempo
-          necesario para generar el pack.
+          Aliis recopila y procesa los siguientes datos de salud, que constituyen categoría especial bajo Art. 9 GDPR:
+          (a) el texto de diagnóstico que introduces para generar un pack educativo — solo se retiene durante la generación;
+          (b) los registros que introduces voluntariamente en el Diario de síntomas (síntomas, signos vitales, notas libres);
+          (c) los tratamientos y medicamentos que registras;
+          (d) el perfil médico (condiciones previas, alergias) que configuras voluntariamente;
+          (e) las observaciones que el agente Aliis genera a partir de tus conversaciones, almacenadas cifradas con AES-256-GCM.
+          Todos estos datos se tratan con las salvaguardas adicionales descritas en la sección 3 y los plazos de conservación de la sección 7.
         </LegalSubsection>
         <LegalSubsection title="2.3 Datos de pago">
           Si te suscribes al plan Pro, Stripe procesa los datos de pago directamente. Aliis no almacena
@@ -130,13 +133,29 @@ export default function PrivacidadPage() {
       </LegalSection>
 
       <LegalSection title="Conservación de datos">
+        <p className="text-sm text-muted-foreground mb-4">
+          Los plazos a continuación son el máximo por categoría. Puedes solicitar la eliminación anticipada
+          en cualquier momento desde Configuración → Eliminar cuenta, o escribiendo a hola@cerebrosesponjosos.com.
+        </p>
         <LegalTable rows={[
-          ['Datos de cuenta', 'Mientras la cuenta esté activa + 30 días tras la eliminación'],
-          ['Historial de packs', 'Mientras la cuenta esté activa, o hasta que solicites su eliminación'],
-          ['Datos de pago (Stripe)', 'Según las obligaciones fiscales aplicables (generalmente 7 años)'],
-          ['Datos técnicos y logs', 'Máximo 12 meses'],
-          ['Texto del diagnóstico (input)', 'Solo durante el proceso de generación del pack — no se almacena'],
+          ['Datos de cuenta (email, nombre)', 'Mientras la cuenta esté activa. Tras solicitar la eliminación, se aplica un período de gracia de 30 días antes del borrado definitivo, durante el cual puedes cancelar la solicitud escribiéndonos.'],
+          ['Historial de packs educativos', 'Mientras la cuenta esté activa, o hasta que solicites su eliminación.'],
+          ['Registros de síntomas y signos vitales (symptom_logs)', 'Máximo 3 años desde la fecha del registro, o hasta que solicites su eliminación. Base legal Art. 5(1)(e) GDPR — limitación del plazo de conservación.'],
+          ['Registros de adherencia a tratamientos (adherence_logs)', 'Máximo 3 años desde la fecha del registro, o hasta que solicites su eliminación.'],
+          ['Perfil médico (diagnósticos, condiciones previas)', 'Mientras la cuenta esté activa. Se elimina junto con la cuenta.'],
+          ['Memoria del agente Aliis (agent_memory)', 'Máximo 30 días por entrada (ventana deslizante automática). Los datos se almacenan cifrados con AES-256-GCM.'],
+          ['Observaciones e insights del agente', 'Máximo 90 días desde su generación.'],
+          ['Datos de pago (identificador Stripe)', 'Mientras la suscripción esté activa + según las obligaciones fiscales aplicables (generalmente 7 años).'],
+          ['Datos técnicos y logs de acceso', 'Máximo 12 meses.'],
+          ['Registro de accesos a datos de salud (audit log)', 'Máximo 90 días.'],
+          ['Texto del diagnóstico (input para generación de packs)', 'Solo durante el proceso de generación — no se almacena de forma persistente.'],
         ]} />
+        <p className="text-sm text-muted-foreground mt-3">
+          <strong>Eliminación de cuenta:</strong> al solicitar la eliminación, tu cuenta y todos tus datos médicos
+          quedan inmediatamente inaccesibles. El borrado definitivo de los servidores se completa en un máximo de
+          30 días (período de gracia de recuperación). Transcurrido ese plazo, los datos se eliminan de forma
+          permanente e irrecuperable, salvo los que deban conservarse por obligación legal (ej. datos fiscales).
+        </p>
       </LegalSection>
 
       <LegalSection title="Tus derechos">
@@ -174,12 +193,16 @@ export default function PrivacidadPage() {
 
       <LegalSection title="Seguridad">
         <p>
-          Implementamos medidas técnicas y organizativas para proteger tus datos: cifrado en tránsito (TLS),
-          cifrado en reposo, acceso restringido por roles, autenticación segura vía Supabase Auth, y
-          revisiones periódicas de seguridad. Sin embargo, ningún sistema es completamente infalible.
-          Si detectamos una brecha de seguridad que afecte a tus datos, te notificaremos conforme a los
-          plazos legales aplicables (72 horas para el GDPR).
+          Implementamos medidas técnicas y organizativas para proteger tus datos:
         </p>
+        <LegalTable rows={[
+          ['Cifrado en tránsito', 'TLS 1.3 en todas las comunicaciones. HSTS con preload activado.'],
+          ['Cifrado en reposo', 'AES-256 a nivel de volumen (Supabase). Las observaciones del agente Aliis se cifran adicionalmente con AES-256-GCM a nivel de aplicación — ilegibles sin la clave, incluso con acceso directo a la base de datos.'],
+          ['Control de acceso', 'Row Level Security (RLS) en PostgreSQL: cada usuario solo puede acceder a sus propios datos, incluso con credenciales de base de datos comprometidas.'],
+          ['Autenticación', 'Supabase Auth con tokens JWT de corta duración y refresco automático. Tokens almacenados en iOS Keychain / Android Keystore en la app móvil.'],
+          ['Audit log', 'Registro inmutable de accesos a datos de salud, conservado 90 días.'],
+          ['Notificación de brechas', 'En caso de brecha de seguridad que afecte tus datos, te notificaremos en el plazo máximo de 72 horas desde su detección (Art. 33 GDPR).'],
+        ]} />
       </LegalSection>
 
       <LegalSection title="Cookies">

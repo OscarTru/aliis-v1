@@ -1,6 +1,8 @@
 import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { rateLimit } from '@/lib/rate-limit'
+import { logPhiAccess } from '@/lib/phi-audit'
 
 interface ExtractedSymptom {
   name: string
@@ -24,6 +26,13 @@ export async function POST(req: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+
+  const rl = await rateLimit(`user:${user.id}:diary`, 30, 300)
+  if (!rl.ok) {
+    return Response.json({ error: 'Demasiadas solicitudes. Intenta más tarde.' }, { status: 429 })
+  }
+
+  logPhiAccess(user.id, '/api/diary', 'write')
 
   let body: Record<string, unknown>
   try {
