@@ -41,7 +41,7 @@ export function decrypt(ciphertext: string): Record<string, unknown> {
     const encrypted = packed.subarray(28)
     const decipher = createDecipheriv(ALG, key, iv)
     decipher.setAuthTag(authTag)
-    const plain = decipher.update(encrypted) + decipher.final('utf8')
+    const plain = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8')
     return JSON.parse(plain) as Record<string, unknown>
   } catch {
     // Dato no encriptado (fila legacy) o corrupto — retorna vacío
