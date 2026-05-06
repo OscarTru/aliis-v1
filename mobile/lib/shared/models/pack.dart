@@ -18,7 +18,9 @@ class Chapter {
     n: json['n'] as String,
     kicker: json['kicker'] as String,
     tldr: json['tldr'] as String,
-    paragraphs: List<String>.from(json['paragraphs'] as List? ?? []),
+    paragraphs: (json['paragraphs'] as List<dynamic>? ?? [])
+        .map((p) => p as String)
+        .toList(),
   );
 }
 
