@@ -62,7 +62,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () => context.push('/inicio/diario/registro'),
+                  onPressed: () => context.push('/diario/registro'),
                   icon: const Icon(Icons.add, size: 18),
                   label: Text('Registrar síntomas',
                     style: GoogleFonts.inter(fontWeight: FontWeight.w600)),

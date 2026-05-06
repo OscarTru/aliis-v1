@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/auth_provider.dart';
 import '../features/auth/login_screen.dart';
+import '../features/diario/diario_screen.dart';
+import '../features/diario/registro_wizard.dart';
 import '../features/home/home_screen.dart';
 import '../features/packs/packs_screen.dart';
 import '../features/alertas/alertas_screen.dart';
@@ -31,6 +33,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         builder: (_, __) => const LoginScreen(),
       ),
+      GoRoute(
+        path: '/diario',
+        builder: (_, __) => const DiarioScreen(),
+        routes: [
+          GoRoute(
+            path: 'registro',
+            builder: (_, __) => const RegistroWizard(),
+          ),
+        ],
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellScaffold(
           currentIndex: shell.currentIndex,
@@ -42,14 +54,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: '/inicio',
               builder: (_, __) => const HomeScreen(),
-              routes: [
-                GoRoute(
-                  path: 'diario/registro',
-                  builder: (_, __) => const Scaffold(
-                    body: Center(child: Text('Diario — próximamente')),
-                  ),
-                ),
-              ],
             ),
           ]),
           StatefulShellBranch(routes: [
