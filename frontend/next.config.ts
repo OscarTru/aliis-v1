@@ -17,7 +17,7 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com",
+  `img-src 'self' ${isDev ? 'data: ' : ''}blob: https://lh3.googleusercontent.com https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com`,
   "font-src 'self' https://fonts.gstatic.com",
   `connect-src 'self' ${apiUrl} https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://m.stripe.com https://m.stripe.network https://r.stripe.com https://accounts.google.com https://*.ingest.de.sentry.io https://www.google-analytics.com https://*.analytics.google.com https://*.google-analytics.com https://*.googletagmanager.com`,
   "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",

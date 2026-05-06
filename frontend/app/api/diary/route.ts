@@ -2,6 +2,7 @@ import { generateText } from 'ai'
 import { models } from '@/lib/ai-providers'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
+import { logPhiAccess } from '@/lib/phi-audit'
 
 interface ExtractedSymptom {
   name: string
@@ -30,6 +31,8 @@ export async function POST(req: Request) {
   if (!rl.ok) {
     return Response.json({ error: 'Demasiadas solicitudes. Intenta más tarde.' }, { status: 429 })
   }
+
+  logPhiAccess(user.id, '/api/diary', 'write')
 
   let body: Record<string, unknown>
   try {

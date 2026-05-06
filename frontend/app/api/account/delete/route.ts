@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
+import { logPhiAccess } from '@/lib/phi-audit'
 
 export async function DELETE(req: Request) {
   const supabase = await createServerSupabaseClient()
@@ -37,46 +38,20 @@ export async function DELETE(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  // GDPR Art. 17 — right to erasure. Delete every table that holds user data.
-  // Order: leaf tables first, then parents. Each .delete() is idempotent
-  // (missing rows = no-op), so the loop never blocks on missing data.
-  const tablesToWipe = [
-    'pack_chats',
-    'pack_notes',
-    'chapter_reads',
-    'consult_summaries',
-    'tracked_symptoms',
-    'symptom_logs',
-    'adherence_logs',
-    'aliis_insights',
-    'notifications',
-    'push_subscriptions',
-    'medical_profiles',
-    'treatments',
-    'llm_usage',
-    'packs',
-  ] as const
+  logPhiAccess(user.id, '/api/account/delete', 'delete')
 
-  for (const table of tablesToWipe) {
-    const { error } = await admin.from(table).delete().eq('user_id', user.id)
-    if (error) {
-      // Log and continue — best-effort deletion. Don't abort partial cleanup.
-      console.error(`[account/delete] failed to delete from ${table}:`, error.message)
-    }
+  // Soft delete: marca deleted_at ahora, purge_deleted_profiles() lo borrará en 30 días.
+  // Permite recuperación ante eliminaciones accidentales o session hijack.
+  // Los datos médicos quedan inaccesibles (RLS los filtra por profiles.deleted_at)
+  // pero recuperables por soporte durante la ventana de gracia.
+  const { error: softDeleteError } = await admin
+    .from('profiles')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', user.id)
+
+  if (softDeleteError) {
+    return NextResponse.json({ error: softDeleteError.message }, { status: 500 })
   }
 
-  // invite_codes uses `used_by` (not user_id). Anonymize instead of deleting
-  // the row — keeps audit trail of code consumption without holding user FK.
-  await admin.from('invite_codes').update({ used_by: null }).eq('used_by', user.id)
-
-  // profiles last (FK target for many of the above already wiped)
-  await admin.from('profiles').delete().eq('id', user.id)
-
-  // Finally remove the auth.users record
-  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id)
-  if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 })
-  }
-
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, grace_days: 30 })
 }
