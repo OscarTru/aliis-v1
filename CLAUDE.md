@@ -27,14 +27,17 @@ Aliis es el acompañante de salud personal para pacientes con enfermedades crón
 |---|---|---|
 | `frontend/` | **PRODUCCIÓN** — Next.js 15 en Vercel | App principal: auth, packs educativos, diario, tratamientos, agentes IA, Stripe |
 | `backend/` | **PRODUCCIÓN** — Express en Railway | Pipeline de generación de packs (6 capas), crons |
+| `mobile/` | **EN DESARROLLO** — Flutter (Fase 2A completa) | App móvil: Home, Diario, Packs, Alertas, Perfil — datos reales vía Supabase |
 | `/app/` (raíz) | **LEGACY** | Landing anterior. Pendiente de deprecación (ADR-0006) |
 
 ## Roadmap activo
 
 - **Fase 0** ✅ COMPLETA: AI-Native Foundation — docs, prompts versionados, subagentes, agent_memory, patient_context, streaming agent con memoria en sesión y persistente Pro
-- **Fase 1** (semanas 2-4): Brainstorming + diseño app Flutter
-- **Fase 2** (semanas 5-10): Build Flutter — HealthKit, push nativa, OCR recetas
-- **Fase 3** (semanas 11-13): Widgets, ASO, submission stores
+- **Fase 1** ✅ COMPLETA: Brainstorming + diseño app Flutter
+- **Fase 2A** ✅ COMPLETA: 5 pantallas Flutter con datos reales — Home, Diario (wizard multi-step), Packs, Alertas (Realtime), Perfil
+- **Fase 2B** ⏳ Pendiente: HealthKit/Health Connect, push nativa FCM, offline con Drift
+- **Fase 2C** ⏳ Pendiente: OCR de recetas (escanear prescripciones con cámara)
+- **Fase 3** ⏳ Pendiente: Widgets de pantalla de inicio, ASO, submission App Store + Play Store
 
 ### Próximos pasos — plan AI-First (Capas 2-5)
 
@@ -96,12 +99,13 @@ npm run build
 npm start
 ```
 
-### Flutter (cuando exista)
+### Flutter (mobile/)
 ```bash
 cd mobile
 flutter run        # simulador
 flutter build ios --release
 flutter build apk --release
+flutter analyze lib/  # debe dar 0 issues
 ```
 
 ## Variables de entorno

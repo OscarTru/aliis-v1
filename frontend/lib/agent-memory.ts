@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from './supabase-server'
+import { encrypt, decrypt } from './memory-crypto'
 import type { AgentMemory, AgentName, MemoryType } from './types'
 
 export async function writeMemory(
@@ -16,7 +17,7 @@ export async function writeMemory(
     user_id: userId,
     agent_name: agentName,
     memory_type: type,
-    content,
+    content: encrypt(content),
     expires_at,
   })
   if (error) console.error('[agent-memory] writeMemory error', error.message)
@@ -48,5 +49,9 @@ export async function readMemory(
     console.error('[agent-memory] readMemory error', error.message)
     return []
   }
-  return (data ?? []) as AgentMemory[]
+
+  return (data ?? []).map((row) => ({
+    ...row,
+    content: decrypt(row.content as string),
+  })) as AgentMemory[]
 }
