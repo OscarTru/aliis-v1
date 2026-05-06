@@ -22,7 +22,8 @@ export function logPhiAccess(
   action: PhiAction,
   ip?: string
 ): void {
-  admin()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(admin() as any)
     .from('phi_access_log')
     .insert({ user_id: userId, endpoint, action, ip: ip ?? null })
     .then(({ error }) => {
