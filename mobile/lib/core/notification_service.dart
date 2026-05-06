@@ -37,8 +37,17 @@ class NotificationService {
   }
 
   static Future<void> _uploadToken() async {
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token != null) await _saveToken(token);
+    try {
+      // El simulador de iOS no soporta APNS — getToken() lanza excepción
+      if (Platform.isIOS) {
+        final apns = await FirebaseMessaging.instance.getAPNSToken();
+        if (apns == null) return; // simulador o APNS no configurado
+      }
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) await _saveToken(token);
+    } catch (e) {
+      debugPrint('FCM token unavailable: $e');
+    }
   }
 
   static Future<void> _saveToken(String token) async {
