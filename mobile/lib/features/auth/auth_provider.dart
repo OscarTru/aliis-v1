@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/supabase_client.dart';
 
@@ -20,21 +19,12 @@ class AuthNotifier {
     await supabase.auth.signUp(email: email, password: password);
   }
 
-  // Google OAuth
+  // Google OAuth vía Supabase — sin Firebase, sin google_sign_in SDK
+  // Abre browser del sistema, redirige a com.example.aliisMobile://login-callback
   Future<void> signInWithGoogle() async {
-    final googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-    );
-    final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return; // usuario canceló
-
-    final googleAuth = await googleUser.authentication;
-    final idToken = googleAuth.idToken;
-    if (idToken == null) throw Exception('Google Sign-In: idToken is null');
-    await supabase.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: googleAuth.accessToken,
+    await supabase.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'com.example.aliisMobile://login-callback',
     );
   }
 
