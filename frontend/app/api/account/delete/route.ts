@@ -2,12 +2,34 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
   const supabase = await createServerSupabaseClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) {
     return NextResponse.json({ error: 'No autenticado.' }, { status: 401 })
+  }
+
+  // Re-auth: require current password before wiping all data.
+  // OAuth users (no password) skip this check — they already re-authenticated
+  // via the OAuth flow and have no password to verify against.
+  let body: Record<string, unknown> = {}
+  try { body = await req.json() } catch { /* empty body ok */ }
+
+  const password = typeof body.password === 'string' ? body.password : null
+  const isPasswordUser = user.app_metadata?.provider === 'email'
+
+  if (isPasswordUser) {
+    if (!password) {
+      return NextResponse.json({ error: 'Se requiere tu contraseña para confirmar.' }, { status: 400 })
+    }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email!,
+      password,
+    })
+    if (signInError) {
+      return NextResponse.json({ error: 'Contraseña incorrecta.' }, { status: 403 })
+    }
   }
 
   const admin = createClient(
