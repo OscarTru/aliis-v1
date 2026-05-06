@@ -26,7 +26,7 @@ export function logPhiAccess(
   ;(admin() as any)
     .from('phi_access_log')
     .insert({ user_id: userId, endpoint, action, ip: ip ?? null })
-    .then(({ error }) => {
+    .then(({ error }: { error: { message: string } | null }) => {
       if (error) console.error('[phi-audit] insert failed', error.message)
     })
 }
