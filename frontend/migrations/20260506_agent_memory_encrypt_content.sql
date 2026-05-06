@@ -1,6 +1,14 @@
 -- frontend/migrations/20260506_agent_memory_encrypt_content.sql
 -- Migra agent_memory.content de jsonb a text para almacenar ciphertext AES-256-GCM.
 -- Las filas existentes se truncan a '{}' encriptado (se regeneran en el siguiente ciclo).
+--
+-- ROLLBACK: Esta migración es destructiva — el historial de observaciones previas se pierde
+-- intencionalmente (datos en texto plano que no deben conservarse sin cifrar).
+-- Para revertir: truncar todas las filas y reconvertir la columna a jsonb:
+--   delete from agent_memory;
+--   alter table agent_memory alter column content type jsonb using '{}'::jsonb;
+--   alter table agent_memory alter column content set default '{}'::jsonb;
+-- El app regenerará las observaciones en el siguiente ciclo de conversaciones.
 
 -- 1. Cambiar tipo de columna
 alter table agent_memory
