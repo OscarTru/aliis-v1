@@ -26,5 +26,6 @@ export async function classifyIntent(input: string): Promise<IntentClass> {
 
   const raw = text.trim().toUpperCase()
   const valid: IntentClass[] = ['SAFE', 'DOSE', 'DIAGN', 'EMERG', 'OOD']
-  return valid.includes(raw as IntentClass) ? (raw as IntentClass) : 'SAFE'
+  // Fail closed: respuesta inesperada del clasificador → rechazar como OOD
+  return valid.includes(raw as IntentClass) ? (raw as IntentClass) : 'OOD'
 }
