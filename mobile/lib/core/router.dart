@@ -39,7 +39,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: '/inicio', builder: (_, __) => const HomeScreen()),
+            GoRoute(
+              path: '/inicio',
+              builder: (_, __) => const HomeScreen(),
+              routes: [
+                GoRoute(
+                  path: 'diario/registro',
+                  builder: (_, __) => const Scaffold(
+                    body: Center(child: Text('Diario — próximamente')),
+                  ),
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/packs', builder: (_, __) => const PacksScreen()),
