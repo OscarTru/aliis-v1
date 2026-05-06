@@ -48,7 +48,7 @@ Ver spec completo en `docs/superpowers/specs/2026-05-04-aliis-ai-first-design.md
 | **Capa 1** — Datos del paciente | ✅ Producción | `symptom_logs`, `adherence_logs`, `treatments`, `medical_profiles` |
 | **Capa 2** — Agent Memory | ✅ Producción | `agent_memory` tabla + `lib/agent-memory.ts`. `ChatAgent` aprende de conversaciones Pro |
 | **Capa 3** — Patient Context | ✅ Producción | `lib/patient-context.ts` — resumen narrativo + invalidación por cambios |
-| **Capa 4** — AliisCore Orchestrator | ⏳ Pendiente | `lib/aliis-core.ts` — agrega señales, una notificación priorizada por día |
+| **Capa 4** — AliisCore Orchestrator | ✅ Producción | `lib/aliis-core.ts` — agrega señales, una notificación priorizada por día |
 | **Capa 5** — Agente Queryable | ✅ Producción | `/api/aliis/agent` — streaming, RAG, historial en sesión, memoria Pro |
 | **Capa 6** — Company OS | 🚫 Diferida | FinanceAgent, ProductAgent, ContentAgent — no antes de Flutter |
 
