@@ -7,6 +7,7 @@ import '../features/diario/diario_screen.dart';
 import '../features/diario/registro_wizard.dart';
 import '../features/home/home_screen.dart';
 import '../features/packs/packs_screen.dart';
+import '../features/packs/pack_reader.dart';
 import '../features/alertas/alertas_screen.dart';
 import '../features/perfil/perfil_screen.dart';
 import '../shared/widgets/shell_scaffold.dart';
@@ -57,7 +58,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/packs', builder: (_, __) => const PacksScreen()),
+            GoRoute(
+              path: '/packs',
+              builder: (_, __) => const PacksScreen(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) => PackReader(
+                    packId: state.pathParameters['id']!),
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/alertas', builder: (_, __) => const AlertasScreen()),
