@@ -3,7 +3,7 @@
 -- device_tokens: almacena el FCM token de cada dispositivo
 create table if not exists device_tokens (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users not null,
+  user_id     uuid references auth.users on delete cascade not null,
   token       text not null,
   platform    text not null check (platform in ('ios', 'android')),
   updated_at  timestamptz default now()
@@ -23,14 +23,14 @@ create policy "users manage own tokens"
 -- notification_log: registro de pushes enviados (para el límite diario)
 create table if not exists notification_log (
   id       uuid primary key default gen_random_uuid(),
-  user_id  uuid references auth.users not null,
+  user_id  uuid references auth.users on delete cascade not null,
   type     text not null check (type in ('medication', 'insight', 'red_flag')),
   message  text,
   sent_at  timestamptz default now()
 );
 
 create index if not exists notification_log_user_type_sent_idx
-  on notification_log(user_id, type, sent_at);
+  on notification_log(user_id, sent_at, type);
 
 alter table notification_log enable row level security;
 
