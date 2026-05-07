@@ -18,14 +18,11 @@ class AlertRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 2,
-            height: subtitle != null ? 38 : 20,
-            color: accentColor,
-          ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          Container(width: 2, color: accentColor),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -49,6 +46,7 @@ class AlertRow extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

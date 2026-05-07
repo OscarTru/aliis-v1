@@ -37,7 +37,7 @@ class AdherenceBar extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: percent / 100),
+          tween: Tween(begin: 0, end: percent.clamp(0, 100) / 100),
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeOut,
           builder: (_, value, __) => ClipRRect(
