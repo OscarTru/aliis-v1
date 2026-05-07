@@ -50,7 +50,7 @@ final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
     supabase.from('profiles')
         .select('name, next_appointment')
         .eq('id', userId)
-        .single() as Future<dynamic>,
+        .maybeSingle() as Future<dynamic>,
     supabase.from('treatments')
         .select('id, user_id, name, dose, frequency_label, active, updated_at')
         .eq('user_id', userId)

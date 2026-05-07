@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../../core/theme.dart';
-import '../../shared/widgets/serif_heading.dart';
-import '../../shared/widgets/bell_badge.dart';
-import '../../shared/widgets/aliis_signal_card.dart';
-import '../../shared/widgets/alert_row.dart';
-import '../../shared/widgets/adherence_bar.dart';
-import '../../shared/widgets/list_item.dart';
 import '../alertas/alertas_provider.dart';
 import 'home_provider.dart';
 
@@ -21,11 +14,8 @@ class HomeScreen extends ConsumerWidget {
     final homeAsync = ref.watch(homeProvider);
     final alertasAsync = ref.watch(alertasProvider);
     final now = DateTime.now();
-    final fecha = DateFormat("EEEE d 'de' MMMM", 'es').format(now).toUpperCase();
     final greeting = _greeting(now.hour);
-
-    final alertCount = alertasAsync.valueOrNull
-        ?.where((n) => !n.read).length ?? 0;
+    final alertCount = alertasAsync.valueOrNull?.where((n) => !n.read).length ?? 0;
 
     return Scaffold(
       body: SafeArea(
@@ -45,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('Error cargando datos',
-                        style: GoogleFonts.inter(color: AliisColors.mutedFg)),
+                          style: GoogleFonts.inter(color: AliisColors.mutedFg)),
                       const SizedBox(height: 12),
                       TextButton(
                         onPressed: () => ref.invalidate(homeProvider),
@@ -57,102 +47,121 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             data: (data) => ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               children: [
-                // Header
+                // ── Greeting row ──────────────────────────────────────────
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: SerifHeading(
-                        eyebrow: fecha,
-                        heading: data.userName != null
-                            ? '$greeting, ${data.userName}'
-                            : greeting,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(greeting.toUpperCase(),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: AliisColors.mutedFg,
+                                letterSpacing: 1.8,
+                                fontWeight: FontWeight.w500,
+                              )),
+                          const SizedBox(height: 2),
+                          Text(
+                            data.userName ?? 'Bienvenido',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.italic,
+                              color: AliisColors.foreground,
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    BellBadge(
-                      count: alertCount,
-                      onTap: () => context.push('/alertas'),
+                    // Bell + Avatar row
+                    Row(
+                      children: [
+                        if (alertCount > 0)
+                          GestureDetector(
+                            onTap: () => context.go('/alertas'),
+                            child: Stack(
+                              children: [
+                                Icon(Icons.notifications_none_rounded,
+                                    size: 24, color: AliisColors.foreground),
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AliisColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (alertCount > 0) const SizedBox(width: 12),
+                        _Avatar(name: data.userName),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
 
-                // 1. Señal Aliis del día
+                // ── Cita próxima ──────────────────────────────────────────
+                if (data.nextAppointment != null) ...[
+                  _AppointmentCard(appointment: data.nextAppointment!),
+                  const SizedBox(height: 16),
+                ],
+
+                // ── Señal Aliis del día ───────────────────────────────────
                 if (data.alertBody != null) ...[
-                  AliisSignalCard(body: data.alertBody!),
-                  const SizedBox(height: 20),
+                  _AliisSignalCard(body: data.alertBody!),
+                  const SizedBox(height: 16),
                 ],
 
-                // 2. Adherencia 14 días
+                // ── Continuar leyendo (placeholder) ──────────────────────
                 if (data.treatments.isNotEmpty) ...[
-                  AdherenceBar(
-                    label: 'Adherencia 14 días',
-                    percent: data.adherencia14d,
-                    sublabel: data.treatments
-                            .where((t) => !data.takenToday.contains(t.name))
-                            .map((t) => t.name)
-                            .take(1)
-                            .map((n) => 'Pendiente: $n')
-                            .firstOrNull,
-                  ),
+                  _SectionLabel('CONTINUAR LEYENDO'),
+                  const SizedBox(height: 10),
+                  _PackContinueCard(userName: data.userName),
                   const SizedBox(height: 20),
                 ],
 
-                // Empty state — sin tratamientos
-                if (data.treatments.isEmpty)
-                  _EmptyCTA(
-                    icon: Icons.medication_outlined,
-                    title: 'Agrega tus medicamentos',
-                    subtitle: 'Registra tus tratamientos para hacer seguimiento de tus tomas diarias.',
-                    label: 'Ir a Perfil',
-                    onTap: () => context.go('/perfil'),
-                  ),
-
-                // 3. Alertas/insights de Aliis
-                if (data.insights.length > 1) ...[
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: AliisColors.border)),
-                    ),
-                    child: Column(
-                      children: data.insights.skip(1).map((ins) =>
-                        AlertRow(title: ins, accentColor: AliisColors.primary)
-                      ).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
-                // 4. Vitales recientes
-                _VitalesSection(data: data),
+                // ── Quick actions ─────────────────────────────────────────
+                _SectionLabel('EMPEZAR ALGO NUEVO'),
+                const SizedBox(height: 10),
+                _QuickActionsGrid(),
                 const SizedBox(height: 20),
 
-                // Empty state — sin registros de diario
-                if (data.diasRegistrados30d == 0) ...[
-                  _EmptyCTA(
-                    icon: Icons.edit_note_outlined,
-                    title: 'Empieza tu diario de salud',
-                    subtitle: 'Registra síntomas, presión, glucosa y más. Cada registro ayuda a Aliis a acompañarte mejor.',
-                    label: 'Registrar ahora',
-                    onTap: () => context.push('/expediente/registro'),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                // ── Esta semana ───────────────────────────────────────────
+                _SectionLabel('ESTA SEMANA'),
+                const SizedBox(height: 10),
+                _WeekShortcut(
+                  emoji: '📝',
+                  emojiBackground: const Color(0xFFF0FAF6),
+                  title: 'Diario de hoy',
+                  subtitle: '¿Cómo te sientes?',
+                  onTap: () => context.push('/expediente/registro'),
+                ),
+                const SizedBox(height: 8),
+                _WeekShortcut(
+                  emoji: '💊',
+                  emojiBackground: const Color(0xFFFFF8F0),
+                  title: 'Medicación',
+                  subtitle: data.treatments.isEmpty
+                      ? 'Sin tratamientos registrados'
+                      : '${data.takenToday.length} de ${data.treatments.length} tomas hoy',
+                  onTap: () => context.go('/medicacion'),
+                ),
 
-                // 5. Próxima cita
-                if (data.nextAppointment != null)
-                  ListItem(
-                    title: 'Próxima cita',
-                    subtitle: data.nextAppointment,
-                    trailing: Text('Preparar preguntas →',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AliisColors.primary,
-                      )),
-                  ),
+                // ── Stats strip ───────────────────────────────────────────
+                const SizedBox(height: 24),
+                _StatsStrip(data: data),
               ],
             ),
           ),
@@ -162,171 +171,426 @@ class HomeScreen extends ConsumerWidget {
   }
 
   String _greeting(int hour) {
-    if (hour < 12) return 'Buenos días';
-    if (hour < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (hour < 12) return 'Buenos días,';
+    if (hour < 19) return 'Buenas tardes,';
+    return 'Buenas noches,';
   }
 }
 
-class _VitalesSection extends StatelessWidget {
-  final HomeData data;
-  const _VitalesSection({required this.data});
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final String? name;
+  const _Avatar({this.name});
 
   @override
   Widget build(BuildContext context) {
+    final initial = (name?.isNotEmpty == true) ? name![0].toUpperCase() : 'A';
     return Container(
+      width: 40,
+      height: 40,
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AliisColors.border)),
+        color: AliisColors.deepTeal,
+        shape: BoxShape.circle,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text('VITALES RECIENTES',
-              style: GoogleFonts.robotoMono(
-                fontSize: 9,
-                color: AliisColors.mutedFg,
-                letterSpacing: 1.5,
-              )),
-          ),
-          Row(
-            children: [
-              _VitalCell(
-                label: 'Días registrados',
-                value: '${data.diasRegistrados30d}',
-                unit: '/30d',
-              ),
-              Container(width: 1, height: 48, color: AliisColors.border),
-              _VitalCell(
-                label: 'Adherencia 14d',
-                value: '${data.adherencia14d}',
-                unit: '%',
-              ),
-            ],
-          ),
-          const Divider(height: 1, color: AliisColors.border),
-        ],
+      child: Center(
+        child: Text(initial,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            )),
       ),
     );
   }
 }
 
-class _EmptyCTA extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String label;
-  final VoidCallback onTap;
-  const _EmptyCTA({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.label,
-    required this.onTap,
-  });
+// ── Section label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text,
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          color: AliisColors.mutedFg,
+          letterSpacing: 1.8,
+          fontWeight: FontWeight.w500,
+        ));
+  }
+}
+
+// ── Appointment card ──────────────────────────────────────────────────────────
+
+class _AppointmentCard extends StatelessWidget {
+  final String appointment;
+  const _AppointmentCard({required this.appointment});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: AliisColors.border),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF8FBF9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD1E8DF)),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AliisColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AliisColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text('CITA PRÓXIMA',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                color: AliisColors.deepTeal,
+                letterSpacing: 1.8,
+                fontWeight: FontWeight.w500,
+              )),
+          const SizedBox(height: 6),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                color: AliisColors.foreground,
+                height: 1.3,
+              ),
               children: [
-                Text(title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AliisColors.foreground,
-                  )),
-                const SizedBox(height: 3),
-                Text(subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AliisColors.mutedFg,
-                    height: 1.4,
-                  )),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: onTap,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AliisColors.foreground,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(label,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      )),
+                const TextSpan(text: 'Tu próxima cita: '),
+                TextSpan(
+                  text: appointment,
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: AliisColors.deepTeal,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 10),
+          Container(
+            height: 1,
+            color: const Color(0xFFD1E8DF),
+          ),
+          const SizedBox(height: 10),
+          Text('Aliis preparará preguntas para llevarte.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AliisColors.mutedFg,
+                height: 1.4,
+              )),
         ],
       ),
     );
   }
 }
 
-class _VitalCell extends StatelessWidget {
+// ── Aliis signal card ─────────────────────────────────────────────────────────
+
+class _AliisSignalCard extends StatelessWidget {
+  final String body;
+  const _AliisSignalCard({required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AliisColors.foreground,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('✦',
+                  style: GoogleFonts.inter(
+                      fontSize: 12, color: AliisColors.primary)),
+              const SizedBox(width: 6),
+              Text('SEÑAL ALIIS',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: AliisColors.primary,
+                    letterSpacing: 1.8,
+                    fontWeight: FontWeight.w500,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(body,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: Colors.white,
+                height: 1.5,
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pack continue card ────────────────────────────────────────────────────────
+
+class _PackContinueCard extends StatelessWidget {
+  final String? userName;
+  const _PackContinueCard({this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/packs'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AliisColors.foreground,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('TU BIBLIOTECA · PACKS',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: const Color(0xFF888888),
+                  letterSpacing: 1.8,
+                )),
+            const SizedBox(height: 8),
+            RichText(
+              text: TextSpan(
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                  height: 1.3,
+                ),
+                children: [
+                  const TextSpan(text: 'Explora tus diagnósticos, '),
+                  TextSpan(
+                    text: userName != null ? 'para ${userName!.split(' ').first}' : 'para ti',
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: AliisColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: 0.36,
+                      backgroundColor: const Color(0xFF3A3A45),
+                      valueColor: AlwaysStoppedAnimation<Color>(AliisColors.primary),
+                      minHeight: 4,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('Ver packs →',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF888888),
+                    )),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Quick actions grid ────────────────────────────────────────────────────────
+
+class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = [
+      (Icons.camera_alt_outlined, 'Foto de receta', '/expediente/registro'),
+      (Icons.edit_note_outlined, 'Registrar síntomas', '/expediente/registro'),
+      (Icons.medication_outlined, 'Ver medicación', '/medicacion'),
+      (Icons.library_books_outlined, 'Ver packs', '/packs'),
+    ];
+
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.4,
+      children: actions.map((a) {
+        final (icon, label, route) = a;
+        return GestureDetector(
+          onTap: () => context.go(route),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, size: 20, color: AliisColors.foreground),
+                Text(label,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AliisColors.foreground,
+                    )),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Week shortcut ─────────────────────────────────────────────────────────────
+
+class _WeekShortcut extends StatelessWidget {
+  final String emoji;
+  final Color emojiBackground;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _WeekShortcut({
+    required this.emoji,
+    required this.emojiBackground,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: AliisColors.border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: emojiBackground,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 16)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AliisColors.foreground,
+                      )),
+                  Text(subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AliisColors.mutedFg,
+                      )),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                size: 18, color: AliisColors.border),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Stats strip ───────────────────────────────────────────────────────────────
+
+class _StatsStrip extends StatelessWidget {
+  final HomeData data;
+  const _StatsStrip({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AliisColors.border)),
+      ),
+      child: Row(
+        children: [
+          _StatCell(
+            label: 'Días registrados',
+            value: '${data.diasRegistrados30d}',
+            unit: '/30d',
+          ),
+          Container(width: 1, height: 40, color: AliisColors.border),
+          _StatCell(
+            label: 'Adherencia 14d',
+            value: '${data.adherencia14d}',
+            unit: '%',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
   final String label;
   final String value;
   final String unit;
-  const _VitalCell({required this.label, required this.value, required this.unit});
+  const _StatCell(
+      {required this.label, required this.value, required this.unit});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                color: AliisColors.mutedFg,
-              )),
+                style: GoogleFonts.inter(
+                    fontSize: 10, color: AliisColors.mutedFg)),
             const SizedBox(height: 4),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(value,
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AliisColors.foreground,
-                  )),
+                    style: GoogleFonts.inter(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AliisColors.foreground,
+                    )),
                 const SizedBox(width: 2),
                 Text(unit,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AliisColors.mutedFg,
-                  )),
+                    style: GoogleFonts.inter(
+                        fontSize: 11, color: AliisColors.mutedFg)),
               ],
             ),
           ],

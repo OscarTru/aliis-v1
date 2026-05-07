@@ -73,7 +73,7 @@ final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) asyn
         .eq('user_id', userId)
         .eq('active', true) as Future<dynamic>,
     supabase.from('adherence_logs')
-        .select('medication, status, taken_date, created_at')
+        .select('medication, status, taken_date, taken_at')
         .eq('user_id', userId)
         .eq('taken_date', today) as Future<dynamic>,
   ]);
@@ -87,7 +87,7 @@ final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) asyn
   for (final log in logs) {
     final l = log as Map<String, dynamic>;
     if (l['status'] == 'taken') {
-      final raw = l['created_at'] as String?;
+      final raw = l['taken_at'] as String?;
       takenMap[l['medication'] as String] =
           raw != null ? DateTime.tryParse(raw) : null;
     }

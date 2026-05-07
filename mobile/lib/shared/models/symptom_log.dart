@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class SymptomLog {
   final String id;
   final String userId;
@@ -36,6 +38,8 @@ class SymptomLog {
     temperature: (json['temperature'] as num?)?.toDouble(),
     weight: (json['weight'] as num?)?.toDouble(),
     note: json['note'] as String?,
-    freeText: json['free_text'] as Map<String, dynamic>?,
+    freeText: json['free_text'] is String
+        ? (jsonDecode(json['free_text'] as String) as Map<String, dynamic>?)
+        : json['free_text'] as Map<String, dynamic>?,
   );
 }

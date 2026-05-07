@@ -9,6 +9,9 @@ import '../features/home/home_screen.dart';
 import '../features/medicacion/medicacion_screen.dart';
 import '../features/alertas/alertas_screen.dart';
 import '../features/perfil/perfil_screen.dart';
+import '../features/aliis/chat_screen.dart';
+import '../features/packs/packs_screen.dart';
+import '../features/packs/pack_reader.dart';
 import '../shared/widgets/shell_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -34,12 +37,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
-        path: '/alertas',
-        builder: (_, __) => const AlertasScreen(),
+        path: '/chat',
+        builder: (_, __) => const ChatScreen(),
       ),
       GoRoute(
         path: '/expediente/registro',
         builder: (_, __) => const RegistroWizard(),
+      ),
+      GoRoute(
+        path: '/medicacion',
+        builder: (_, __) => const MedicacionScreen(),
+      ),
+      GoRoute(
+        path: '/expediente',
+        builder: (_, __) => const DiarioScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellScaffold(
@@ -56,14 +67,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/expediente',
-              builder: (_, __) => const DiarioScreen(),
+              path: '/packs',
+              builder: (_, __) => const PacksScreen(),
+              routes: [
+                GoRoute(
+                  path: ':packId',
+                  builder: (_, state) => PackReader(
+                    packId: state.pathParameters['packId']!,
+                  ),
+                ),
+              ],
             ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/medicacion',
-              builder: (_, __) => const MedicacionScreen(),
+              path: '/alertas',
+              builder: (_, __) => const AlertasScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [

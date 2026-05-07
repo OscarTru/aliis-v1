@@ -26,7 +26,7 @@ final perfilProvider = FutureProvider.autoDispose<PerfilData>((ref) async {
     supabase.from('profiles')
       .select('name, plan, next_appointment')
       .eq('id', userId)
-      .single(),
+      .maybeSingle(),
     supabase.from('treatments')
       .select()
       .eq('user_id', userId)
@@ -34,15 +34,15 @@ final perfilProvider = FutureProvider.autoDispose<PerfilData>((ref) async {
       .order('created_at', ascending: true),
   ]);
 
-  final profile = results[0] as Map<String, dynamic>;
+  final profile = results[0] as Map<String, dynamic>?;
   final treatments = (results[1] as List)
     .map((r) => Treatment.fromJson(r as Map<String, dynamic>))
     .toList();
 
   return PerfilData(
-    name: profile['name'] as String?,
-    plan: profile['plan'] as String? ?? 'free',
-    nextAppointment: profile['next_appointment'] as String?,
+    name: profile?['name'] as String?,
+    plan: profile?['plan'] as String? ?? 'free',
+    nextAppointment: profile?['next_appointment'] as String?,
     treatments: treatments,
   );
 });
