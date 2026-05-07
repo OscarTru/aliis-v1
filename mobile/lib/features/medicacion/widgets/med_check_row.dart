@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import '../../../core/theme.dart';
+import '../medicacion_provider.dart';
+
+class MedCheckRow extends StatefulWidget {
+  final MedItem item;
+  final VoidCallback onToggle;
+
+  const MedCheckRow({super.key, required this.item, required this.onToggle});
+
+  @override
+  State<MedCheckRow> createState() => _MedCheckRowState();
+}
+
+class _MedCheckRowState extends State<MedCheckRow> {
+  bool _loading = false;
+
+  bool get _isFuturo {
+    final now = DateTime.now();
+    final turno = widget.item.turno;
+    if (turno == Turno.noche) return now.hour < 21;
+    if (turno == Turno.tarde) return now.hour < 14;
+    return now.hour < 8;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tomado = widget.item.tomado;
+    final futuro = !tomado && _isFuturo;
+
+    return Opacity(
+      opacity: futuro ? 0.4 : 1.0,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AliisColors.border)),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: futuro || _loading ? null : () async {
+                setState(() => _loading = true);
+                await Future(() => widget.onToggle());
+                if (mounted) setState(() => _loading = false);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: tomado ? AliisColors.deepTeal : Colors.transparent,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: tomado
+                        ? AliisColors.deepTeal
+                        : futuro
+                            ? AliisColors.mutedFg
+                            : const Color(0xFFE0E0E0),
+                    width: futuro ? 1 : 1.5,
+                    strokeAlign: BorderSide.strokeAlignCenter,
+                  ),
+                ),
+                child: tomado
+                    ? const Icon(Icons.check, color: Colors.white, size: 14)
+                        .animate().fadeIn(duration: 200.ms)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.item.treatment.name,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AliisColors.foreground,
+                    ),
+                  ),
+                  if (widget.item.treatment.dose != null &&
+                      widget.item.treatment.dose!.isNotEmpty)
+                    Text(
+                      widget.item.treatment.dose!,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AliisColors.mutedFg,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (tomado && widget.item.horaRegistro != null)
+              Text(
+                DateFormat('HH:mm').format(
+                  DateTime.parse(widget.item.horaRegistro!).toLocal()),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AliisColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            else if (!tomado && !futuro)
+              Text('Pendiente',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AliisColors.mutedFg,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+}
