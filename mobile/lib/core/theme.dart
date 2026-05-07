@@ -4,23 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 class AliisColors {
   const AliisColors._();
 
-  static const background = Color(0xFFFAFAF7);
-  static const foreground = Color(0xFF272730);
-  static const primary = Color(0xFF1F8A9B);
-  static const muted = Color(0xFFF4F4F6);
-  static const mutedForeground = Color(0xFF57575F);
-  static const border = Color(0xFFE4E4EB);
-  static const card = Color(0xFFF4F4F6);
-  static const amber = Color(0xFFF59E0B);
-  static const emerald = Color(0xFF10B981);
-  static const destructive = Color(0xFFDC2626);
+  static const background   = Color(0xFFFFFFFF);
+  static const foreground   = Color(0xFF272730);
+  static const primary      = Color(0xFF1F8A9B);
+  static const deepTeal     = Color(0xFF14606E);
+  static const mutedFg      = Color(0xFF999999);
+  static const border       = Color(0xFFF0F0F0);
+  static const amber        = Color(0xFFF59E0B);
+  static const emerald      = Color(0xFF10B981);
+  static const destructive  = Color(0xFFDC2626);
 
-  // Dark mode
-  static const backgroundDark = Color(0xFF0F1117);
-  static const foregroundDark = Color(0xFFF4F4F6);
-  static const mutedDark = Color(0xFF1A1D26);
-  static const borderDark = Color(0xFF2E3040);
-  static const cardDark = Color(0xFF161923);
+  // dark mode — diferido, mantener para no romper referencias
+  static const backgroundDark  = Color(0xFF0F1117);
+  static const foregroundDark  = Color(0xFFF4F4F6);
+  static const borderDark      = Color(0xFF2E3040);
+  static const mutedForeground = mutedFg; // alias compat
 }
 
 ThemeData aliisLightTheme() {
@@ -34,18 +32,25 @@ ThemeData aliisLightTheme() {
       outline: AliisColors.border,
     ),
     textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-      displayLarge: GoogleFonts.instrumentSerif(
-        fontSize: 32, fontStyle: FontStyle.italic,
+      displayLarge: GoogleFonts.playfairDisplay(
+        fontSize: 30, fontStyle: FontStyle.italic, fontWeight: FontWeight.w300,
+        color: AliisColors.foreground,
       ),
-      displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
-      titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
+      displayMedium: GoogleFonts.playfairDisplay(
+        fontSize: 22, fontStyle: FontStyle.italic, fontWeight: FontWeight.w300,
+        color: AliisColors.foreground,
+      ),
+      titleLarge: GoogleFonts.playfairDisplay(
+        fontSize: 20, fontStyle: FontStyle.italic,
+        color: AliisColors.foreground,
+      ),
     ),
     cardTheme: CardThemeData(
-      color: AliisColors.card,
+      color: AliisColors.background,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AliisColors.border),
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
       ),
     ),
     dividerColor: AliisColors.border,
@@ -69,26 +74,29 @@ ThemeData aliisDarkTheme() {
       outline: AliisColors.borderDark,
     ),
     textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-      displayLarge: GoogleFonts.instrumentSerif(
-        fontSize: 32, fontStyle: FontStyle.italic,
+      displayLarge: GoogleFonts.playfairDisplay(
+        fontSize: 30, fontStyle: FontStyle.italic, fontWeight: FontWeight.w300,
+        color: AliisColors.foregroundDark,
       ),
-      displayMedium: GoogleFonts.instrumentSerif(fontSize: 24),
-      titleLarge: GoogleFonts.instrumentSerif(fontSize: 20),
+      displayMedium: GoogleFonts.playfairDisplay(
+        fontSize: 22, fontStyle: FontStyle.italic, fontWeight: FontWeight.w300,
+        color: AliisColors.foregroundDark,
+      ),
+      titleLarge: GoogleFonts.playfairDisplay(
+        fontSize: 20, fontStyle: FontStyle.italic,
+        color: AliisColors.foregroundDark,
+      ),
     ),
     cardTheme: CardThemeData(
-      color: AliisColors.cardDark,
+      color: AliisColors.backgroundDark,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AliisColors.borderDark),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
     dividerColor: AliisColors.borderDark,
     appBarTheme: const AppBarTheme(
       backgroundColor: AliisColors.backgroundDark,
       foregroundColor: AliisColors.foregroundDark,
       elevation: 0,
-      centerTitle: false,
     ),
   );
 }

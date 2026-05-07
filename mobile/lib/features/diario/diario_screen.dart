@@ -85,7 +85,7 @@ class _RegistroCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AliisColors.muted,
+        color: AliisColors.border,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AliisColors.border),
       ),

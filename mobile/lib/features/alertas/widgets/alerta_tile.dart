@@ -34,7 +34,7 @@ class AlertaTile extends ConsumerWidget {
           padding: const EdgeInsets.all(14),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: notification.read ? AliisColors.muted : Colors.white,
+            color: notification.read ? AliisColors.border : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AliisColors.border),
           ),

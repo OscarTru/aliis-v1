@@ -114,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: InputDecoration(
                   hintText: 'Correo electrónico',
                   filled: true,
-                  fillColor: AliisColors.muted,
+                  fillColor: AliisColors.border,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AliisColors.border),
@@ -134,7 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 decoration: InputDecoration(
                   hintText: 'Contraseña',
                   filled: true,
-                  fillColor: AliisColors.muted,
+                  fillColor: AliisColors.border,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AliisColors.border),

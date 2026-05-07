@@ -46,7 +46,7 @@ class TratamientoTile extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AliisColors.muted,
+          color: AliisColors.border,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AliisColors.border),
         ),
