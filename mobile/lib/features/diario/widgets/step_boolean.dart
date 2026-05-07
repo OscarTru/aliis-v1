@@ -54,7 +54,7 @@ class _OptionBtn extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: selected ? AliisColors.primary : AliisColors.muted,
+          color: selected ? AliisColors.primary : AliisColors.border,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? AliisColors.primary : AliisColors.border,

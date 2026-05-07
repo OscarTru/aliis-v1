@@ -20,8 +20,12 @@ class AuthNotifier {
   }
 
   // Google OAuth vía Supabase — sin Firebase, sin google_sign_in SDK
-  // Abre browser del sistema, redirige a com.example.aliisMobile://login-callback
+  // Limpia sesión colgada antes de abrir el browser para evitar el loop
+  // donde cerrar sesión + volver a entrar queda en estado inconsistente.
   Future<void> signInWithGoogle() async {
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {}
     await supabase.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: 'com.example.aliisMobile://login-callback',

@@ -17,22 +17,26 @@ class NotificationService {
   NotificationService._();
 
   static Future<void> init() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-    FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
 
-    final settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+      final settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized ||
-        settings.authorizationStatus == AuthorizationStatus.provisional) {
-      await _uploadToken();
-      FirebaseMessaging.instance.onTokenRefresh.listen(_saveToken);
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        await _uploadToken();
+        FirebaseMessaging.instance.onTokenRefresh.listen(_saveToken);
+      }
+    } catch (e) {
+      debugPrint('NotificationService init failed (non-fatal): $e');
     }
   }
 

@@ -49,7 +49,7 @@ class _MetricaTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AliisColors.muted,
+          color: AliisColors.border,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AliisColors.border),
         ),

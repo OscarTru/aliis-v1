@@ -27,7 +27,7 @@ Aliis es el acompañante de salud personal para pacientes con enfermedades crón
 |---|---|---|
 | `frontend/` | **PRODUCCIÓN** — Next.js 15 en Vercel | App principal: auth, packs educativos, diario, tratamientos, agentes IA, Stripe |
 | `backend/` | **PRODUCCIÓN** — Express en Railway | Pipeline de generación de packs (6 capas), crons |
-| `mobile/` | **EN DESARROLLO** — Flutter (Fase 2A completa) | App móvil: Home, Diario, Packs, Alertas, Perfil — datos reales vía Supabase |
+| `mobile/` | **EN DESARROLLO** — Flutter (Fase 3A en curso) | App móvil: 8 pantallas rediseñadas Figma, liquid nav iOS 26, chat funcional |
 | `/app/` (raíz) | **LEGACY** | Landing anterior. Pendiente de deprecación (ADR-0006) |
 
 ## Roadmap activo
@@ -35,9 +35,12 @@ Aliis es el acompañante de salud personal para pacientes con enfermedades crón
 - **Fase 0** ✅ COMPLETA: AI-Native Foundation — docs, prompts versionados, subagentes, agent_memory, patient_context, streaming agent con memoria en sesión y persistente Pro
 - **Fase 1** ✅ COMPLETA: Brainstorming + diseño app Flutter
 - **Fase 2A** ✅ COMPLETA: 5 pantallas Flutter con datos reales — Home, Diario (wizard multi-step), Packs, Alertas (Realtime), Perfil
-- **Fase 2B** ⏳ Pendiente: HealthKit/Health Connect, push nativa FCM, offline con Drift
+- **Fase 2B** ✅ COMPLETA: Push nativa FCM (Edge Functions `adherence-analyzer` + `fcm-client` + orquestador), `NotificationService`, `NotificationRouter`
 - **Fase 2C** ⏳ Pendiente: OCR de recetas (escanear prescripciones con cámara)
-- **Fase 3** ⏳ Pendiente: Widgets de pantalla de inicio, ASO, submission App Store + Play Store
+- **Fase 3A** 🔄 EN CURSO: Onboarding, Ingreso/Captura, Destilando, PackTOC, `chapter_reads` — ver plan `2026-05-07-flutter-fase3a-ingreso-onboarding.md`
+- **Fase 3B** ⏳ Pendiente: Insight semanal, Pre-consulta Pro, Correlación, Glosario, ProScreen — ver plan `2026-05-07-flutter-fase3b-pro-features.md`
+- **Fase 3C** ⏳ Pendiente: HealthKit/Health Connect, offline con Drift
+- **Fase 4** ⏳ Pendiente: Widgets de pantalla de inicio, ASO, submission App Store + Play Store
 
 ### Próximos pasos — plan AI-First (Capas 2-5)
 
@@ -102,11 +105,39 @@ npm start
 ### Flutter (mobile/)
 ```bash
 cd mobile
-flutter run        # simulador
+bash run.sh              # siempre usar run.sh — carga .env.json con --dart-define-from-file
 flutter build ios --release
 flutter build apk --release
-flutter analyze lib/  # debe dar 0 issues
+flutter analyze lib/     # debe dar 0 issues
 ```
+
+#### Arquitectura mobile (Fase 3A+)
+
+| Feature | Pantalla | Ruta |
+|---|---|---|
+| Onboarding | `onboarding_screen.dart` | `/onboarding` (redirect si `profiles.onboarding_done = false`) |
+| Ingreso | `ingreso_screen.dart` | `/ingreso` — texto/foto/voz |
+| Destilando | `distilling_screen.dart` | `/distilling` (extra: String diagnóstico) |
+| PackTOC | `pack_toc_screen.dart` | `/packs/:packId/toc` |
+| Packs | `packs_screen.dart` | `/packs` (tab shell) |
+| PackReader | `pack_reader.dart` | `/packs/:packId` |
+| Home | `home_screen.dart` | `/inicio` (tab shell) |
+| Alertas | `alertas_screen.dart` | `/alertas` (tab shell) |
+| Perfil | `perfil_screen.dart` | `/perfil` (tab shell) |
+| Chat sheet | `aliis_sheet.dart` | modal desde home |
+| Chat pantalla | `chat_screen.dart` | `/chat` |
+| Medicación | `medicacion_screen.dart` | `/medicacion` |
+| Diario | `diario_screen.dart` | `/expediente` |
+| Registro wizard | `registro_wizard.dart` | `/expediente/registro` |
+
+**Bottom nav (iOS 26 liquid pill):** fondo frosted glass blanco, pill oscura animada `easeInOutCubicEmphasized`. Tabs: Inicio · Biblioteca · [+→/ingreso] · Alertas · Perfil.
+
+**APIs web que consume mobile:**
+- `POST https://aliis.app/api/pack/generate` — genera pack (backend Railway, JWT Supabase)
+- `GET https://aliis.app/api/aliis/agent` — chat streaming
+- `GET https://aliis.app/api/aliis/insight` — insight semanal
+- `POST https://aliis.app/api/aliis/consult` — pre-consulta Pro
+- `GET https://aliis.app/api/aliis/correlation` — correlación síntomas-adherencia Pro
 
 ## Variables de entorno
 

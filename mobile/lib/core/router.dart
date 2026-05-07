@@ -6,10 +6,12 @@ import '../features/auth/login_screen.dart';
 import '../features/diario/diario_screen.dart';
 import '../features/diario/registro_wizard.dart';
 import '../features/home/home_screen.dart';
-import '../features/packs/packs_screen.dart';
-import '../features/packs/pack_reader.dart';
+import '../features/medicacion/medicacion_screen.dart';
 import '../features/alertas/alertas_screen.dart';
 import '../features/perfil/perfil_screen.dart';
+import '../features/aliis/chat_screen.dart';
+import '../features/packs/packs_screen.dart';
+import '../features/packs/pack_reader.dart';
 import '../shared/widgets/shell_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -35,14 +37,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
-        path: '/diario',
+        path: '/chat',
+        builder: (_, __) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: '/expediente/registro',
+        builder: (_, __) => const RegistroWizard(),
+      ),
+      GoRoute(
+        path: '/medicacion',
+        builder: (_, __) => const MedicacionScreen(),
+      ),
+      GoRoute(
+        path: '/expediente',
         builder: (_, __) => const DiarioScreen(),
-        routes: [
-          GoRoute(
-            path: 'registro',
-            builder: (_, __) => const RegistroWizard(),
-          ),
-        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => ShellScaffold(
@@ -63,18 +71,25 @@ final routerProvider = Provider<GoRouter>((ref) {
               builder: (_, __) => const PacksScreen(),
               routes: [
                 GoRoute(
-                  path: ':id',
+                  path: ':packId',
                   builder: (_, state) => PackReader(
-                    packId: state.pathParameters['id']!),
+                    packId: state.pathParameters['packId']!,
+                  ),
                 ),
               ],
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/alertas', builder: (_, __) => const AlertasScreen()),
+            GoRoute(
+              path: '/alertas',
+              builder: (_, __) => const AlertasScreen(),
+            ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/perfil', builder: (_, __) => const PerfilScreen()),
+            GoRoute(
+              path: '/perfil',
+              builder: (_, __) => const PerfilScreen(),
+            ),
           ]),
         ],
       ),
@@ -82,7 +97,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Notifica a GoRouter cuando cambia la sesión sin recrear el router
 class _SessionListenable extends ChangeNotifier {
   _SessionListenable(Ref ref) {
     ref.listen(sessionProvider, (_, __) => notifyListeners());
