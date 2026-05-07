@@ -21,6 +21,15 @@ extension TurnoLabel on Turno {
       case Turno.noche:  return 20;
     }
   }
+
+  // Fix 3 — single source of truth for display hours
+  String get displayHora {
+    switch (this) {
+      case Turno.manana: return '8:00';
+      case Turno.tarde:  return '14:00';
+      case Turno.noche:  return '21:00';
+    }
+  }
 }
 
 class MedItem {
@@ -99,36 +108,48 @@ final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) asyn
   return MedicacionData(items: items);
 });
 
+// Fix 2 — noche checked before tarde; 'pm' removed from tarde branch
 Turno _parseTurno(String? frequencyLabel) {
-  if (frequencyLabel == null) return Turno.manana;
-  final lower = frequencyLabel.toLowerCase();
-  if (lower.contains('tarde') || lower.contains('14') || lower.contains('pm')) {
-    return Turno.tarde;
+  final lower = (frequencyLabel ?? '').toLowerCase();
+  if (lower.contains('mañana') || lower.contains('manana') ||
+      lower.contains('matutino') || lower.contains('8')) {
+    return Turno.manana;
   }
-  if (lower.contains('noche') || lower.contains('21') || lower.contains('9 pm')) {
+  if (lower.contains('noche') || lower.contains('21') ||
+      lower.contains('20') || lower.contains('9 pm')) {
     return Turno.noche;
   }
-  return Turno.manana;
+  if (lower.contains('tarde') || lower.contains('14') ||
+      lower.contains('vespertino')) {
+    return Turno.tarde;
+  }
+  return Turno.manana; // default
 }
 
+// Fix 4 — try/catch + rethrow; Fix 5 — null-guard currentUser
 Future<void> toggleMedicacion(String medicationName, bool tomado, WidgetRef ref) async {
-  final userId = supabase.auth.currentUser!.id;
-  final today = DateTime.now().toIso8601String().substring(0, 10);
+  final userId = supabase.auth.currentUser?.id;
+  if (userId == null) return;
 
-  if (tomado) {
-    await supabase.from('adherence_logs').upsert({
-      'user_id': userId,
-      'medication': medicationName,
-      'taken_date': today,
-      'status': 'taken',
-      'created_at': DateTime.now().toIso8601String(),
-    }, onConflict: 'user_id,medication,taken_date');
-  } else {
-    await supabase.from('adherence_logs')
-        .delete()
-        .eq('user_id', userId)
-        .eq('medication', medicationName)
-        .eq('taken_date', today);
+  final today = DateTime.now().toIso8601String().substring(0, 10);
+  try {
+    if (tomado) {
+      await supabase.from('adherence_logs').upsert({
+        'user_id': userId,
+        'medication': medicationName,
+        'taken_date': today,
+        'status': 'taken',
+        'created_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id,medication,taken_date');
+    } else {
+      await supabase.from('adherence_logs')
+          .delete()
+          .eq('user_id', userId)
+          .eq('medication', medicationName)
+          .eq('taken_date', today);
+    }
+    ref.invalidate(medicacionProvider);
+  } catch (e) {
+    rethrow;
   }
-  ref.invalidate(medicacionProvider);
 }

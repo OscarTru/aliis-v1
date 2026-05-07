@@ -7,7 +7,8 @@ import '../medicacion_provider.dart';
 
 class MedCheckRow extends StatefulWidget {
   final MedItem item;
-  final VoidCallback onToggle;
+  // Fix 1 — properly typed async callback
+  final Future<void> Function() onToggle;
 
   const MedCheckRow({super.key, required this.item, required this.onToggle});
 
@@ -34,34 +35,57 @@ class _MedCheckRowState extends State<MedCheckRow> {
         ),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: futuro || _loading ? null : () async {
-                setState(() => _loading = true);
-                await Future(() => widget.onToggle());
-                if (mounted) setState(() => _loading = false);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: tomado ? AliisColors.deepTeal : Colors.transparent,
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(
-                    color: tomado
-                        ? AliisColors.deepTeal
-                        : futuro
-                            ? AliisColors.mutedFg
-                            : const Color(0xFFE0E0E0),
-                    width: futuro ? 1 : 1.5,
-                    strokeAlign: BorderSide.strokeAlignCenter,
+            // Fix 7 — Semantics + expanded tap target
+            Semantics(
+              label: widget.item.treatment.name,
+              checked: tomado,
+              enabled: !futuro,
+              child: Padding(
+                padding: const EdgeInsets.all(11),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: futuro || _loading ? null : () async {
+                    // Fix 4 — try/catch with snackbar feedback
+                    try {
+                      setState(() => _loading = true);
+                      // Fix 1 — await the Future directly
+                      await widget.onToggle();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Error al guardar. Intenta de nuevo.'),
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _loading = false);
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: tomado ? AliisColors.deepTeal : Colors.transparent,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: tomado
+                            ? AliisColors.deepTeal
+                            : futuro
+                                ? AliisColors.mutedFg
+                                : const Color(0xFFE0E0E0),
+                        width: futuro ? 1 : 1.5,
+                        strokeAlign: BorderSide.strokeAlignCenter,
+                      ),
+                    ),
+                    child: tomado
+                        ? const Icon(Icons.check, color: Colors.white, size: 14)
+                            .animate().fadeIn(duration: 200.ms)
+                        : null,
                   ),
                 ),
-                child: tomado
-                    ? const Icon(Icons.check, color: Colors.white, size: 14)
-                        .animate().fadeIn(duration: 200.ms)
-                    : null,
               ),
             ),
             const SizedBox(width: 12),

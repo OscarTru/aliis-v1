@@ -18,14 +18,27 @@ class MedicacionScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async => ref.invalidate(medicacionProvider),
-          child: medAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Text('Error cargando medicación',
-                style: GoogleFonts.inter(color: AliisColors.mutedFg))),
-            data: (data) => ListView(
+        // Fix 6 — when() restructured so RefreshIndicator only wraps scrollable data
+        child: medAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          // Fix 6 — error state with retry button (not wrapped in RefreshIndicator)
+          error: (e, _) => Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Error al cargar medicamentos'),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => ref.invalidate(medicacionProvider),
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          ),
+          // Fix 6 — RefreshIndicator moved inside data branch
+          data: (data) => RefreshIndicator(
+            onRefresh: () async => ref.invalidate(medicacionProvider),
+            child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
                 SerifHeading(
@@ -40,32 +53,28 @@ class MedicacionScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 if (data.manana.isNotEmpty) ...[
-                  _TurnoHeader(label: 'Mañana', hora: '8:00'),
+                  // Fix 3 — hora comes from Turno.displayHora (single source of truth)
+                  _TurnoHeader(label: 'Mañana', hora: Turno.manana.displayHora),
                   ...data.manana.map((item) => MedCheckRow(
                     item: item,
-                    onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
-                    },
+                    // Fix 1 — lambda returns Future<void> directly
+                    onToggle: () => toggleMedicacion(item.treatment.name, !item.tomado, ref),
                   )),
                   const SizedBox(height: 20),
                 ],
                 if (data.tarde.isNotEmpty) ...[
-                  _TurnoHeader(label: 'Tarde', hora: '14:00'),
+                  _TurnoHeader(label: 'Tarde', hora: Turno.tarde.displayHora),
                   ...data.tarde.map((item) => MedCheckRow(
                     item: item,
-                    onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
-                    },
+                    onToggle: () => toggleMedicacion(item.treatment.name, !item.tomado, ref),
                   )),
                   const SizedBox(height: 20),
                 ],
                 if (data.noche.isNotEmpty) ...[
-                  _TurnoHeader(label: 'Noche', hora: '21:00'),
+                  _TurnoHeader(label: 'Noche', hora: Turno.noche.displayHora),
                   ...data.noche.map((item) => MedCheckRow(
                     item: item,
-                    onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
-                    },
+                    onToggle: () => toggleMedicacion(item.treatment.name, !item.tomado, ref),
                   )),
                   const SizedBox(height: 20),
                 ],
