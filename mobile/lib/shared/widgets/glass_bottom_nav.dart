@@ -7,6 +7,7 @@ class GlassBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onAliisPressed;
+  // alertCount: reservado para badge en tab Inicio — no renderizado en esta iteración
   final int alertCount;
 
   const GlassBottomNav({
@@ -111,7 +112,11 @@ class _NavTab extends StatelessWidget {
     final color = isActive ? AliisColors.primary : const Color(0xFFBBBBBB);
 
     return Expanded(
-      child: GestureDetector(
+      child: Semantics(
+        label: label,
+        button: true,
+        selected: isActive,
+        child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Column(
@@ -131,8 +136,9 @@ class _NavTab extends StatelessWidget {
                 ),
               )
             else
-              const SizedBox(height: 4),
+              const SizedBox(width: 4, height: 4),
           ],
+        ),
         ),
       ),
     );
@@ -145,7 +151,10 @@ class _FabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Semantics(
+      label: 'Abrir Aliis',
+      button: true,
+      child: GestureDetector(
       onTap: onPressed,
       child: Transform.translate(
         offset: const Offset(0, -8),
@@ -169,6 +178,7 @@ class _FabButton extends StatelessWidget {
           ),
         ).animate(onPlay: (c) => c.repeat(reverse: true))
           .scaleXY(begin: 1, end: 1.04, duration: 2000.ms, curve: Curves.easeInOut),
+      ),
       ),
     );
   }
