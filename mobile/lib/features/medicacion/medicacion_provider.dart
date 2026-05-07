@@ -14,11 +14,11 @@ extension TurnoLabel on Turno {
     }
   }
 
-  String get hora {
+  int get hora {
     switch (this) {
-      case Turno.manana: return '8:00';
-      case Turno.tarde:  return '14:00';
-      case Turno.noche:  return '21:00';
+      case Turno.manana: return 6;
+      case Turno.tarde:  return 13;
+      case Turno.noche:  return 20;
     }
   }
 }
@@ -27,7 +27,7 @@ class MedItem {
   final Treatment treatment;
   final Turno turno;
   final bool tomado;
-  final String? horaRegistro;
+  final DateTime? horaRegistro;
 
   const MedItem({
     required this.treatment,
@@ -39,15 +39,11 @@ class MedItem {
 
 class MedicacionData {
   final List<MedItem> items;
-  final int totalHoy;
-  final int tomadosHoy;
 
-  const MedicacionData({
-    required this.items,
-    required this.totalHoy,
-    required this.tomadosHoy,
-  });
+  const MedicacionData({required this.items});
 
+  int get totalHoy => items.length;
+  int get tomadosHoy => items.where((i) => i.tomado).length;
   int get percent => totalHoy > 0 ? ((tomadosHoy / totalHoy) * 100).round() : 0;
 
   List<MedItem> get manana => items.where((i) => i.turno == Turno.manana).toList();
@@ -57,7 +53,7 @@ class MedicacionData {
 
 final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) async {
   final session = ref.watch(sessionProvider).valueOrNull;
-  if (session == null) return const MedicacionData(items: [], totalHoy: 0, tomadosHoy: 0);
+  if (session == null) return const MedicacionData(items: []);
 
   final userId = session.user.id;
   final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -78,11 +74,13 @@ final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) asyn
       .toList();
   final logs = results[1] as List<dynamic>;
 
-  final takenMap = <String, String?>{};
+  final takenMap = <String, DateTime?>{};
   for (final log in logs) {
     final l = log as Map<String, dynamic>;
     if (l['status'] == 'taken') {
-      takenMap[l['medication'] as String] = l['created_at'] as String?;
+      final raw = l['created_at'] as String?;
+      takenMap[l['medication'] as String] =
+          raw != null ? DateTime.tryParse(raw) : null;
     }
   }
 
@@ -98,11 +96,7 @@ final medicacionProvider = FutureProvider.autoDispose<MedicacionData>((ref) asyn
     ));
   }
 
-  return MedicacionData(
-    items: items,
-    totalHoy: items.length,
-    tomadosHoy: items.where((i) => i.tomado).length,
-  );
+  return MedicacionData(items: items);
 });
 
 Turno _parseTurno(String? frequencyLabel) {
@@ -117,7 +111,7 @@ Turno _parseTurno(String? frequencyLabel) {
   return Turno.manana;
 }
 
-Future<void> toggleMedicacion(String medicationName, bool tomado) async {
+Future<void> toggleMedicacion(String medicationName, bool tomado, WidgetRef ref) async {
   final userId = supabase.auth.currentUser!.id;
   final today = DateTime.now().toIso8601String().substring(0, 10);
 
@@ -136,4 +130,5 @@ Future<void> toggleMedicacion(String medicationName, bool tomado) async {
         .eq('medication', medicationName)
         .eq('taken_date', today);
   }
+  ref.invalidate(medicacionProvider);
 }

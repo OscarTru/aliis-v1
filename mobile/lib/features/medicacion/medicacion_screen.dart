@@ -44,8 +44,7 @@ class MedicacionScreen extends ConsumerWidget {
                   ...data.manana.map((item) => MedCheckRow(
                     item: item,
                     onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado);
-                      ref.invalidate(medicacionProvider);
+                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
                     },
                   )),
                   const SizedBox(height: 20),
@@ -55,8 +54,7 @@ class MedicacionScreen extends ConsumerWidget {
                   ...data.tarde.map((item) => MedCheckRow(
                     item: item,
                     onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado);
-                      ref.invalidate(medicacionProvider);
+                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
                     },
                   )),
                   const SizedBox(height: 20),
@@ -66,8 +64,7 @@ class MedicacionScreen extends ConsumerWidget {
                   ...data.noche.map((item) => MedCheckRow(
                     item: item,
                     onToggle: () async {
-                      await toggleMedicacion(item.treatment.name, !item.tomado);
-                      ref.invalidate(medicacionProvider);
+                      await toggleMedicacion(item.treatment.name, !item.tomado, ref);
                     },
                   )),
                   const SizedBox(height: 20),

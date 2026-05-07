@@ -18,18 +18,12 @@ class MedCheckRow extends StatefulWidget {
 class _MedCheckRowState extends State<MedCheckRow> {
   bool _loading = false;
 
-  bool get _isFuturo {
-    final now = DateTime.now();
-    final turno = widget.item.turno;
-    if (turno == Turno.noche) return now.hour < 21;
-    if (turno == Turno.tarde) return now.hour < 14;
-    return now.hour < 8;
-  }
+  bool get _isFuturo => !widget.item.tomado && DateTime.now().hour < widget.item.turno.hora;
 
   @override
   Widget build(BuildContext context) {
     final tomado = widget.item.tomado;
-    final futuro = !tomado && _isFuturo;
+    final futuro = _isFuturo;
 
     return Opacity(
       opacity: futuro ? 0.4 : 1.0,
@@ -97,8 +91,7 @@ class _MedCheckRowState extends State<MedCheckRow> {
             ),
             if (tomado && widget.item.horaRegistro != null)
               Text(
-                DateFormat('HH:mm').format(
-                  DateTime.parse(widget.item.horaRegistro!).toLocal()),
+                DateFormat('HH:mm').format(widget.item.horaRegistro!.toLocal()),
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: AliisColors.primary,
