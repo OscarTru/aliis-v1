@@ -10,6 +10,7 @@ class HomeData {
   final Set<String> takenToday;
   final bool hasActiveAlert;
   final String? alertBody;
+  final List<String> insights;
   final int adherencia14d;
   final int diasRegistrados30d;
 
@@ -20,6 +21,7 @@ class HomeData {
     required this.takenToday,
     required this.hasActiveAlert,
     this.alertBody,
+    required this.insights,
     required this.adherencia14d,
     required this.diasRegistrados30d,
   });
@@ -31,9 +33,9 @@ class HomeData {
 
 final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
   final session = ref.watch(sessionProvider).valueOrNull;
-  if (session == null) return HomeData(
+  if (session == null) return const HomeData(
     treatments: [], takenToday: {}, hasActiveAlert: false,
-    adherencia14d: 0, diasRegistrados30d: 0,
+    insights: [], adherencia14d: 0, diasRegistrados30d: 0,
   );
 
   final userId = session.user.id;
@@ -101,6 +103,8 @@ final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
 
   String? alertBody;
   bool hasActiveAlert = false;
+  final insights = <String>[];
+
   if (insight != null) {
     final content = insight['content'];
     final parsed = content is String
@@ -110,7 +114,10 @@ final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
     if (patron != null) {
       hasActiveAlert = true;
       alertBody = patron;
+      insights.add(patron);
     }
+    final recomendacion = parsed['recomendacion'] as String?;
+    if (recomendacion != null) insights.add(recomendacion);
   }
 
   return HomeData(
@@ -120,6 +127,7 @@ final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
     takenToday: takenToday,
     hasActiveAlert: hasActiveAlert,
     alertBody: alertBody,
+    insights: insights,
     adherencia14d: adherencia14d,
     diasRegistrados30d: dias,
   );
