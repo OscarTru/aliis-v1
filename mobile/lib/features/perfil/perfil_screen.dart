@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
+import '../../shared/widgets/serif_heading.dart';
+import '../../shared/widgets/list_item.dart';
 import '../auth/auth_provider.dart';
 import 'perfil_provider.dart';
 import 'widgets/tratamiento_form.dart';
@@ -23,114 +25,115 @@ class PerfilScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: Text('Error cargando perfil',
-                style: GoogleFonts.inter(color: AliisColors.mutedForeground))),
+                style: GoogleFonts.inter(color: AliisColors.mutedFg))),
             data: (data) => ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
-                Text('Tu perfil.',
-                  style: Theme.of(context).textTheme.displayLarge),
-                const SizedBox(height: 24),
-
-                _SectionHeader('Mi cuenta'),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AliisColors.border,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AliisColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(data.name ?? 'Usuario',
-                              style: GoogleFonts.inter(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text(data.plan == 'pro' ? 'Plan Pro' : 'Plan Free',
-                              style: GoogleFonts.inter(
-                                fontSize: 12, color: AliisColors.mutedForeground)),
-                          ],
-                        ),
+                // Header
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SerifHeading(
+                        eyebrow: 'MI CUENTA',
+                        heading: data.name ?? 'Tu perfil',
                       ),
+                    ),
+                    if (data.plan == 'pro')
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: data.plan == 'pro'
-                            ? AliisColors.primary.withValues(alpha: 0.1)
-                            : AliisColors.border,
+                          color: AliisColors.deepTeal,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          data.plan == 'pro' ? 'Pro' : 'Free',
+                        child: Text('PRO',
                           style: GoogleFonts.inter(
-                            fontSize: 11, fontWeight: FontWeight.w600,
-                            color: data.plan == 'pro'
-                              ? AliisColors.primary
-                              : AliisColors.mutedForeground)),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 1,
+                          )),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 
+                // Tratamientos
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const _SectionHeader('Tratamientos'),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: AliisColors.primary),
-                      onPressed: () => showModalBottomSheet(
+                    Text('TRATAMIENTOS ACTIVOS',
+                      style: GoogleFonts.robotoMono(
+                        fontSize: 9,
+                        color: AliisColors.mutedFg,
+                        letterSpacing: 1.5,
+                      )),
+                    GestureDetector(
+                      onTap: () => showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
-                        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
                         shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20))),
                         builder: (_) => const TratamientoForm(),
                       ),
+                      child: Text('+ Añadir',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AliisColors.primary,
+                          fontWeight: FontWeight.w500,
+                        )),
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
                 if (data.treatments.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text('Sin tratamientos activos',
                       style: GoogleFonts.inter(
-                        color: AliisColors.mutedForeground, fontSize: 13)),
+                        color: AliisColors.mutedFg, fontSize: 13)),
                   )
                 else
                   ...data.treatments.map((t) => TratamientoTile(treatment: t)),
                 const SizedBox(height: 24),
 
-                if (data.plan == 'pro') ...[
-                  _SectionHeader('Suscripción'),
-                  OutlinedButton(
-                    onPressed: () => launchUrl(
+                // Cuenta
+                Text('CUENTA',
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 9,
+                    color: AliisColors.mutedFg,
+                    letterSpacing: 1.5,
+                  )),
+                const SizedBox(height: 8),
+
+                if (data.plan == 'pro')
+                  ListItem(
+                    title: 'Plan Pro',
+                    subtitle: 'Gestionar suscripción',
+                    trailing: const Icon(Icons.chevron_right,
+                      color: AliisColors.mutedFg, size: 18),
+                    onTap: () => launchUrl(
                       Uri.parse('https://aliis.app/portal'),
                       mode: LaunchMode.externalApplication),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      side: const BorderSide(color: AliisColors.border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                    child: Text('Gestionar suscripción',
-                      style: GoogleFonts.inter(color: AliisColors.foreground)),
                   ),
-                  const SizedBox(height: 24),
-                ],
 
-                OutlinedButton(
-                  onPressed: () => ref.read(authProvider).signOut(),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
-                    side: const BorderSide(color: AliisColors.border),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12))),
-                  child: Text('Cerrar sesión',
-                    style: GoogleFonts.inter(color: AliisColors.foreground)),
+                ListItem(
+                  title: 'Exportar datos',
+                  subtitle: 'Descargar historial (GDPR)',
+                  trailing: const Icon(Icons.download_outlined,
+                    color: AliisColors.mutedFg, size: 18),
+                  onTap: () {},
+                ),
+
+                ListItem(
+                  title: 'Cerrar sesión',
+                  trailing: const Icon(Icons.logout,
+                    color: AliisColors.destructive, size: 18),
+                  onTap: () => ref.read(authProvider).signOut(),
                 ),
                 const SizedBox(height: 40),
               ],
@@ -140,20 +143,4 @@ class PerfilScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader(this.title);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text(title,
-      style: GoogleFonts.inter(
-        fontSize: 11, fontWeight: FontWeight.w600,
-        color: AliisColors.mutedForeground,
-        letterSpacing: 0.5,
-        decoration: TextDecoration.none)),
-  );
 }
