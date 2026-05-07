@@ -14,16 +14,21 @@ export async function sendEmail({
   replyTo?: string
 }) {
   try {
-    await resend.emails.send({
-      from: 'Aliis <hola@aliis.app>',
+    const { data, error } = await resend.emails.send({
+      from: 'Aliis <hola@cerebrosesponjosos.com>',
       to,
       subject,
       html,
       ...(replyTo ? { replyTo } : {}),
     })
+    if (error) {
+      console.error('Resend error:', error)
+      return { ok: false as const, error: error.message }
+    }
+    console.log('Resend sent:', data?.id)
     return { ok: true as const }
   } catch (err) {
-    console.error('Resend error:', err)
+    console.error('Resend exception:', err)
     return { ok: false as const, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
