@@ -13,6 +13,18 @@ import 'widgets/tratamiento_tile.dart';
 class PerfilScreen extends ConsumerWidget {
   const PerfilScreen({super.key});
 
+  void _launchPortal(BuildContext context) async {
+    final ok = await launchUrl(
+      Uri.parse('https://aliis.app/portal'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir el enlace')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final perfilAsync = ref.watch(perfilProvider);
@@ -23,9 +35,26 @@ class PerfilScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(perfilProvider),
           child: perfilAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Text('Error cargando perfil',
-                style: GoogleFonts.inter(color: AliisColors.mutedFg))),
+            error: (e, _) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const SizedBox(height: 200),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Error cargando perfil',
+                        style: GoogleFonts.inter(color: AliisColors.mutedFg)),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => ref.invalidate(perfilProvider),
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             data: (data) => ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
@@ -116,18 +145,8 @@ class PerfilScreen extends ConsumerWidget {
                     subtitle: 'Gestionar suscripción',
                     trailing: const Icon(Icons.chevron_right,
                       color: AliisColors.mutedFg, size: 18),
-                    onTap: () => launchUrl(
-                      Uri.parse('https://aliis.app/portal'),
-                      mode: LaunchMode.externalApplication),
+                    onTap: () => _launchPortal(context),
                   ),
-
-                ListItem(
-                  title: 'Exportar datos',
-                  subtitle: 'Descargar historial (GDPR)',
-                  trailing: const Icon(Icons.download_outlined,
-                    color: AliisColors.mutedFg, size: 18),
-                  onTap: () {},
-                ),
 
                 ListItem(
                   title: 'Cerrar sesión',

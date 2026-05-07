@@ -36,9 +36,26 @@ class HomeScreen extends ConsumerWidget {
           },
           child: homeAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Text('Error cargando datos',
-                style: GoogleFonts.inter(color: AliisColors.mutedFg))),
+            error: (e, _) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const SizedBox(height: 200),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Error cargando datos',
+                        style: GoogleFonts.inter(color: AliisColors.mutedFg)),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => ref.invalidate(homeProvider),
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             data: (data) => ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
               children: [
@@ -69,10 +86,10 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                 ],
 
-                // 2. Adherencia hoy
+                // 2. Adherencia 14 días
                 if (data.treatments.isNotEmpty) ...[
                   AdherenceBar(
-                    label: 'Adherencia hoy',
+                    label: 'Adherencia 14 días',
                     percent: data.adherencia14d,
                     sublabel: data.treatments
                             .where((t) => !data.takenToday.contains(t.name))

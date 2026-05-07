@@ -60,12 +60,15 @@ class AlertasScreen extends ConsumerWidget {
                       itemCount: notifications.length,
                       itemBuilder: (ctx, i) {
                         final n = notifications[i];
-                        return AlertRow(
-                          title: n.title,
-                          subtitle: n.body,
-                          accentColor: n.type == 'alert'
-                              ? AliisColors.destructive
-                              : AliisColors.primary,
+                        return GestureDetector(
+                          onTap: () => marcarLeida(n.id),
+                          child: AlertRow(
+                            title: n.title,
+                            subtitle: n.body,
+                            accentColor: n.type == 'alert'
+                                ? AliisColors.destructive
+                                : AliisColors.primary,
+                          ),
                         );
                       },
                     ),
