@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
@@ -78,14 +79,55 @@ class MedicacionScreen extends ConsumerWidget {
                   )),
                   const SizedBox(height: 20),
                 ],
-                if (data.items.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 40),
-                      child: Text('Sin tratamientos activos',
-                        style: GoogleFonts.inter(color: AliisColors.mutedFg)),
+                if (data.items.isEmpty) ...[
+                  const SizedBox(height: 32),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AliisColors.border),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.medication_outlined,
+                          size: 36, color: AliisColors.mutedFg),
+                        const SizedBox(height: 12),
+                        Text('Sin medicamentos registrados',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AliisColors.foreground,
+                          )),
+                        const SizedBox(height: 6),
+                        Text('Agrega tus tratamientos en Perfil para hacer seguimiento de tus tomas.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AliisColors.mutedFg,
+                            height: 1.4,
+                          )),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.go('/perfil'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AliisColors.foreground,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('Agregar medicamento',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              )),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ],
               ],
             ),
           ),

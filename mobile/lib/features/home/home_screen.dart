@@ -101,6 +101,16 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                 ],
 
+                // Empty state — sin tratamientos
+                if (data.treatments.isEmpty)
+                  _EmptyCTA(
+                    icon: Icons.medication_outlined,
+                    title: 'Agrega tus medicamentos',
+                    subtitle: 'Registra tus tratamientos para hacer seguimiento de tus tomas diarias.',
+                    label: 'Ir a Perfil',
+                    onTap: () => context.go('/perfil'),
+                  ),
+
                 // 3. Alertas/insights de Aliis
                 if (data.insights.length > 1) ...[
                   Container(
@@ -116,9 +126,21 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                 ],
 
-                // 4. Vitales recientes — grid 2x2
+                // 4. Vitales recientes
                 _VitalesSection(data: data),
                 const SizedBox(height: 20),
+
+                // Empty state — sin registros de diario
+                if (data.diasRegistrados30d == 0) ...[
+                  _EmptyCTA(
+                    icon: Icons.edit_note_outlined,
+                    title: 'Empieza tu diario de salud',
+                    subtitle: 'Registra síntomas, presión, glucosa y más. Cada registro ayuda a Aliis a acompañarte mejor.',
+                    label: 'Registrar ahora',
+                    onTap: () => context.push('/expediente/registro'),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // 5. Próxima cita
                 if (data.nextAppointment != null)
@@ -184,6 +206,85 @@ class _VitalesSection extends StatelessWidget {
             ],
           ),
           const Divider(height: 1, color: AliisColors.border),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyCTA extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String label;
+  final VoidCallback onTap;
+  const _EmptyCTA({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: AliisColors.border),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AliisColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: AliisColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AliisColors.foreground,
+                  )),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AliisColors.mutedFg,
+                    height: 1.4,
+                  )),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AliisColors.foreground,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(label,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      )),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
