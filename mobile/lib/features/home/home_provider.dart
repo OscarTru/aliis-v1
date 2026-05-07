@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/supabase_client.dart';
 import '../../shared/models/treatment.dart';
@@ -108,7 +109,7 @@ final homeProvider = FutureProvider.autoDispose<HomeData>((ref) async {
   if (insight != null) {
     final content = insight['content'];
     final parsed = content is String
-        ? <String, dynamic>{}
+        ? jsonDecode(content) as Map<String, dynamic>
         : content as Map<String, dynamic>;
     final patron = parsed['patron_reciente'] as String?;
     if (patron != null) {
